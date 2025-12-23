@@ -117,7 +117,7 @@ export default function VisualMenu({
 
                     {item.weight && (
                       <p className="font-body text-xs sm:text-sm text-accent-foreground mb-1">
-                        {item.weight}g
+                        {item.weight} g
                       </p>
                     )}
 

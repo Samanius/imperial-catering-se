@@ -115,7 +115,7 @@ export default function TastingMenu({ restaurantId, restaurantName, description,
                         </h4>
                         {item.weight && (
                           <span className="font-body text-xs text-accent-foreground whitespace-nowrap">
-                            {item.weight}g
+                            {item.weight} g
                           </span>
                         )}
                       </div>

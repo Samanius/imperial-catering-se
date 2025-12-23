@@ -63,7 +63,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     Object.values(groupedByRestaurant).forEach(({ restaurantName, items }) => {
       message += `*${restaurantName}*%0A`
       items.forEach(item => {
-        const weight = item.menuItem.weight ? ` (${item.menuItem.weight}g)` : ''
+        const weight = item.menuItem.weight ? ` (${item.menuItem.weight} g)` : ''
         message += `• ${item.quantity}x ${item.menuItem.name}${weight} - $${(item.menuItem.price * item.quantity).toFixed(2)}%0A`
       })
       message += '%0A'
@@ -149,7 +149,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                               </div>
                               {item.menuItem.weight && (
                                 <p className="font-body text-xs text-muted-foreground mb-2">
-                                  {item.menuItem.weight}g
+                                  {item.menuItem.weight} g
                                 </p>
                               )}
                               
