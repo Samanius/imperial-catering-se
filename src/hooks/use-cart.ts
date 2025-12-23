@@ -58,12 +58,12 @@ export function useCart() {
     })
   }, [setCartItems])
 
-  const getItemQuantity = useCallback((restaurantId: string, menuItemId: string) => {
+  const getItemQuantity = (restaurantId: string, menuItemId: string) => {
     const item = safeCartItems.find(
       item => item.restaurantId === restaurantId && item.menuItem.id === menuItemId
     )
     return item?.quantity || 0
-  }, [safeCartItems])
+  }
 
   const totalItems = useMemo(() => {
     return safeCartItems.reduce((sum, item) => sum + item.quantity, 0)

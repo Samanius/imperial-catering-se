@@ -39,9 +39,8 @@ export default function TastingMenu({ restaurantId, restaurantName, description,
 
   const handleAddToCart = (menuItem: MenuItem) => {
     addToCart(restaurantId, restaurantName, menuItem)
-    const quantity = getItemQuantity(restaurantId, menuItem.id)
     toast.success('Added to cart', {
-      description: `${menuItem.name} (x${quantity + 1})`,
+      description: menuItem.name,
       duration: 2000,
     })
   }
