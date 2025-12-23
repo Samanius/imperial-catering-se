@@ -165,7 +165,55 @@ export async function getBackups(): Promise<BackupEntry[]> {
 
 export async function exportBackupsAsJSON(): Promise<string> {
   const backups = await getBackups()
-  return JSON.stringify(backups, null, 2)
+  const restaurants = await window.spark.kv.get<any[]>('restaurants') || []
+  
+  const allImageUrls = new Set<string>()
+  
+  restaurants.forEach(restaurant => {
+    if (restaurant.coverImage) allImageUrls.add(restaurant.coverImage)
+    if (restaurant.galleryImages) {
+      restaurant.galleryImages.forEach((img: string) => allImageUrls.add(img))
+    }
+    if (restaurant.menuItems) {
+      restaurant.menuItems.forEach((item: any) => {
+        if (item.image) allImageUrls.add(item.image)
+      })
+    }
+  })
+  
+  backups.forEach(backup => {
+    if (backup.data?.coverImage) allImageUrls.add(backup.data.coverImage)
+    if (backup.data?.galleryImages) {
+      backup.data.galleryImages.forEach((img: string) => allImageUrls.add(img))
+    }
+    if (backup.data?.menuItems) {
+      backup.data.menuItems.forEach((item: any) => {
+        if (item.image) allImageUrls.add(item.image)
+      })
+    }
+    
+    if (backup.previousData?.coverImage) allImageUrls.add(backup.previousData.coverImage)
+    if (backup.previousData?.galleryImages) {
+      backup.previousData.galleryImages.forEach((img: string) => allImageUrls.add(img))
+    }
+    if (backup.previousData?.menuItems) {
+      backup.previousData.menuItems.forEach((item: any) => {
+        if (item.image) allImageUrls.add(item.image)
+      })
+    }
+  })
+  
+  const exportData = {
+    exportDate: new Date().toISOString(),
+    exportTimestamp: Date.now(),
+    totalBackups: backups.length,
+    totalImages: allImageUrls.size,
+    currentRestaurants: restaurants,
+    imageUrls: Array.from(allImageUrls).filter(url => url && url.trim() !== ''),
+    backupLogs: backups.sort((a, b) => b.timestamp - a.timestamp)
+  }
+  
+  return JSON.stringify(exportData, null, 2)
 }
 
 export async function getLatestBackupForEntity(entityId: string): Promise<BackupEntry | undefined> {

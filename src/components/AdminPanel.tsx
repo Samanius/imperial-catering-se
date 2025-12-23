@@ -791,24 +791,39 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
 
           <TabsContent value="backups" className="mt-0">
             <Card className="p-6">
-              <div className="flex justify-between items-center mb-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                 <div>
                   <h2 className="font-heading text-2xl font-semibold">
                     Data Backups Archive
                   </h2>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Automatic backup of all admin changes
+                    All logs and image URLs • Automatic backup system
                   </p>
                 </div>
                 <Button
                   onClick={downloadBackups}
-                  variant="outline"
-                  className="gap-2"
+                  className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2 whitespace-nowrap"
                 >
-                  <DownloadSimple size={16} />
-                  Export JSON
+                  <DownloadSimple size={18} weight="bold" />
+                  Download Full Backup
                 </Button>
               </div>
+
+              <Card className="p-4 mb-6 bg-muted/30 border-accent/20">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-sm bg-accent/10">
+                    <DownloadSimple size={20} className="text-accent" weight="bold" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-heading font-semibold text-sm mb-1">
+                      Backup File Contents
+                    </p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      JSON file includes: all change logs, current restaurants data, all image URLs (covers, galleries, menu items), timestamps, and detailed change history.
+                    </p>
+                  </div>
+                </div>
+              </Card>
 
               <ScrollArea className="h-[calc(100vh-300px)]">
                 <div className="space-y-3">
