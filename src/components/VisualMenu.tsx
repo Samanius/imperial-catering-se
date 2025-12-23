@@ -59,7 +59,7 @@ export default function VisualMenu({
               return (
                 <Card
                   key={item.id}
-                  className="group relative overflow-hidden border-border hover:shadow-md transition-all duration-300"
+                  className="group relative overflow-hidden border-border hover:shadow-md transition-all duration-300 flex flex-col"
                   onMouseEnter={() => !isMobile && setHoveredItem(item.id)}
                   onMouseLeave={() => !isMobile && setHoveredItem(null)}
                 >
@@ -73,7 +73,7 @@ export default function VisualMenu({
                     </div>
                   )}
 
-                  <div className="p-4 sm:p-5 md:p-6">
+                  <div className="p-4 sm:p-5 md:p-6 flex flex-col flex-1">
                     <div className="flex justify-between items-start mb-2 gap-2">
                       <h3 className="font-heading text-lg sm:text-xl font-semibold flex-1">
                         {item.name}
@@ -95,48 +95,50 @@ export default function VisualMenu({
                       </p>
                     )}
 
-                    {quantity === 0 ? (
-                      <div
-                        className={`transition-opacity duration-300 ${
-                          isMobile || isHovered ? 'opacity-100' : 'opacity-0'
-                        }`}
-                      >
-                        <Button
-                          onClick={() => handleAddToCart(item)}
-                          variant="outline"
-                          size="sm"
-                          className="w-full border-accent text-accent-foreground hover:bg-accent/10 h-10 sm:h-9 text-sm"
+                    <div className="mt-auto">
+                      {quantity === 0 ? (
+                        <div
+                          className={`transition-opacity duration-300 ${
+                            isMobile || isHovered ? 'opacity-100' : 'opacity-0'
+                          }`}
                         >
-                          <Plus size={18} weight="bold" className="mr-2 sm:hidden" />
-                          <Plus size={16} weight="bold" className="mr-2 hidden sm:block" />
-                          Add
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-between bg-accent/10 rounded-sm px-3 py-2.5 sm:py-2">
-                        <Button
-                          onClick={() => handleUpdateQuantity(item.id, -1)}
-                          variant="ghost"
-                          size="icon"
-                          className="h-9 w-9 sm:h-8 sm:w-8 hover:bg-accent/20"
-                        >
-                          <Minus size={18} weight="bold" className="sm:hidden" />
-                          <Minus size={16} weight="bold" className="hidden sm:block" />
-                        </Button>
-                        <span className="font-body font-medium text-lg">
-                          {quantity}
-                        </span>
-                        <Button
-                          onClick={() => handleUpdateQuantity(item.id, 1)}
-                          variant="ghost"
-                          size="icon"
-                          className="h-9 w-9 sm:h-8 sm:w-8 hover:bg-accent/20"
-                        >
-                          <Plus size={18} weight="bold" className="sm:hidden" />
-                          <Plus size={16} weight="bold" className="hidden sm:block" />
-                        </Button>
-                      </div>
-                    )}
+                          <Button
+                            onClick={() => handleAddToCart(item)}
+                            variant="outline"
+                            size="sm"
+                            className="w-full border-accent text-accent-foreground hover:bg-accent/10 h-10 sm:h-9 text-sm"
+                          >
+                            <Plus size={18} weight="bold" className="mr-2 sm:hidden" />
+                            <Plus size={16} weight="bold" className="mr-2 hidden sm:block" />
+                            Add
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between bg-accent/10 rounded-sm px-3 py-2.5 sm:py-2">
+                          <Button
+                            onClick={() => handleUpdateQuantity(item.id, -1)}
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 sm:h-8 sm:w-8 hover:bg-accent/20"
+                          >
+                            <Minus size={18} weight="bold" className="sm:hidden" />
+                            <Minus size={16} weight="bold" className="hidden sm:block" />
+                          </Button>
+                          <span className="font-body font-medium text-lg">
+                            {quantity}
+                          </span>
+                          <Button
+                            onClick={() => handleUpdateQuantity(item.id, 1)}
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 sm:h-8 sm:w-8 hover:bg-accent/20"
+                          >
+                            <Plus size={18} weight="bold" className="sm:hidden" />
+                            <Plus size={16} weight="bold" className="hidden sm:block" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </Card>
               )
