@@ -1,5 +1,6 @@
 import { useKV } from '@github/spark/hooks'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { useMemo } from 'react'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from './ui/drawer'
 import { Button } from './ui/button'
 import { ScrollArea } from './ui/scroll-area'
@@ -17,9 +18,14 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const [cartItems = [], setCartItems] = useKV<CartItem[]>('cart-items', [])
   const isMobile = useIsMobile()
 
+  const safeCartItems = useMemo(() => {
+    return Array.isArray(cartItems) ? cartItems : []
+  }, [cartItems])
+
   const updateQuantity = (restaurantId: string, menuItemId: string, delta: number) => {
     setCartItems((current = []) => {
-      return current.map(item => {
+      const safeArray = Array.isArray(current) ? current : []
+      return safeArray.map(item => {
         if (item.restaurantId === restaurantId && item.menuItem.id === menuItemId) {
           const newQuantity = item.quantity + delta
           return newQuantity > 0 ? { ...item, quantity: newQuantity } : null
@@ -31,29 +37,32 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
   const removeItem = (restaurantId: string, menuItemId: string) => {
     setCartItems((current = []) => {
-      return current.filter(
+      const safeArray = Array.isArray(current) ? current : []
+      return safeArray.filter(
         item => !(item.restaurantId === restaurantId && item.menuItem.id === menuItemId)
       )
     })
   }
 
   const calculateTotal = () => {
-    return cartItems.reduce((sum, item) => sum + (item.menuItem.price * item.quantity), 0)
+    return safeCartItems.reduce((sum, item) => sum + (item.menuItem.price * item.quantity), 0)
   }
 
-  const groupedByRestaurant = cartItems.reduce((acc, item) => {
-    if (!acc[item.restaurantId]) {
-      acc[item.restaurantId] = {
-        restaurantName: item.restaurantName,
-        items: []
+  const groupedByRestaurant = useMemo(() => {
+    return safeCartItems.reduce((acc, item) => {
+      if (!acc[item.restaurantId]) {
+        acc[item.restaurantId] = {
+          restaurantName: item.restaurantName,
+          items: []
+        }
       }
-    }
-    acc[item.restaurantId].items.push(item)
-    return acc
-  }, {} as Record<string, { restaurantName: string; items: CartItem[] }>)
+      acc[item.restaurantId].items.push(item)
+      return acc
+    }, {} as Record<string, { restaurantName: string; items: CartItem[] }>)
+  }, [safeCartItems])
 
   const handleSendOrder = () => {
-    if (cartItems.length === 0) {
+    if (safeCartItems.length === 0) {
       toast.error('Your cart is empty')
       return
     }
@@ -99,7 +108,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           </div>
         </DrawerHeader>
 
-        {cartItems.length === 0 ? (
+        {safeCartItems.length === 0 ? (
           <div className="flex-1 flex items-center justify-center text-center p-6 sm:p-8">
             <div>
               <p className="font-heading text-xl sm:text-2xl text-muted-foreground mb-2">

@@ -20,6 +20,10 @@ export default function Header({
   onBackClick 
 }: HeaderProps) {
   const [cartItems = []] = useKV<CartItem[]>('cart-items', [])
+  
+  const totalItems = Array.isArray(cartItems) 
+    ? cartItems.reduce((sum, item) => sum + item.quantity, 0)
+    : 0
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
@@ -60,11 +64,11 @@ export default function Header({
             >
               <ShoppingBag size={24} weight="regular" className="sm:hidden" />
               <ShoppingBag size={22} weight="regular" className="hidden sm:block" />
-              {cartItems.length > 0 && (
+              {totalItems > 0 && (
                 <Badge 
                   className="absolute -top-1 -right-1 h-5 w-5 sm:h-5 sm:w-5 flex items-center justify-center p-0 bg-accent text-accent-foreground text-xs font-medium"
                 >
-                  {cartItems.length}
+                  {totalItems}
                 </Badge>
               )}
             </Button>

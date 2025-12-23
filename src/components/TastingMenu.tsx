@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Button } from './ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog'
 import { Textarea } from './ui/textarea'
@@ -22,6 +22,10 @@ export default function TastingMenu({ restaurantId, restaurantName, description,
   const [cartItems = [], setCartItems] = useKV<CartItem[]>('cart-items', [])
   const isMobile = useIsMobile()
 
+  const safeCartItems = useMemo(() => {
+    return Array.isArray(cartItems) ? cartItems : []
+  }, [cartItems])
+
   const handleConciergeOrder = () => {
     if (!orderMessage.trim()) {
       toast.error('Please enter your order details')
@@ -39,7 +43,8 @@ export default function TastingMenu({ restaurantId, restaurantName, description,
 
   const addToCart = (menuItem: MenuItem) => {
     setCartItems((current = []) => {
-      const existingItem = current.find(
+      const safeArray = Array.isArray(current) ? current : []
+      const existingItem = safeArray.find(
         item => item.restaurantId === restaurantId && item.menuItem.id === menuItem.id
       )
 
@@ -48,7 +53,7 @@ export default function TastingMenu({ restaurantId, restaurantName, description,
           description: `${menuItem.name} (x${existingItem.quantity + 1})`,
           duration: 2000,
         })
-        return current.map(item =>
+        return safeArray.map(item =>
           item.restaurantId === restaurantId && item.menuItem.id === menuItem.id
             ? { ...item, quantity: item.quantity + 1 }
             : item
@@ -59,12 +64,13 @@ export default function TastingMenu({ restaurantId, restaurantName, description,
         description: menuItem.name,
         duration: 2000,
       })
-      return [...current, { restaurantId, restaurantName, menuItem, quantity: 1 }]
+      return [...safeArray, { restaurantId, restaurantName, menuItem, quantity: 1 }]
     })
   }
 
   const getItemQuantity = (menuItemId: string) => {
-    const item = cartItems.find(
+    if (!safeCartItems || !Array.isArray(safeCartItems)) return 0
+    const item = safeCartItems.find(
       item => item.restaurantId === restaurantId && item.menuItem.id === menuItemId
     )
     return item?.quantity || 0

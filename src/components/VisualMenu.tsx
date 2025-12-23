@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Plus, Minus } from '@phosphor-icons/react'
 import { useKV } from '@github/spark/hooks'
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -24,21 +24,26 @@ export default function VisualMenu({
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
   const isMobile = useIsMobile()
 
+  const safeCartItems = useMemo(() => {
+    return Array.isArray(cartItems) ? cartItems : []
+  }, [cartItems])
+
   const addToCart = (menuItem: MenuItem) => {
     setCartItems((current = []) => {
-      const existingItem = current.find(
+      const safeArray = Array.isArray(current) ? current : []
+      const existingItem = safeArray.find(
         item => item.restaurantId === restaurantId && item.menuItem.id === menuItem.id
       )
 
       if (existingItem) {
-        return current.map(item =>
+        return safeArray.map(item =>
           item.restaurantId === restaurantId && item.menuItem.id === menuItem.id
             ? { ...item, quantity: item.quantity + 1 }
             : item
         )
       }
 
-      return [...current, { restaurantId, restaurantName, menuItem, quantity: 1 }]
+      return [...safeArray, { restaurantId, restaurantName, menuItem, quantity: 1 }]
     })
     
     toast.success('Added to cart', {
@@ -49,7 +54,8 @@ export default function VisualMenu({
 
   const updateQuantity = (menuItemId: string, delta: number) => {
     setCartItems((current = []) => {
-      const newItems = current.map(item => {
+      const safeArray = Array.isArray(current) ? current : []
+      const newItems = safeArray.map(item => {
         if (item.restaurantId === restaurantId && item.menuItem.id === menuItemId) {
           const newQuantity = item.quantity + delta
           return newQuantity > 0 ? { ...item, quantity: newQuantity } : null
@@ -62,7 +68,8 @@ export default function VisualMenu({
   }
 
   const getItemQuantity = (menuItemId: string) => {
-    const item = cartItems.find(
+    if (!safeCartItems || !Array.isArray(safeCartItems)) return 0
+    const item = safeCartItems.find(
       item => item.restaurantId === restaurantId && item.menuItem.id === menuItemId
     )
     return item?.quantity || 0
