@@ -58,12 +58,19 @@ export function useCart() {
     })
   }, [setCartItems])
 
-  const getItemQuantity = (restaurantId: string, menuItemId: string) => {
-    const item = safeCartItems.find(
-      item => item.restaurantId === restaurantId && item.menuItem.id === menuItemId
-    )
-    return item?.quantity || 0
-  }
+  const itemQuantities = useMemo(() => {
+    const quantities: Record<string, number> = {}
+    safeCartItems.forEach(item => {
+      const key = `${item.restaurantId}-${item.menuItem.id}`
+      quantities[key] = item.quantity
+    })
+    return quantities
+  }, [safeCartItems])
+
+  const getItemQuantity = useCallback((restaurantId: string, menuItemId: string) => {
+    const key = `${restaurantId}-${menuItemId}`
+    return itemQuantities[key] || 0
+  }, [itemQuantities])
 
   const totalItems = useMemo(() => {
     return safeCartItems.reduce((sum, item) => sum + item.quantity, 0)
@@ -96,6 +103,7 @@ export function useCart() {
     updateQuantity,
     removeItem,
     getItemQuantity,
+    itemQuantities,
     totalItems,
     totalPrice,
     groupedByRestaurant,
