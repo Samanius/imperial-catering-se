@@ -7,12 +7,13 @@ import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { Separator } from './ui/separator'
-import { ArrowLeft, Plus, Trash, Upload, PencilSimple, Check, X, ClockCounterClockwise, DownloadSimple } from '@phosphor-icons/react'
+import { ArrowLeft, Plus, Trash, Upload, PencilSimple, Check, X, ClockCounterClockwise, DownloadSimple, CaretDown, CaretUp } from '@phosphor-icons/react'
 import type { Restaurant, MenuItem, MenuType } from '@/lib/types'
 import { toast } from 'sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 import { ScrollArea } from './ui/scroll-area'
 import { createBackup, getBackups, exportBackupsAsJSON, type BackupEntry } from '@/lib/backup'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible'
 
 interface AdminPanelProps {
   onBack: () => void
@@ -787,39 +788,114 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                     backups
                       .sort((a, b) => b.timestamp - a.timestamp)
                       .map((backup, index) => (
-                        <Card key={index} className="p-4">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span
-                                  className={`px-2 py-0.5 text-xs font-medium rounded ${
-                                    backup.action === 'create'
-                                      ? 'bg-green-500/10 text-green-700'
-                                      : backup.action === 'update'
-                                      ? 'bg-blue-500/10 text-blue-700'
-                                      : 'bg-red-500/10 text-red-700'
-                                  }`}
-                                >
-                                  {backup.action.toUpperCase()}
-                                </span>
-                                <span className="text-xs text-muted-foreground">
-                                  {new Date(backup.timestamp).toLocaleString()}
-                                </span>
-                              </div>
-                              <p className="font-heading font-medium">
-                                {backup.entityName}
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                ID: {backup.entityId}
-                              </p>
-                              {backup.action === 'update' && backup.previousData && (
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  Previous version saved
+                        <Collapsible key={index}>
+                          <Card className="p-4">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span
+                                    className={`px-2 py-0.5 text-xs font-medium rounded ${
+                                      backup.action === 'create'
+                                        ? 'bg-green-500/10 text-green-700'
+                                        : backup.action === 'update'
+                                        ? 'bg-blue-500/10 text-blue-700'
+                                        : 'bg-red-500/10 text-red-700'
+                                    }`}
+                                  >
+                                    {backup.action.toUpperCase()}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {new Date(backup.timestamp).toLocaleString()}
+                                  </span>
+                                </div>
+                                <p className="font-heading font-medium">
+                                  {backup.entityName}
                                 </p>
+                                <p className="text-sm text-muted-foreground">
+                                  ID: {backup.entityId}
+                                </p>
+                                {backup.changesSummary && (
+                                  <p className="text-sm text-foreground mt-2 font-medium">
+                                    {backup.changesSummary}
+                                  </p>
+                                )}
+                              </div>
+                              {backup.changes && backup.changes.length > 0 && (
+                                <CollapsibleTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <CaretDown size={16} className="transition-transform [[data-state=open]_&]:rotate-180" />
+                                  </Button>
+                                </CollapsibleTrigger>
                               )}
                             </div>
-                          </div>
-                        </Card>
+                            
+                            {backup.changes && backup.changes.length > 0 && (
+                              <CollapsibleContent className="mt-3">
+                                <Separator className="mb-3" />
+                                <div className="space-y-2">
+                                  <p className="text-xs font-semibold text-muted-foreground uppercase">
+                                    Detailed Changes
+                                  </p>
+                                  {backup.changes.map((change, changeIndex) => (
+                                    <div
+                                      key={changeIndex}
+                                      className="p-2 bg-muted/30 rounded text-xs space-y-1"
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <span
+                                          className={`px-1.5 py-0.5 rounded font-medium ${
+                                            change.changeType === 'added'
+                                              ? 'bg-green-500/10 text-green-700'
+                                              : change.changeType === 'removed'
+                                              ? 'bg-red-500/10 text-red-700'
+                                              : 'bg-blue-500/10 text-blue-700'
+                                          }`}
+                                        >
+                                          {change.changeType}
+                                        </span>
+                                        <span className="font-medium">{change.field}</span>
+                                      </div>
+                                      {change.changeType === 'modified' && (
+                                        <div className="grid grid-cols-2 gap-2 mt-1">
+                                          <div>
+                                            <span className="text-muted-foreground">Before:</span>
+                                            <div className="mt-0.5 text-foreground break-words">
+                                              {typeof change.oldValue === 'object' && change.oldValue !== null
+                                                ? JSON.stringify(change.oldValue).substring(0, 100)
+                                                : String(change.oldValue)}
+                                            </div>
+                                          </div>
+                                          <div>
+                                            <span className="text-muted-foreground">After:</span>
+                                            <div className="mt-0.5 text-foreground break-words">
+                                              {typeof change.newValue === 'object' && change.newValue !== null
+                                                ? JSON.stringify(change.newValue).substring(0, 100)
+                                                : String(change.newValue)}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      )}
+                                      {change.changeType === 'added' && (
+                                        <div className="text-foreground break-words">
+                                          Value: {typeof change.newValue === 'object' && change.newValue !== null
+                                            ? JSON.stringify(change.newValue).substring(0, 100)
+                                            : String(change.newValue)}
+                                        </div>
+                                      )}
+                                      {change.changeType === 'removed' && (
+                                        <div className="text-foreground break-words">
+                                          Previous value: {typeof change.oldValue === 'object' && change.oldValue !== null
+                                            ? JSON.stringify(change.oldValue).substring(0, 100)
+                                            : String(change.oldValue)}
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </CollapsibleContent>
+                            )}
+                          </Card>
+                        </Collapsible>
                       ))
                   )}
                 </div>
