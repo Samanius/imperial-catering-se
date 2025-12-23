@@ -7,7 +7,7 @@ import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { Separator } from './ui/separator'
-import { ArrowLeft, Plus, Trash, Upload, PencilSimple, Check, X, ClockCounterClockwise, DownloadSimple, CaretDown, CaretUp } from '@phosphor-icons/react'
+import { ArrowLeft, Plus, Trash, Upload, PencilSimple, Check, X, ClockCounterClockwise, DownloadSimple, CaretDown, CaretUp, Eye, EyeSlash } from '@phosphor-icons/react'
 import type { Restaurant, MenuItem, MenuType } from '@/lib/types'
 import { toast } from 'sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
@@ -257,6 +257,21 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
     setSelectedRestaurant(null)
   }
 
+  const toggleRestaurantVisibility = async (id: string) => {
+    const restaurant = restaurants?.find(r => r.id === id)
+    if (!restaurant) return
+    
+    const updatedRestaurant = { ...restaurant, isHidden: !restaurant.isHidden }
+    const action = updatedRestaurant.isHidden ? 'hidden' : 'shown'
+    
+    await createBackup('update', 'restaurant', id, restaurant.name, updatedRestaurant, restaurant)
+    setRestaurants((current) => 
+      (current || []).map(r => r.id === id ? updatedRestaurant : r)
+    )
+    toast.success(`Restaurant ${action}`)
+    await loadBackups()
+  }
+
   const deleteRestaurant = async (id: string) => {
     const restaurantToDelete = restaurants?.find(r => r.id === id)
     if (!restaurantToDelete) return
@@ -367,19 +382,39 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {restaurant.menuType}
+                            {restaurant.isHidden && (
+                              <span className="ml-2 text-destructive font-medium">• Hidden</span>
+                            )}
                           </p>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            deleteRestaurant(restaurant.id)
-                          }}
-                          className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
-                        >
-                          <Trash size={16} />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              toggleRestaurantVisibility(restaurant.id)
+                            }}
+                            className={`h-8 w-8 ${
+                              restaurant.isHidden 
+                                ? 'hover:bg-accent/10 hover:text-accent text-muted-foreground' 
+                                : 'hover:bg-accent/10 hover:text-accent'
+                            }`}
+                          >
+                            {restaurant.isHidden ? <EyeSlash size={16} /> : <Eye size={16} />}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              deleteRestaurant(restaurant.id)
+                            }}
+                            className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
+                          >
+                            <Trash size={16} />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))

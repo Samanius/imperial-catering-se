@@ -12,6 +12,8 @@ export default function RestaurantCatalog({ onRestaurantSelect }: RestaurantCata
   const [restaurants] = useKV<Restaurant[]>('restaurants', [])
   const isMobile = useIsMobile()
 
+  const visibleRestaurants = (restaurants || []).filter(r => !r.isHidden)
+
   return (
     <main className="pt-14 sm:pt-20">
       <section className="relative h-[60vh] sm:h-[70vh] md:h-[85vh] overflow-hidden flex items-center justify-center">
@@ -41,7 +43,7 @@ export default function RestaurantCatalog({ onRestaurantSelect }: RestaurantCata
       </section>
 
       <section className="px-4 sm:px-6 py-12 sm:py-16 md:py-24 max-w-7xl mx-auto">
-        {!restaurants || restaurants.length === 0 ? (
+        {!visibleRestaurants || visibleRestaurants.length === 0 ? (
           <div className="text-center py-16 sm:py-24">
             <p className="font-heading text-xl sm:text-2xl text-muted-foreground mb-2">
               Curated Experiences Arriving Soon
@@ -52,7 +54,7 @@ export default function RestaurantCatalog({ onRestaurantSelect }: RestaurantCata
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-            {restaurants.map((restaurant, index) => (
+            {visibleRestaurants.map((restaurant, index) => (
               <RestaurantCard
                 key={restaurant.id}
                 restaurant={restaurant}

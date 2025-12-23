@@ -27,6 +27,7 @@ export interface Restaurant {
   orderDeadlineHours?: number
   chefServicePrice?: number
   waiterServicePrice?: number
+  isHidden?: boolean
 }
 
 export interface CartItem {
