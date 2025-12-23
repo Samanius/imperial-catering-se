@@ -7,7 +7,7 @@ import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { Separator } from './ui/separator'
-import { ArrowLeft, Plus, Trash, Upload } from '@phosphor-icons/react'
+import { ArrowLeft, Plus, Trash, Upload, PencilSimple, Check, X } from '@phosphor-icons/react'
 import type { Restaurant, MenuItem, MenuType } from '@/lib/types'
 import { toast } from 'sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
@@ -46,6 +46,8 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
     category: '',
     weight: undefined
   })
+  const [editingItemId, setEditingItemId] = useState<string | null>(null)
+  const [editingItemData, setEditingItemData] = useState<MenuItem | null>(null)
 
   const startCreating = () => {
     setIsCreating(true)
@@ -143,6 +145,34 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       ...prev,
       menuItems: (prev.menuItems || []).filter(item => item.id !== id)
     }))
+  }
+
+  const startEditingItem = (item: MenuItem) => {
+    setEditingItemId(item.id)
+    setEditingItemData({ ...item })
+  }
+
+  const cancelEditingItem = () => {
+    setEditingItemId(null)
+    setEditingItemData(null)
+  }
+
+  const saveEditedItem = () => {
+    if (!editingItemData || !editingItemData.name || !editingItemData.price) {
+      toast.error('Please fill name and price')
+      return
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      menuItems: (prev.menuItems || []).map(item =>
+        item.id === editingItemId ? editingItemData : item
+      )
+    }))
+
+    toast.success('Menu item updated')
+    setEditingItemId(null)
+    setEditingItemData(null)
   }
 
   const saveRestaurant = () => {
@@ -481,26 +511,113 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                         <div className="space-y-2">
                           {(formData.menuItems || []).map((item) => (
                             <Card key={item.id} className="p-3">
-                              <div className="flex justify-between items-start gap-3">
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-medium truncate">{item.name}</p>
-                                  <p className="text-sm text-muted-foreground">{item.category}</p>
-                                  <div className="flex gap-2 items-center text-sm font-medium">
-                                    <span>${item.price}</span>
-                                    {item.weight && (
-                                      <span className="text-muted-foreground">• {item.weight}g</span>
-                                    )}
+                              {editingItemId === item.id && editingItemData ? (
+                                <div className="space-y-3">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                      <Label className="text-xs">Name</Label>
+                                      <Input
+                                        placeholder="Item name"
+                                        value={editingItemData.name}
+                                        onChange={(e) => setEditingItemData(prev => prev ? ({ ...prev, name: e.target.value }) : null)}
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-xs">Price</Label>
+                                      <Input
+                                        type="number"
+                                        placeholder="Price"
+                                        value={editingItemData.price || ''}
+                                        onChange={(e) => setEditingItemData(prev => prev ? ({ ...prev, price: Number(e.target.value) }) : null)}
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-xs">Category</Label>
+                                      <Input
+                                        placeholder="Category"
+                                        value={editingItemData.category}
+                                        onChange={(e) => setEditingItemData(prev => prev ? ({ ...prev, category: e.target.value }) : null)}
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-xs">Weight (g)</Label>
+                                      <Input
+                                        type="number"
+                                        placeholder="Weight"
+                                        value={editingItemData.weight || ''}
+                                        onChange={(e) => setEditingItemData(prev => prev ? ({ ...prev, weight: e.target.value ? Number(e.target.value) : undefined }) : null)}
+                                      />
+                                    </div>
+                                    <div className="space-y-1 md:col-span-2">
+                                      <Label className="text-xs">Image URL</Label>
+                                      <Input
+                                        placeholder="Image URL"
+                                        value={editingItemData.image || ''}
+                                        onChange={(e) => setEditingItemData(prev => prev ? ({ ...prev, image: e.target.value }) : null)}
+                                      />
+                                    </div>
+                                    <div className="space-y-1 md:col-span-2">
+                                      <Label className="text-xs">Description</Label>
+                                      <Textarea
+                                        placeholder="Description"
+                                        value={editingItemData.description}
+                                        onChange={(e) => setEditingItemData(prev => prev ? ({ ...prev, description: e.target.value }) : null)}
+                                        rows={2}
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      onClick={saveEditedItem}
+                                      size="sm"
+                                      className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90"
+                                    >
+                                      <Check size={16} weight="bold" className="mr-2" />
+                                      Save
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      onClick={cancelEditingItem}
+                                      size="sm"
+                                      className="flex-1"
+                                    >
+                                      <X size={16} weight="bold" className="mr-2" />
+                                      Cancel
+                                    </Button>
                                   </div>
                                 </div>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => removeMenuItem(item.id)}
-                                  className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
-                                >
-                                  <Trash size={16} />
-                                </Button>
-                              </div>
+                              ) : (
+                                <div className="flex justify-between items-start gap-3">
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium truncate">{item.name}</p>
+                                    <p className="text-sm text-muted-foreground">{item.category}</p>
+                                    <div className="flex gap-2 items-center text-sm font-medium">
+                                      <span>${item.price}</span>
+                                      {item.weight && (
+                                        <span className="text-muted-foreground">• {item.weight}g</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => startEditingItem(item)}
+                                      className="h-8 w-8 hover:bg-accent/10 hover:text-accent"
+                                    >
+                                      <PencilSimple size={16} />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => removeMenuItem(item.id)}
+                                      className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
+                                    >
+                                      <Trash size={16} />
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
                             </Card>
                           ))}
                         </div>
