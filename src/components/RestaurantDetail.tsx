@@ -98,6 +98,7 @@ export default function RestaurantDetail({ restaurantId }: RestaurantDetailProps
       {restaurant.menuType === 'tasting' && (
         <section className="px-4 sm:px-6 pb-16 sm:pb-20 md:pb-24">
           <TastingMenu 
+            restaurantId={restaurant.id}
             restaurantName={restaurant.name}
             description={restaurant.tastingMenuDescription || ''}
             menuItems={restaurant.menuItems || []}
@@ -136,6 +137,7 @@ export default function RestaurantDetail({ restaurantId }: RestaurantDetailProps
 
             <TabsContent value="tasting">
               <TastingMenu 
+                restaurantId={restaurant.id}
                 restaurantName={restaurant.name}
                 description={restaurant.tastingMenuDescription || ''}
                 menuItems={restaurant.menuItems || []}

@@ -4,19 +4,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from './ui/textarea'
 import { Label } from './ui/label'
 import { useIsMobile } from '@/hooks/use-mobile'
-import type { MenuItem } from '@/lib/types'
+import { useKV } from '@github/spark/hooks'
+import type { MenuItem, CartItem } from '@/lib/types'
 import { WhatsappLogo } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 
 interface TastingMenuProps {
+  restaurantId: string
   restaurantName: string
   description: string
   menuItems: MenuItem[]
 }
 
-export default function TastingMenu({ restaurantName, description, menuItems }: TastingMenuProps) {
+export default function TastingMenu({ restaurantId, restaurantName, description, menuItems }: TastingMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [orderMessage, setOrderMessage] = useState('')
+  const [cartItems = [], setCartItems] = useKV<CartItem[]>('cart-items', [])
   const isMobile = useIsMobile()
 
   const handleConciergeOrder = () => {
@@ -32,6 +35,39 @@ export default function TastingMenu({ restaurantName, description, menuItems }: 
     setIsOpen(false)
     setOrderMessage('')
     toast.success('Opening WhatsApp...')
+  }
+
+  const addToCart = (menuItem: MenuItem) => {
+    setCartItems((current = []) => {
+      const existingItem = current.find(
+        item => item.restaurantId === restaurantId && item.menuItem.id === menuItem.id
+      )
+
+      if (existingItem) {
+        toast.success('Added to cart', {
+          description: `${menuItem.name} (x${existingItem.quantity + 1})`,
+          duration: 2000,
+        })
+        return current.map(item =>
+          item.restaurantId === restaurantId && item.menuItem.id === menuItem.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        )
+      }
+
+      toast.success('Added to cart', {
+        description: menuItem.name,
+        duration: 2000,
+      })
+      return [...current, { restaurantId, restaurantName, menuItem, quantity: 1 }]
+    })
+  }
+
+  const getItemQuantity = (menuItemId: string) => {
+    const item = cartItems.find(
+      item => item.restaurantId === restaurantId && item.menuItem.id === menuItemId
+    )
+    return item?.quantity || 0
   }
 
   const categorizedItems = menuItems.reduce((acc, item) => {
@@ -63,23 +99,38 @@ export default function TastingMenu({ restaurantName, description, menuItems }: 
             </div>
 
             <div className="space-y-5 sm:space-y-6">
-              {items.map((item) => (
-                <div key={item.id} className="flex justify-between items-start gap-3 sm:gap-4">
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-heading text-base sm:text-lg font-medium mb-1">
-                      {item.name}
-                    </h4>
-                    {item.description && (
-                      <p className="font-body text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                        {item.description}
-                      </p>
-                    )}
+              {items.map((item) => {
+                const quantity = getItemQuantity(item.id)
+                
+                return (
+                  <div 
+                    key={item.id} 
+                    className="group flex justify-between items-start gap-3 sm:gap-4 cursor-pointer hover:bg-accent/5 -mx-2 px-2 py-2 rounded-sm transition-colors duration-200"
+                    onClick={() => addToCart(item)}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-heading text-base sm:text-lg font-medium mb-1">
+                        {item.name}
+                      </h4>
+                      {item.description && (
+                        <p className="font-body text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                          {item.description}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 ml-2 sm:ml-4">
+                      <span className="font-body text-sm sm:text-base text-muted-foreground whitespace-nowrap">
+                        ${item.price.toFixed(2)}
+                      </span>
+                      {quantity > 0 && (
+                        <span className="font-body text-sm font-medium text-accent-foreground bg-accent/15 px-2 py-0.5 rounded-sm min-w-[2.5rem] text-center animate-in fade-in slide-in-from-right-2 duration-200">
+                          x{quantity}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <span className="font-body text-sm sm:text-base text-muted-foreground whitespace-nowrap flex-shrink-0 ml-2 sm:ml-4">
-                    {item.price}
-                  </span>
-                </div>
-              ))}
+                )
+              })}
             </div>
 
             {index < Object.entries(categorizedItems).length - 1 && (
