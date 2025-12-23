@@ -32,10 +32,10 @@ export default function RestaurantCatalog({ onRestaurantSelect }: RestaurantCata
           <h1 className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold text-card tracking-wide leading-tight mb-4 sm:mb-6">
             Exquisite Dining.
             <br />
-            Delivered to Deck.
+            On your Yacht.
           </h1>
           <p className="font-body text-base sm:text-lg md:text-xl text-card/90 tracking-wide font-light px-4">
-            Curated gastronomy from the world's finest establishments
+            Curated gastronomy from the Dubai's finest establishments
           </p>
         </div>
       </section>
