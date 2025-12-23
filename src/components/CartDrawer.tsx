@@ -80,8 +80,8 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
   return (
     <Drawer open={isOpen} onOpenChange={onClose}>
-      <DrawerContent className={`${isMobile ? 'h-[95vh]' : 'h-[90vh]'}`}>
-        <DrawerHeader className="border-b border-border px-4 sm:px-6">
+      <DrawerContent className={`${isMobile ? 'h-[95vh]' : 'h-[90vh]'} flex flex-col`}>
+        <DrawerHeader className="border-b border-border px-4 sm:px-6 flex-shrink-0">
           <div className="flex items-center justify-between">
             <DrawerTitle className="font-heading text-xl sm:text-2xl">
               Your Selection
@@ -111,82 +111,84 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           </div>
         ) : (
           <>
-            <ScrollArea className="flex-1 p-4 sm:p-6">
-              <div className="space-y-6 sm:space-y-8">
-                {Object.entries(groupedByRestaurant).map(([restaurantId, { restaurantName, items }]) => (
-                  <div key={restaurantId}>
-                    <h3 className="font-heading text-lg sm:text-xl font-semibold mb-3 sm:mb-4">
-                      {restaurantName}
-                    </h3>
-                    
-                    <div className="space-y-4">
-                      {items.map((item) => (
-                        <div key={item.menuItem.id} className="flex gap-3 sm:gap-4">
-                          {item.menuItem.image && (
-                            <img
-                              src={item.menuItem.image}
-                              alt={item.menuItem.name}
-                              className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-sm flex-shrink-0"
-                            />
-                          )}
-                          
-                          <div className="flex-1 min-w-0">
-                            <div className="flex justify-between items-start mb-2 gap-2">
-                              <h4 className="font-body font-medium text-sm sm:text-base line-clamp-2 flex-1">
-                                {item.menuItem.name}
-                              </h4>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => removeItem(item.restaurantId, item.menuItem.id)}
-                                className="h-7 w-7 sm:h-6 sm:w-6 hover:bg-destructive/10 hover:text-destructive flex-shrink-0"
-                              >
-                                <X size={16} className="sm:hidden" />
-                                <X size={14} className="hidden sm:block" />
-                              </Button>
-                            </div>
+            <div className="flex-1 overflow-hidden">
+              <ScrollArea className="h-full">
+                <div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
+                  {Object.entries(groupedByRestaurant).map(([restaurantId, { restaurantName, items }]) => (
+                    <div key={restaurantId}>
+                      <h3 className="font-heading text-lg sm:text-xl font-semibold mb-3 sm:mb-4">
+                        {restaurantName}
+                      </h3>
+                      
+                      <div className="space-y-4">
+                        {items.map((item) => (
+                          <div key={item.menuItem.id} className="flex gap-3 sm:gap-4">
+                            {item.menuItem.image && (
+                              <img
+                                src={item.menuItem.image}
+                                alt={item.menuItem.name}
+                                className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-sm flex-shrink-0"
+                              />
+                            )}
                             
-                            <div className="flex items-center justify-between gap-3">
-                              <div className="flex items-center gap-1.5 sm:gap-2 bg-muted rounded-sm">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex justify-between items-start mb-2 gap-2">
+                                <h4 className="font-body font-medium text-sm sm:text-base line-clamp-2 flex-1">
+                                  {item.menuItem.name}
+                                </h4>
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  onClick={() => updateQuantity(item.restaurantId, item.menuItem.id, -1)}
-                                  className="h-8 w-8 sm:h-7 sm:w-7"
+                                  onClick={() => removeItem(item.restaurantId, item.menuItem.id)}
+                                  className="h-7 w-7 sm:h-6 sm:w-6 hover:bg-destructive/10 hover:text-destructive flex-shrink-0"
                                 >
-                                  <Minus size={14} weight="bold" className="sm:hidden" />
-                                  <Minus size={12} weight="bold" className="hidden sm:block" />
-                                </Button>
-                                <span className="font-body text-sm w-8 text-center font-medium">
-                                  {item.quantity}
-                                </span>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => updateQuantity(item.restaurantId, item.menuItem.id, 1)}
-                                  className="h-8 w-8 sm:h-7 sm:w-7"
-                                >
-                                  <Plus size={14} weight="bold" className="sm:hidden" />
-                                  <Plus size={12} weight="bold" className="hidden sm:block" />
+                                  <X size={16} className="sm:hidden" />
+                                  <X size={14} className="hidden sm:block" />
                                 </Button>
                               </div>
                               
-                              <span className="font-body text-sm sm:text-base font-medium flex-shrink-0">
-                                ${(item.menuItem.price * item.quantity).toFixed(2)}
-                              </span>
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-1.5 sm:gap-2 bg-muted rounded-sm">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => updateQuantity(item.restaurantId, item.menuItem.id, -1)}
+                                    className="h-8 w-8 sm:h-7 sm:w-7"
+                                  >
+                                    <Minus size={14} weight="bold" className="sm:hidden" />
+                                    <Minus size={12} weight="bold" className="hidden sm:block" />
+                                  </Button>
+                                  <span className="font-body text-sm w-8 text-center font-medium">
+                                    {item.quantity}
+                                  </span>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => updateQuantity(item.restaurantId, item.menuItem.id, 1)}
+                                    className="h-8 w-8 sm:h-7 sm:w-7"
+                                  >
+                                    <Plus size={14} weight="bold" className="sm:hidden" />
+                                    <Plus size={12} weight="bold" className="hidden sm:block" />
+                                  </Button>
+                                </div>
+                                
+                                <span className="font-body text-sm sm:text-base font-medium flex-shrink-0">
+                                  ${(item.menuItem.price * item.quantity).toFixed(2)}
+                                </span>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
+                      
+                      <Separator className="mt-5 sm:mt-6" />
                     </div>
-                    
-                    <Separator className="mt-5 sm:mt-6" />
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
 
-            <div className="border-t border-border p-4 sm:p-6 space-y-4 bg-background">
+            <div className="border-t border-border p-4 sm:p-6 space-y-4 bg-background flex-shrink-0">
               <div className="flex justify-between items-center">
                 <span className="font-heading text-lg sm:text-xl">Total</span>
                 <span className="font-heading text-xl sm:text-2xl font-semibold">
