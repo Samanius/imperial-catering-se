@@ -4,6 +4,7 @@ import RestaurantCatalog from './components/RestaurantCatalog'
 import RestaurantDetail from './components/RestaurantDetail'
 import AdminPanel from './components/AdminPanel'
 import CartDrawer from './components/CartDrawer'
+import ConciergeOrderButton from './components/ConciergeOrderButton'
 import { Toaster } from './components/ui/sonner'
 
 function App() {
@@ -56,6 +57,8 @@ function App() {
       )}
 
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+      
+      <ConciergeOrderButton />
       
       <Toaster position="top-center" richColors closeButton />
     </div>
