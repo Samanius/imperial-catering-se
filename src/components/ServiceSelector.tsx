@@ -100,10 +100,29 @@ export default function ServiceSelector({ restaurant }: ServiceSelectorProps) {
   return (
     <Card className="mb-12 sm:mb-16 p-4 sm:p-6 border border-border bg-card/50">
       <h3 className="font-heading text-lg sm:text-xl font-semibold mb-4">
-        Additional Services
+        Ordering Information & Services
       </h3>
       
       <div className="space-y-6">
+        {(restaurant.minimumOrderAmount || restaurant.orderDeadlineHours) && (
+          <div className="space-y-2">
+            {restaurant.minimumOrderAmount && (
+              <p className="font-body text-sm sm:text-base text-foreground/90">
+                <span className="text-muted-foreground">Minimum order amount:</span> ${restaurant.minimumOrderAmount}
+              </p>
+            )}
+            {restaurant.orderDeadlineHours && (
+              <p className="font-body text-sm sm:text-base text-foreground/90">
+                <span className="text-muted-foreground">Order deadline:</span> {restaurant.orderDeadlineHours} hours before charter
+              </p>
+            )}
+          </div>
+        )}
+
+        {(restaurant.minimumOrderAmount || restaurant.orderDeadlineHours) && (restaurant.chefServicePrice || restaurant.waiterServicePrice) && (
+          <div className="border-t border-border pt-6" />
+        )}
+
         {restaurant.chefServicePrice && (
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-start gap-3 flex-1">
@@ -128,12 +147,12 @@ export default function ServiceSelector({ restaurant }: ServiceSelectorProps) {
         )}
 
         {restaurant.waiterServicePrice && (
-          <div className="space-y-3">
-            <div className="flex items-start gap-3">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-start gap-3 flex-1">
               <div className="p-2 rounded-sm bg-accent/10 text-accent">
                 <UsersThree size={24} weight="duotone" />
               </div>
-              <div className="flex-1">
+              <div>
                 <Label className="text-base font-medium">
                   Waiter Service
                 </Label>
@@ -143,7 +162,7 @@ export default function ServiceSelector({ restaurant }: ServiceSelectorProps) {
               </div>
             </div>
             
-            <div className="flex items-center gap-3 ml-11">
+            <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="icon"
@@ -154,12 +173,9 @@ export default function ServiceSelector({ restaurant }: ServiceSelectorProps) {
                 <Minus size={16} weight="bold" />
               </Button>
               
-              <div className="flex-1 text-center">
+              <div className="min-w-[60px] text-center">
                 <span className="text-lg font-semibold">
                   {waiterCount}
-                </span>
-                <span className="text-sm text-muted-foreground ml-2">
-                  {waiterCount === 1 ? 'waiter' : 'waiters'}
                 </span>
               </div>
               

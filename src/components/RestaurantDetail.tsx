@@ -84,27 +84,7 @@ export default function RestaurantDetail({ restaurantId }: RestaurantDetailProps
           </p>
         </div>
 
-        {(restaurant.minimumOrderAmount || restaurant.orderDeadlineHours) && (
-          <div className="mb-12 sm:mb-16 p-4 sm:p-6 border border-border rounded-sm bg-card/50">
-            <h3 className="font-heading text-lg sm:text-xl font-semibold mb-3">
-              Ordering Information
-            </h3>
-            <div className="space-y-2">
-              {restaurant.minimumOrderAmount && (
-                <p className="font-body text-sm sm:text-base text-foreground/90">
-                  <span className="text-muted-foreground">Minimum order amount:</span> ${restaurant.minimumOrderAmount}
-                </p>
-              )}
-              {restaurant.orderDeadlineHours && (
-                <p className="font-body text-sm sm:text-base text-foreground/90">
-                  <span className="text-muted-foreground">Order deadline:</span> {restaurant.orderDeadlineHours} hours before charter
-                </p>
-              )}
-            </div>
-          </div>
-        )}
-
-        {(restaurant.chefServicePrice || restaurant.waiterServicePrice) && (
+        {(restaurant.minimumOrderAmount || restaurant.orderDeadlineHours || restaurant.chefServicePrice || restaurant.waiterServicePrice) && (
           <ServiceSelector restaurant={restaurant} />
         )}
       </section>
