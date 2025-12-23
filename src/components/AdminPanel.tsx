@@ -20,7 +20,7 @@ interface AdminPanelProps {
 }
 
 export default function AdminPanel({ onBack }: AdminPanelProps) {
-  const [restaurants = [], setRestaurants] = useKV<Restaurant[]>('restaurants', [])
+  const [restaurants, setRestaurants] = useKV<Restaurant[]>('restaurants', [])
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [backups, setBackups] = useState<BackupEntry[]>([])
@@ -241,13 +241,13 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
 
     if (selectedRestaurant) {
       await createBackup('update', 'restaurant', restaurant.id, restaurant.name, restaurant, selectedRestaurant)
-      setRestaurants((current = []) => 
-        current.map(r => r.id === restaurant.id ? restaurant : r)
+      setRestaurants((current) => 
+        (current || []).map(r => r.id === restaurant.id ? restaurant : r)
       )
       toast.success('Restaurant updated')
     } else {
       await createBackup('create', 'restaurant', restaurant.id, restaurant.name, restaurant)
-      setRestaurants((current = []) => [...current, restaurant])
+      setRestaurants((current) => [...(current || []), restaurant])
       toast.success('Restaurant created')
     }
 
@@ -257,12 +257,12 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
   }
 
   const deleteRestaurant = async (id: string) => {
-    const restaurantToDelete = restaurants.find(r => r.id === id)
+    const restaurantToDelete = restaurants?.find(r => r.id === id)
     if (!restaurantToDelete) return
     
     if (confirm('Are you sure you want to delete this restaurant?')) {
       await createBackup('delete', 'restaurant', id, restaurantToDelete.name, restaurantToDelete)
-      setRestaurants((current = []) => current.filter(r => r.id !== id))
+      setRestaurants((current) => (current || []).filter(r => r.id !== id))
       toast.success('Restaurant deleted')
       await loadBackups()
     }
@@ -312,7 +312,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
             </h2>
             <ScrollArea className="h-[calc(100vh-300px)]">
               <div className="space-y-2">
-                {restaurants.length === 0 ? (
+                {!restaurants || restaurants.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">
                     No restaurants yet
                   </p>

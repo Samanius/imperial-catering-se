@@ -9,7 +9,7 @@ interface RestaurantCatalogProps {
 }
 
 export default function RestaurantCatalog({ onRestaurantSelect }: RestaurantCatalogProps) {
-  const [restaurants = []] = useKV<Restaurant[]>('restaurants', [])
+  const [restaurants] = useKV<Restaurant[]>('restaurants', [])
   const isMobile = useIsMobile()
 
   return (
@@ -41,7 +41,7 @@ export default function RestaurantCatalog({ onRestaurantSelect }: RestaurantCata
       </section>
 
       <section className="px-4 sm:px-6 py-12 sm:py-16 md:py-24 max-w-7xl mx-auto">
-        {restaurants.length === 0 ? (
+        {!restaurants || restaurants.length === 0 ? (
           <div className="text-center py-16 sm:py-24">
             <p className="font-heading text-xl sm:text-2xl text-muted-foreground mb-2">
               Curated Experiences Arriving Soon
