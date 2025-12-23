@@ -43,7 +43,7 @@ export default function Header({
             className="text-center hover:opacity-70 transition-opacity flex-shrink min-w-0"
           >
             <div className="font-heading text-lg sm:text-2xl font-semibold tracking-wider whitespace-nowrap">
-              MERIDIEN
+              Imperial delicious menu
             </div>
             <div className="font-body text-[8px] sm:text-[10px] tracking-[0.15em] sm:tracking-[0.2em] text-muted-foreground uppercase mt-0.5 hidden sm:block">
               Curated Dining for the High Seas
