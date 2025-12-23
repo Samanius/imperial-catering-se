@@ -11,11 +11,16 @@ interface RestaurantDetailProps {
 }
 
 export default function RestaurantDetail({ restaurantId }: RestaurantDetailProps) {
-  const [restaurants = []] = useKV<Restaurant[]>('restaurants', [])
+  const [restaurants] = useKV<Restaurant[]>('restaurants', [])
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const isMobile = useIsMobile()
   
-  const restaurant = restaurants.find(r => r.id === restaurantId)
+  const restaurant = restaurants?.find(r => r.id === restaurantId)
+  const isLoading = restaurants === undefined
+
+  if (isLoading) {
+    return null
+  }
 
   if (!restaurant) {
     return (
