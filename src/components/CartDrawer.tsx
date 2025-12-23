@@ -63,7 +63,8 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     Object.values(groupedByRestaurant).forEach(({ restaurantName, items }) => {
       message += `*${restaurantName}*%0A`
       items.forEach(item => {
-        message += `• ${item.quantity}x ${item.menuItem.name} - $${(item.menuItem.price * item.quantity).toFixed(2)}%0A`
+        const weight = item.menuItem.weight ? ` (${item.menuItem.weight}g)` : ''
+        message += `• ${item.quantity}x ${item.menuItem.name}${weight} - $${(item.menuItem.price * item.quantity).toFixed(2)}%0A`
       })
       message += '%0A'
     })
@@ -132,17 +133,10 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                             )}
                             
                             <div className="flex-1 min-w-0">
-                              <div className="flex justify-between items-start mb-2 gap-2">
-                                <div className="flex-1">
-                                  <h4 className="font-body font-medium text-sm sm:text-base line-clamp-2">
-                                    {item.menuItem.name}
-                                  </h4>
-                                  {item.menuItem.weight && (
-                                    <p className="font-body text-xs text-accent-foreground mt-0.5">
-                                      {item.menuItem.weight}g
-                                    </p>
-                                  )}
-                                </div>
+                              <div className="flex justify-between items-start mb-1 gap-2">
+                                <h4 className="font-body font-medium text-sm sm:text-base line-clamp-2 flex-1">
+                                  {item.menuItem.name}
+                                </h4>
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -153,6 +147,11 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                   <X size={14} className="hidden sm:block" />
                                 </Button>
                               </div>
+                              {item.menuItem.weight && (
+                                <p className="font-body text-xs text-muted-foreground mb-2">
+                                  {item.menuItem.weight}g
+                                </p>
+                              )}
                               
                               <div className="flex items-center justify-between gap-3">
                                 <div className="flex items-center gap-1.5 sm:gap-2 bg-muted rounded-sm">
