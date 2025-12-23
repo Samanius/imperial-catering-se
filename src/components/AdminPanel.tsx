@@ -7,14 +7,13 @@ import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { Separator } from './ui/separator'
-import { ArrowLeft, Plus, Trash, Upload, PencilSimple, Check, X, ClockCounterClockwise, DownloadSimple, CaretDown, CaretUp, Eye, EyeSlash } from '@phosphor-icons/react'
+import { ArrowLeft, Plus, Trash, PencilSimple, Check, X, ClockCounterClockwise, DownloadSimple, CaretDown, CaretUp, Eye, EyeSlash } from '@phosphor-icons/react'
 import type { Restaurant, MenuItem, MenuType } from '@/lib/types'
 import { toast } from 'sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 import { ScrollArea } from './ui/scroll-area'
 import { createBackup, getBackups, exportBackupsAsJSON, type BackupEntry } from '@/lib/backup'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible'
-import { seedRestaurants } from '@/lib/seed-restaurants'
 
 interface AdminPanelProps {
   onBack: () => void
@@ -284,26 +283,6 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
     }
   }
 
-  const loadSampleRestaurants = async () => {
-    if (confirm('This will add 12 sample restaurants to the catalog. Continue?')) {
-      const existingIds = new Set((restaurants || []).map(r => r.id))
-      const newRestaurants = seedRestaurants.filter(r => !existingIds.has(r.id))
-      
-      if (newRestaurants.length === 0) {
-        toast.info('All sample restaurants are already loaded')
-        return
-      }
-
-      for (const restaurant of newRestaurants) {
-        await createBackup('create', 'restaurant', restaurant.id, restaurant.name, restaurant)
-      }
-
-      setRestaurants((current) => [...(current || []), ...newRestaurants])
-      toast.success(`Added ${newRestaurants.length} sample restaurants`)
-      await loadBackups()
-    }
-  }
-
   return (
     <div className="min-h-screen pt-20 pb-12">
       <div className="container mx-auto px-6 max-w-7xl">
@@ -322,25 +301,13 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
             </div>
           </div>
           
-          <div className="flex gap-2 w-full sm:w-auto">
-            <Button
-              onClick={loadSampleRestaurants}
-              variant="outline"
-              className="border-accent/30 text-accent-foreground hover:bg-accent/10 flex-1 sm:flex-none"
-            >
-              <Upload size={20} weight="bold" className="mr-2" />
-              <span className="hidden sm:inline">Load Sample Restaurants</span>
-              <span className="sm:hidden">Load Samples</span>
-            </Button>
-            <Button
-              onClick={startCreating}
-              className="bg-accent text-accent-foreground hover:bg-accent/90 flex-1 sm:flex-none"
-            >
-              <Plus size={20} weight="bold" className="mr-2" />
-              <span className="hidden sm:inline">New Restaurant</span>
-              <span className="sm:hidden">New</span>
-            </Button>
-          </div>
+          <Button
+            onClick={startCreating}
+            className="bg-accent text-accent-foreground hover:bg-accent/90"
+          >
+            <Plus size={20} weight="bold" className="mr-2" />
+            New Restaurant
+          </Button>
         </div>
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'restaurants' | 'backups')} className="w-full">
