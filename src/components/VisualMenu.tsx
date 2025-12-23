@@ -1,10 +1,10 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { Plus, Minus } from '@phosphor-icons/react'
-import { useKV } from '@github/spark/hooks'
+import { useCart } from '@/hooks/use-cart'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
-import type { MenuItem, CartItem } from '@/lib/types'
+import type { MenuItem } from '@/lib/types'
 import { toast } from 'sonner'
 
 interface VisualMenuProps {
@@ -20,59 +20,20 @@ export default function VisualMenu({
   menuItems, 
   categories 
 }: VisualMenuProps) {
-  const [cartItems = [], setCartItems] = useKV<CartItem[]>('cart-items', [])
+  const { addToCart, updateQuantity, getItemQuantity } = useCart()
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
   const isMobile = useIsMobile()
 
-  const safeCartItems = useMemo(() => {
-    return Array.isArray(cartItems) ? cartItems : []
-  }, [cartItems])
-
-  const addToCart = (menuItem: MenuItem) => {
-    setCartItems((current = []) => {
-      const safeArray = Array.isArray(current) ? current : []
-      const existingItem = safeArray.find(
-        item => item.restaurantId === restaurantId && item.menuItem.id === menuItem.id
-      )
-
-      if (existingItem) {
-        return safeArray.map(item =>
-          item.restaurantId === restaurantId && item.menuItem.id === menuItem.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        )
-      }
-
-      return [...safeArray, { restaurantId, restaurantName, menuItem, quantity: 1 }]
-    })
-    
+  const handleAddToCart = (menuItem: MenuItem) => {
+    addToCart(restaurantId, restaurantName, menuItem)
     toast.success('Added to cart', {
       description: menuItem.name,
       duration: 2000,
     })
   }
 
-  const updateQuantity = (menuItemId: string, delta: number) => {
-    setCartItems((current = []) => {
-      const safeArray = Array.isArray(current) ? current : []
-      const newItems = safeArray.map(item => {
-        if (item.restaurantId === restaurantId && item.menuItem.id === menuItemId) {
-          const newQuantity = item.quantity + delta
-          return newQuantity > 0 ? { ...item, quantity: newQuantity } : null
-        }
-        return item
-      }).filter(Boolean) as CartItem[]
-
-      return newItems
-    })
-  }
-
-  const getItemQuantity = (menuItemId: string) => {
-    if (!safeCartItems || !Array.isArray(safeCartItems)) return 0
-    const item = safeCartItems.find(
-      item => item.restaurantId === restaurantId && item.menuItem.id === menuItemId
-    )
-    return item?.quantity || 0
+  const handleUpdateQuantity = (menuItemId: string, delta: number) => {
+    updateQuantity(restaurantId, menuItemId, delta)
   }
 
   const categorizedItems = categories.length > 0
@@ -92,7 +53,7 @@ export default function VisualMenu({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {items.map((item) => {
-              const quantity = getItemQuantity(item.id)
+              const quantity = getItemQuantity(restaurantId, item.id)
               const isHovered = hoveredItem === item.id
 
               return (
@@ -141,7 +102,7 @@ export default function VisualMenu({
                         }`}
                       >
                         <Button
-                          onClick={() => addToCart(item)}
+                          onClick={() => handleAddToCart(item)}
                           variant="outline"
                           size="sm"
                           className="w-full border-accent text-accent-foreground hover:bg-accent/10 h-10 sm:h-9 text-sm"
@@ -154,7 +115,7 @@ export default function VisualMenu({
                     ) : (
                       <div className="flex items-center justify-between bg-accent/10 rounded-sm px-3 py-2.5 sm:py-2">
                         <Button
-                          onClick={() => updateQuantity(item.id, -1)}
+                          onClick={() => handleUpdateQuantity(item.id, -1)}
                           variant="ghost"
                           size="icon"
                           className="h-9 w-9 sm:h-8 sm:w-8 hover:bg-accent/20"
@@ -166,7 +127,7 @@ export default function VisualMenu({
                           {quantity}
                         </span>
                         <Button
-                          onClick={() => updateQuantity(item.id, 1)}
+                          onClick={() => handleUpdateQuantity(item.id, 1)}
                           variant="ghost"
                           size="icon"
                           className="h-9 w-9 sm:h-8 sm:w-8 hover:bg-accent/20"

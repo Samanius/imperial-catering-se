@@ -1,11 +1,11 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { Button } from './ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog'
 import { Textarea } from './ui/textarea'
 import { Label } from './ui/label'
 import { useIsMobile } from '@/hooks/use-mobile'
-import { useKV } from '@github/spark/hooks'
-import type { MenuItem, CartItem } from '@/lib/types'
+import { useCart } from '@/hooks/use-cart'
+import type { MenuItem } from '@/lib/types'
 import { WhatsappLogo } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 
@@ -19,12 +19,8 @@ interface TastingMenuProps {
 export default function TastingMenu({ restaurantId, restaurantName, description, menuItems }: TastingMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [orderMessage, setOrderMessage] = useState('')
-  const [cartItems = [], setCartItems] = useKV<CartItem[]>('cart-items', [])
+  const { addToCart, getItemQuantity } = useCart()
   const isMobile = useIsMobile()
-
-  const safeCartItems = useMemo(() => {
-    return Array.isArray(cartItems) ? cartItems : []
-  }, [cartItems])
 
   const handleConciergeOrder = () => {
     if (!orderMessage.trim()) {
@@ -41,39 +37,13 @@ export default function TastingMenu({ restaurantId, restaurantName, description,
     toast.success('Opening WhatsApp...')
   }
 
-  const addToCart = (menuItem: MenuItem) => {
-    setCartItems((current = []) => {
-      const safeArray = Array.isArray(current) ? current : []
-      const existingItem = safeArray.find(
-        item => item.restaurantId === restaurantId && item.menuItem.id === menuItem.id
-      )
-
-      if (existingItem) {
-        toast.success('Added to cart', {
-          description: `${menuItem.name} (x${existingItem.quantity + 1})`,
-          duration: 2000,
-        })
-        return safeArray.map(item =>
-          item.restaurantId === restaurantId && item.menuItem.id === menuItem.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        )
-      }
-
-      toast.success('Added to cart', {
-        description: menuItem.name,
-        duration: 2000,
-      })
-      return [...safeArray, { restaurantId, restaurantName, menuItem, quantity: 1 }]
+  const handleAddToCart = (menuItem: MenuItem) => {
+    addToCart(restaurantId, restaurantName, menuItem)
+    const quantity = getItemQuantity(restaurantId, menuItem.id)
+    toast.success('Added to cart', {
+      description: `${menuItem.name} (x${quantity + 1})`,
+      duration: 2000,
     })
-  }
-
-  const getItemQuantity = (menuItemId: string) => {
-    if (!safeCartItems || !Array.isArray(safeCartItems)) return 0
-    const item = safeCartItems.find(
-      item => item.restaurantId === restaurantId && item.menuItem.id === menuItemId
-    )
-    return item?.quantity || 0
   }
 
   const categorizedItems = menuItems.reduce((acc, item) => {
@@ -106,13 +76,13 @@ export default function TastingMenu({ restaurantId, restaurantName, description,
 
             <div className="space-y-5 sm:space-y-6">
               {items.map((item) => {
-                const quantity = getItemQuantity(item.id)
+                const quantity = getItemQuantity(restaurantId, item.id)
                 
                 return (
                   <div 
                     key={item.id} 
                     className="group flex justify-between items-start gap-3 sm:gap-4 cursor-pointer hover:bg-accent/5 -mx-2 px-2 py-2 rounded-sm transition-colors duration-200"
-                    onClick={() => addToCart(item)}
+                    onClick={() => handleAddToCart(item)}
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-baseline gap-2 mb-1">

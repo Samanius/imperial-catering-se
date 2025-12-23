@@ -1,8 +1,7 @@
 import { ShoppingBag, UserCircle, ArrowLeft } from '@phosphor-icons/react'
 import { Button } from './ui/button'
 import { Badge } from './ui/badge'
-import { useKV } from '@github/spark/hooks'
-import type { CartItem } from '@/lib/types'
+import { useCart } from '@/hooks/use-cart'
 
 interface HeaderProps {
   onAdminClick: () => void
@@ -19,11 +18,7 @@ export default function Header({
   showBackButton,
   onBackClick 
 }: HeaderProps) {
-  const [cartItems = []] = useKV<CartItem[]>('cart-items', [])
-  
-  const totalItems = Array.isArray(cartItems) 
-    ? cartItems.reduce((sum, item) => sum + item.quantity, 0)
-    : 0
+  const { totalItems } = useCart()
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">

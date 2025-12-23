@@ -1,12 +1,10 @@
-import { useKV } from '@github/spark/hooks'
 import { useIsMobile } from '@/hooks/use-mobile'
-import { useMemo } from 'react'
+import { useCart } from '@/hooks/use-cart'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from './ui/drawer'
 import { Button } from './ui/button'
 import { ScrollArea } from './ui/scroll-area'
 import { Separator } from './ui/separator'
 import { X, Plus, Minus, WhatsappLogo } from '@phosphor-icons/react'
-import type { CartItem } from '@/lib/types'
 import { toast } from 'sonner'
 
 interface CartDrawerProps {
@@ -15,54 +13,11 @@ interface CartDrawerProps {
 }
 
 export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
-  const [cartItems = [], setCartItems] = useKV<CartItem[]>('cart-items', [])
+  const { cartItems, updateQuantity, removeItem, totalPrice, groupedByRestaurant } = useCart()
   const isMobile = useIsMobile()
 
-  const safeCartItems = useMemo(() => {
-    return Array.isArray(cartItems) ? cartItems : []
-  }, [cartItems])
-
-  const updateQuantity = (restaurantId: string, menuItemId: string, delta: number) => {
-    setCartItems((current = []) => {
-      const safeArray = Array.isArray(current) ? current : []
-      return safeArray.map(item => {
-        if (item.restaurantId === restaurantId && item.menuItem.id === menuItemId) {
-          const newQuantity = item.quantity + delta
-          return newQuantity > 0 ? { ...item, quantity: newQuantity } : null
-        }
-        return item
-      }).filter(Boolean) as CartItem[]
-    })
-  }
-
-  const removeItem = (restaurantId: string, menuItemId: string) => {
-    setCartItems((current = []) => {
-      const safeArray = Array.isArray(current) ? current : []
-      return safeArray.filter(
-        item => !(item.restaurantId === restaurantId && item.menuItem.id === menuItemId)
-      )
-    })
-  }
-
-  const calculateTotal = () => {
-    return safeCartItems.reduce((sum, item) => sum + (item.menuItem.price * item.quantity), 0)
-  }
-
-  const groupedByRestaurant = useMemo(() => {
-    return safeCartItems.reduce((acc, item) => {
-      if (!acc[item.restaurantId]) {
-        acc[item.restaurantId] = {
-          restaurantName: item.restaurantName,
-          items: []
-        }
-      }
-      acc[item.restaurantId].items.push(item)
-      return acc
-    }, {} as Record<string, { restaurantName: string; items: CartItem[] }>)
-  }, [safeCartItems])
-
   const handleSendOrder = () => {
-    if (safeCartItems.length === 0) {
+    if (cartItems.length === 0) {
       toast.error('Your cart is empty')
       return
     }
@@ -78,15 +33,13 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
       message += '%0A'
     })
 
-    message += `*Total: $${calculateTotal().toFixed(2)}*`
+    message += `*Total: $${totalPrice.toFixed(2)}*`
 
     const whatsappNumber = '971528355939'
     window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank')
     
     toast.success('Opening WhatsApp...')
   }
-
-  const total = calculateTotal()
 
   return (
     <Drawer open={isOpen} onOpenChange={onClose}>
@@ -108,7 +61,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           </div>
         </DrawerHeader>
 
-        {safeCartItems.length === 0 ? (
+        {cartItems.length === 0 ? (
           <div className="flex-1 flex items-center justify-center text-center p-6 sm:p-8">
             <div>
               <p className="font-heading text-xl sm:text-2xl text-muted-foreground mb-2">
@@ -207,7 +160,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               <div className="flex justify-between items-center">
                 <span className="font-heading text-lg sm:text-xl">Total</span>
                 <span className="font-heading text-xl sm:text-2xl font-semibold">
-                  ${total.toFixed(2)}
+                  ${totalPrice.toFixed(2)}
                 </span>
               </div>
 
