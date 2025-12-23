@@ -1,6 +1,7 @@
 import { useKV } from '@github/spark/hooks'
 import type { Restaurant } from '@/lib/types'
 import RestaurantCard from './RestaurantCard'
+import heroVideo from '@/assets/video/41347-429396488_medium.mp4'
 
 interface RestaurantCatalogProps {
   onRestaurantSelect: (id: string) => void
@@ -12,9 +13,17 @@ export default function RestaurantCatalog({ onRestaurantSelect }: RestaurantCata
   return (
     <main className="pt-20">
       <section className="relative h-[85vh] overflow-hidden flex items-center justify-center">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/60 via-primary/40 to-background" />
+        <video 
+          autoPlay 
+          muted 
+          loop 
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        >
+          <source src={heroVideo} type="video/mp4" />
+        </video>
         
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,oklch(0.25_0.05_250),transparent_50%)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/60 via-primary/40 to-background" />
         
         <div className="relative z-10 text-center px-6 max-w-4xl">
           <h1 className="font-heading text-6xl md:text-7xl font-semibold text-card tracking-wide leading-tight mb-6">
