@@ -67,7 +67,15 @@ This platform requires restaurant management, menu systems (both visual and PDF)
 
 **Image Loading** - Progressive blur-up loading with skeleton screens in brand colors, never broken image icons
 
-**Mobile Experience** - Masonry grid becomes single column, hero videos replaced with static images, sticky elements adjust appropriately
+**Mobile Experience (PRIMARY)** - **90% of users are on mobile.** Full mobile-first approach with:
+  - Reduced hero video heights (60vh mobile vs 85vh desktop)
+  - Touch-optimized buttons (44px+ touch targets)
+  - Always-visible "Add" buttons on mobile (no hover-only states)
+  - Full-width sticky CTAs at bottom on mobile
+  - Optimized typography scales (smaller on mobile, larger on desktop)
+  - Single-column grid layouts on mobile
+  - Larger icon sizes for easier tapping
+  - Full-height drawers and modals on mobile
 
 **WhatsApp Unavailable** - Fallback to mailto or display formatted order for manual copying
 
@@ -156,10 +164,15 @@ Animations should feel like the gentle motion of a yacht at anchor - present but
 - Text line height of 1.7 for body copy
 
 **Mobile**: 
-- Masonry becomes single column with full-width cards
-- Hero reduces to 50vh with static image
-- Tabs become full-width buttons
-- Sticky cart button floats at bottom
-- Touch targets minimum 48px
-- Drawer becomes full-screen on mobile
-- Admin panel stacks form fields vertically
+- **PRIMARY FOCUS: Mobile-first design for 90% of user base**
+- Touch targets minimum 44px for all interactive elements
+- Hero sections: 60vh on mobile, 70vh on tablet, 85vh on desktop
+- Single-column grid layout on mobile, responsive to 2-3 columns on larger screens
+- Always-visible action buttons (no hover-only states on touch devices)
+- Full-width sticky CTAs at bottom of screen on mobile
+- Larger icon sizes (24px) and padding on mobile for easier tapping
+- Drawer/cart becomes full-height (95vh) on mobile
+- Optimized typography scaling: smaller base sizes on mobile with proper line-height
+- Header logo adapts: full tagline hidden on mobile, logo size reduced
+- Tabs and form elements stack appropriately with adequate spacing
+- Concierge button: full-width fixed at bottom on mobile, centered floating on desktop

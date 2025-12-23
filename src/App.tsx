@@ -57,7 +57,7 @@ function App() {
 
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
       
-      <Toaster position="top-center" />
+      <Toaster position="top-center" richColors closeButton />
     </div>
   )
 }

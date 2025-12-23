@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Plus, Minus } from '@phosphor-icons/react'
 import { useKV } from '@github/spark/hooks'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
 import type { MenuItem, CartItem } from '@/lib/types'
@@ -21,6 +22,7 @@ export default function VisualMenu({
 }: VisualMenuProps) {
   const [cartItems = [], setCartItems] = useKV<CartItem[]>('cart-items', [])
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
+  const isMobile = useIsMobile()
 
   const addToCart = (menuItem: MenuItem) => {
     setCartItems((current = []) => {
@@ -74,14 +76,14 @@ export default function VisualMenu({
     : [{ category: 'Menu', items: menuItems }]
 
   return (
-    <div className="space-y-16">
+    <div className="space-y-12 sm:space-y-16 max-w-7xl mx-auto">
       {categorizedItems.map(({ category, items }) => (
         <div key={category}>
-          <h2 className="font-heading text-3xl font-semibold mb-8 text-center tracking-wide">
+          <h2 className="font-heading text-2xl sm:text-3xl font-semibold mb-6 sm:mb-8 text-center tracking-wide">
             {category}
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {items.map((item) => {
               const quantity = getItemQuantity(item.id)
               const isHovered = hoveredItem === item.id
@@ -90,8 +92,8 @@ export default function VisualMenu({
                 <Card
                   key={item.id}
                   className="group relative overflow-hidden border-border hover:shadow-md transition-all duration-300"
-                  onMouseEnter={() => setHoveredItem(item.id)}
-                  onMouseLeave={() => setHoveredItem(null)}
+                  onMouseEnter={() => !isMobile && setHoveredItem(item.id)}
+                  onMouseLeave={() => !isMobile && setHoveredItem(null)}
                 >
                   {item.image && (
                     <div className="aspect-square overflow-hidden bg-muted">
@@ -103,18 +105,18 @@ export default function VisualMenu({
                     </div>
                   )}
 
-                  <div className="p-6">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-heading text-xl font-semibold">
+                  <div className="p-4 sm:p-5 md:p-6">
+                    <div className="flex justify-between items-start mb-2 gap-2">
+                      <h3 className="font-heading text-lg sm:text-xl font-semibold flex-1">
                         {item.name}
                       </h3>
-                      <span className="font-body text-lg font-medium text-muted-foreground ml-4">
+                      <span className="font-body text-base sm:text-lg font-medium text-muted-foreground flex-shrink-0">
                         ${item.price}
                       </span>
                     </div>
 
                     {item.description && (
-                      <p className="font-body text-sm text-muted-foreground leading-relaxed mb-4">
+                      <p className="font-body text-xs sm:text-sm text-muted-foreground leading-relaxed mb-3 sm:mb-4">
                         {item.description}
                       </p>
                     )}
@@ -122,28 +124,30 @@ export default function VisualMenu({
                     {quantity === 0 ? (
                       <div
                         className={`transition-opacity duration-300 ${
-                          isHovered ? 'opacity-100' : 'opacity-0'
+                          isMobile || isHovered ? 'opacity-100' : 'opacity-0'
                         }`}
                       >
                         <Button
                           onClick={() => addToCart(item)}
                           variant="outline"
                           size="sm"
-                          className="w-full border-accent text-accent-foreground hover:bg-accent/10"
+                          className="w-full border-accent text-accent-foreground hover:bg-accent/10 h-10 sm:h-9 text-sm"
                         >
-                          <Plus size={16} weight="bold" className="mr-2" />
+                          <Plus size={18} weight="bold" className="mr-2 sm:hidden" />
+                          <Plus size={16} weight="bold" className="mr-2 hidden sm:block" />
                           Add
                         </Button>
                       </div>
                     ) : (
-                      <div className="flex items-center justify-between bg-accent/10 rounded-sm px-3 py-2">
+                      <div className="flex items-center justify-between bg-accent/10 rounded-sm px-3 py-2.5 sm:py-2">
                         <Button
                           onClick={() => updateQuantity(item.id, -1)}
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 hover:bg-accent/20"
+                          className="h-9 w-9 sm:h-8 sm:w-8 hover:bg-accent/20"
                         >
-                          <Minus size={16} weight="bold" />
+                          <Minus size={18} weight="bold" className="sm:hidden" />
+                          <Minus size={16} weight="bold" className="hidden sm:block" />
                         </Button>
                         <span className="font-body font-medium text-lg">
                           {quantity}
@@ -152,9 +156,10 @@ export default function VisualMenu({
                           onClick={() => updateQuantity(item.id, 1)}
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 hover:bg-accent/20"
+                          className="h-9 w-9 sm:h-8 sm:w-8 hover:bg-accent/20"
                         >
-                          <Plus size={16} weight="bold" />
+                          <Plus size={18} weight="bold" className="sm:hidden" />
+                          <Plus size={16} weight="bold" className="hidden sm:block" />
                         </Button>
                       </div>
                     )}
