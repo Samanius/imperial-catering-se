@@ -19,7 +19,7 @@ interface TastingMenuProps {
 export default function TastingMenu({ restaurantId, restaurantName, description, menuItems }: TastingMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [orderMessage, setOrderMessage] = useState('')
-  const { addToCart, getItemQuantity, cartItems } = useCart()
+  const { addToCart, getItemQuantity } = useCart()
   const isMobile = useIsMobile()
 
   const handleConciergeOrder = () => {
