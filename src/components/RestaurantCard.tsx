@@ -63,6 +63,21 @@ export default function RestaurantCard({ restaurant, isWide, onClick }: Restaura
           ))}
         </div>
 
+        {(restaurant.minimumOrderAmount || restaurant.orderDeadlineHours) && (
+          <div className="mb-4 space-y-1">
+            {restaurant.minimumOrderAmount && (
+              <p className="font-body text-xs text-muted-foreground">
+                Min. order: ${restaurant.minimumOrderAmount}
+              </p>
+            )}
+            {restaurant.orderDeadlineHours && (
+              <p className="font-body text-xs text-muted-foreground">
+                Order {restaurant.orderDeadlineHours}h before charter
+              </p>
+            )}
+          </div>
+        )}
+
         <div
           className={`transition-opacity duration-300 ${
             isMobile || isHovered ? 'opacity-100' : 'opacity-0'

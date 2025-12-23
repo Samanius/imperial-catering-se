@@ -33,7 +33,9 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
     galleryImages: [],
     menuItems: [],
     tastingMenuDescription: '',
-    categories: []
+    categories: [],
+    minimumOrderAmount: undefined,
+    orderDeadlineHours: undefined
   })
 
   const [newTag, setNewTag] = useState('')
@@ -63,7 +65,9 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       galleryImages: [],
       menuItems: [],
       tastingMenuDescription: '',
-      categories: []
+      categories: [],
+      minimumOrderAmount: undefined,
+      orderDeadlineHours: undefined
     })
   }
 
@@ -193,7 +197,9 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       galleryImages: formData.galleryImages || [],
       menuItems: formData.menuItems || [],
       tastingMenuDescription: formData.tastingMenuDescription || '',
-      categories: formData.categories || []
+      categories: formData.categories || [],
+      minimumOrderAmount: formData.minimumOrderAmount ? Number(formData.minimumOrderAmount) : undefined,
+      orderDeadlineHours: formData.orderDeadlineHours ? Number(formData.orderDeadlineHours) : undefined
     }
 
     if (selectedRestaurant) {
@@ -403,6 +409,30 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                           <SelectItem value="both">Both</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="minimumOrderAmount">Minimum Order Amount ($)</Label>
+                        <Input
+                          id="minimumOrderAmount"
+                          type="number"
+                          value={formData.minimumOrderAmount || ''}
+                          onChange={(e) => setFormData(prev => ({ ...prev, minimumOrderAmount: e.target.value ? Number(e.target.value) : undefined }))}
+                          placeholder="0"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="orderDeadlineHours">Order Deadline (hours before charter)</Label>
+                        <Input
+                          id="orderDeadlineHours"
+                          type="number"
+                          value={formData.orderDeadlineHours || ''}
+                          onChange={(e) => setFormData(prev => ({ ...prev, orderDeadlineHours: e.target.value ? Number(e.target.value) : undefined }))}
+                          placeholder="24"
+                        />
+                      </div>
                     </div>
 
                     {(formData.menuType === 'tasting' || formData.menuType === 'both') && (

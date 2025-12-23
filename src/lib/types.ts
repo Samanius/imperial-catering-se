@@ -23,6 +23,8 @@ export interface Restaurant {
   menuItems?: MenuItem[]
   tastingMenuDescription?: string
   categories?: string[]
+  minimumOrderAmount?: number
+  orderDeadlineHours?: number
 }
 
 export interface CartItem {
