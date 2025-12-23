@@ -117,12 +117,18 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 <div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
                   {Object.entries(groupedByRestaurant).map(([restaurantId, { restaurantName, items }]) => {
                     const restaurantService = cart?.services?.find(s => s.restaurantId === restaurantId)
+                    const restaurantItemsTotal = items.reduce((sum, item) => sum + (item.menuItem.price * item.quantity), 0)
                     
                     return (
                       <div key={restaurantId}>
-                        <h3 className="font-heading text-lg sm:text-xl font-semibold mb-3 sm:mb-4">
-                          {restaurantName}
-                        </h3>
+                        <div className="flex items-center justify-between mb-3 sm:mb-4">
+                          <h3 className="font-heading text-lg sm:text-xl font-semibold">
+                            {restaurantName}
+                          </h3>
+                          <span className="font-body text-sm sm:text-base font-medium text-muted-foreground">
+                            ${restaurantItemsTotal.toFixed(2)}
+                          </span>
+                        </div>
                         
                         <div className="space-y-4">
                           {items.map((item) => (
