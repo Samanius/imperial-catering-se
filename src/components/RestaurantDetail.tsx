@@ -16,20 +16,9 @@ export default function RestaurantDetail({ restaurantId }: RestaurantDetailProps
   const isMobile = useIsMobile()
   
   const restaurant = restaurants?.find(r => r.id === restaurantId)
-  const isLoading = restaurants === undefined
-
-  if (isLoading) {
-    return null
-  }
 
   if (!restaurant) {
-    return (
-      <div className="pt-24 sm:pt-32 pb-16 sm:pb-24 text-center px-4">
-        <p className="font-heading text-xl sm:text-2xl text-muted-foreground">
-          Restaurant not found
-        </p>
-      </div>
-    )
+    return null
   }
 
   const galleryImages = [restaurant.coverImage, ...restaurant.galleryImages].filter(Boolean)
