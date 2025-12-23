@@ -1,13 +1,18 @@
 import { useKV } from '@github/spark/hooks'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState, useEffect } from 'react'
 import type { CartItem, MenuItem } from '@/lib/types'
 
 export function useCart() {
   const [cartItems, setCartItems] = useKV<CartItem[]>('cart-items', [])
+  const [updateTrigger, setUpdateTrigger] = useState(0)
+
+  useEffect(() => {
+    setUpdateTrigger(prev => prev + 1)
+  }, [cartItems])
 
   const safeCartItems = useMemo(() => {
     return Array.isArray(cartItems) ? cartItems : []
-  }, [cartItems])
+  }, [cartItems, updateTrigger])
 
   const addToCart = useCallback((
     restaurantId: string,
@@ -65,20 +70,22 @@ export function useCart() {
       quantities[key] = item.quantity
     })
     return quantities
-  }, [safeCartItems])
+  }, [safeCartItems, updateTrigger])
 
   const getItemQuantity = useCallback((restaurantId: string, menuItemId: string) => {
-    const key = `${restaurantId}-${menuItemId}`
-    return itemQuantities[key] || 0
-  }, [itemQuantities])
+    const item = safeCartItems.find(
+      item => item.restaurantId === restaurantId && item.menuItem.id === menuItemId
+    )
+    return item ? item.quantity : 0
+  }, [safeCartItems])
 
   const totalItems = useMemo(() => {
     return safeCartItems.reduce((sum, item) => sum + item.quantity, 0)
-  }, [safeCartItems])
+  }, [safeCartItems, updateTrigger])
 
   const totalPrice = useMemo(() => {
     return safeCartItems.reduce((sum, item) => sum + (item.menuItem.price * item.quantity), 0)
-  }, [safeCartItems])
+  }, [safeCartItems, updateTrigger])
 
   const groupedByRestaurant = useMemo(() => {
     return safeCartItems.reduce((acc, item) => {
@@ -91,7 +98,7 @@ export function useCart() {
       acc[item.restaurantId].items.push(item)
       return acc
     }, {} as Record<string, { restaurantName: string; items: CartItem[] }>)
-  }, [safeCartItems])
+  }, [safeCartItems, updateTrigger])
 
   const clearCart = useCallback(() => {
     setCartItems([])

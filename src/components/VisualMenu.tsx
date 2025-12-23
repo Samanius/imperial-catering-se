@@ -20,7 +20,7 @@ export default function VisualMenu({
   menuItems, 
   categories 
 }: VisualMenuProps) {
-  const { addToCart, updateQuantity, getItemQuantity } = useCart()
+  const { addToCart, updateQuantity, getItemQuantity, cartItems } = useCart()
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
   const isMobile = useIsMobile()
 
