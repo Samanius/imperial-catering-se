@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
@@ -7,11 +7,12 @@ import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { Separator } from './ui/separator'
-import { ArrowLeft, Plus, Trash, Upload, PencilSimple, Check, X } from '@phosphor-icons/react'
+import { ArrowLeft, Plus, Trash, Upload, PencilSimple, Check, X, ClockCounterClockwise, DownloadSimple } from '@phosphor-icons/react'
 import type { Restaurant, MenuItem, MenuType } from '@/lib/types'
 import { toast } from 'sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 import { ScrollArea } from './ui/scroll-area'
+import { createBackup, getBackups, exportBackupsAsJSON, type BackupEntry } from '@/lib/backup'
 
 interface AdminPanelProps {
   onBack: () => void
@@ -21,6 +22,8 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
   const [restaurants = [], setRestaurants] = useKV<Restaurant[]>('restaurants', [])
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
   const [isCreating, setIsCreating] = useState(false)
+  const [backups, setBackups] = useState<BackupEntry[]>([])
+  const [activeTab, setActiveTab] = useState<'restaurants' | 'backups'>('restaurants')
 
   const [formData, setFormData] = useState<Partial<Restaurant>>({
     name: '',
@@ -52,6 +55,33 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
   })
   const [editingItemId, setEditingItemId] = useState<string | null>(null)
   const [editingItemData, setEditingItemData] = useState<MenuItem | null>(null)
+
+  useEffect(() => {
+    loadBackups()
+  }, [])
+
+  const loadBackups = async () => {
+    const allBackups = await getBackups()
+    setBackups(allBackups)
+  }
+
+  const downloadBackups = async () => {
+    try {
+      const json = await exportBackupsAsJSON()
+      const blob = new Blob([json], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `meridien-backups-${new Date().toISOString().split('T')[0]}.json`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      toast.success('Backups exported successfully')
+    } catch (error) {
+      toast.error('Failed to export backups')
+    }
+  }
 
   const startCreating = () => {
     setIsCreating(true)
@@ -183,7 +213,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
     setEditingItemData(null)
   }
 
-  const saveRestaurant = () => {
+  const saveRestaurant = async () => {
     if (!formData.name || !formData.story) {
       toast.error('Please fill required fields')
       return
@@ -209,23 +239,31 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
     }
 
     if (selectedRestaurant) {
+      await createBackup('update', 'restaurant', restaurant.id, restaurant.name, restaurant, selectedRestaurant)
       setRestaurants((current = []) => 
         current.map(r => r.id === restaurant.id ? restaurant : r)
       )
       toast.success('Restaurant updated')
     } else {
+      await createBackup('create', 'restaurant', restaurant.id, restaurant.name, restaurant)
       setRestaurants((current = []) => [...current, restaurant])
       toast.success('Restaurant created')
     }
 
+    await loadBackups()
     setIsCreating(false)
     setSelectedRestaurant(null)
   }
 
-  const deleteRestaurant = (id: string) => {
+  const deleteRestaurant = async (id: string) => {
+    const restaurantToDelete = restaurants.find(r => r.id === id)
+    if (!restaurantToDelete) return
+    
     if (confirm('Are you sure you want to delete this restaurant?')) {
+      await createBackup('delete', 'restaurant', id, restaurantToDelete.name, restaurantToDelete)
       setRestaurants((current = []) => current.filter(r => r.id !== id))
       toast.success('Restaurant deleted')
+      await loadBackups()
     }
   }
 
@@ -256,7 +294,17 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'restaurants' | 'backups')} className="w-full">
+          <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
+            <TabsTrigger value="restaurants">Restaurants</TabsTrigger>
+            <TabsTrigger value="backups">
+              <ClockCounterClockwise size={16} className="mr-2" />
+              Backups ({backups.length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="restaurants" className="mt-0">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">{/* ... restaurant management UI ... */}
           <Card className="p-6 lg:col-span-1">
             <h2 className="font-heading text-xl font-semibold mb-4">
               Restaurants
@@ -703,6 +751,82 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
             )}
           </Card>
         </div>
+          </TabsContent>
+
+          <TabsContent value="backups" className="mt-0">
+            <Card className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="font-heading text-2xl font-semibold">
+                    Data Backups Archive
+                  </h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Automatic backup of all admin changes
+                  </p>
+                </div>
+                <Button
+                  onClick={downloadBackups}
+                  variant="outline"
+                  className="gap-2"
+                >
+                  <DownloadSimple size={16} />
+                  Export JSON
+                </Button>
+              </div>
+
+              <ScrollArea className="h-[calc(100vh-300px)]">
+                <div className="space-y-3">
+                  {backups.length === 0 ? (
+                    <div className="text-center py-12">
+                      <ClockCounterClockwise size={48} className="mx-auto mb-3 text-muted-foreground" />
+                      <p className="text-muted-foreground">
+                        No backups yet. All changes will be automatically archived here.
+                      </p>
+                    </div>
+                  ) : (
+                    backups
+                      .sort((a, b) => b.timestamp - a.timestamp)
+                      .map((backup, index) => (
+                        <Card key={index} className="p-4">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span
+                                  className={`px-2 py-0.5 text-xs font-medium rounded ${
+                                    backup.action === 'create'
+                                      ? 'bg-green-500/10 text-green-700'
+                                      : backup.action === 'update'
+                                      ? 'bg-blue-500/10 text-blue-700'
+                                      : 'bg-red-500/10 text-red-700'
+                                  }`}
+                                >
+                                  {backup.action.toUpperCase()}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {new Date(backup.timestamp).toLocaleString()}
+                                </span>
+                              </div>
+                              <p className="font-heading font-medium">
+                                {backup.entityName}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                ID: {backup.entityId}
+                              </p>
+                              {backup.action === 'update' && backup.previousData && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Previous version saved
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </Card>
+                      ))
+                  )}
+                </div>
+              </ScrollArea>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   )
