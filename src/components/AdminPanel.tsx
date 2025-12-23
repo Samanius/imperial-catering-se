@@ -43,7 +43,8 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
     description: '',
     price: 0,
     image: '',
-    category: ''
+    category: '',
+    weight: undefined
   })
 
   const startCreating = () => {
@@ -116,7 +117,8 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       description: newMenuItem.description || '',
       price: Number(newMenuItem.price),
       image: newMenuItem.image || '',
-      category: newMenuItem.category || 'Uncategorized'
+      category: newMenuItem.category || 'Uncategorized',
+      weight: newMenuItem.weight ? Number(newMenuItem.weight) : undefined
     }
 
     setFormData(prev => ({
@@ -129,7 +131,8 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       description: '',
       price: 0,
       image: '',
-      category: ''
+      category: '',
+      weight: undefined
     })
 
     toast.success('Menu item added')
@@ -450,9 +453,16 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                               onChange={(e) => setNewMenuItem(prev => ({ ...prev, category: e.target.value }))}
                             />
                             <Input
+                              type="number"
+                              placeholder="Weight (g)"
+                              value={newMenuItem.weight || ''}
+                              onChange={(e) => setNewMenuItem(prev => ({ ...prev, weight: e.target.value ? Number(e.target.value) : undefined }))}
+                            />
+                            <Input
                               placeholder="Image URL"
                               value={newMenuItem.image}
                               onChange={(e) => setNewMenuItem(prev => ({ ...prev, image: e.target.value }))}
+                              className="md:col-span-2"
                             />
                             <Textarea
                               placeholder="Description"
@@ -475,7 +485,12 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                                 <div className="flex-1 min-w-0">
                                   <p className="font-medium truncate">{item.name}</p>
                                   <p className="text-sm text-muted-foreground">{item.category}</p>
-                                  <p className="text-sm font-medium">${item.price}</p>
+                                  <div className="flex gap-2 items-center text-sm font-medium">
+                                    <span>${item.price}</span>
+                                    {item.weight && (
+                                      <span className="text-muted-foreground">• {item.weight}g</span>
+                                    )}
+                                  </div>
                                 </div>
                                 <Button
                                   variant="ghost"

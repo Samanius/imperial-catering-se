@@ -115,6 +115,12 @@ export default function VisualMenu({
                       </span>
                     </div>
 
+                    {item.weight && (
+                      <p className="font-body text-xs sm:text-sm text-accent-foreground mb-1">
+                        {item.weight}g
+                      </p>
+                    )}
+
                     {item.description && (
                       <p className="font-body text-xs sm:text-sm text-muted-foreground leading-relaxed mb-3 sm:mb-4">
                         {item.description}

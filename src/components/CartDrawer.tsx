@@ -133,9 +133,16 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                             
                             <div className="flex-1 min-w-0">
                               <div className="flex justify-between items-start mb-2 gap-2">
-                                <h4 className="font-body font-medium text-sm sm:text-base line-clamp-2 flex-1">
-                                  {item.menuItem.name}
-                                </h4>
+                                <div className="flex-1">
+                                  <h4 className="font-body font-medium text-sm sm:text-base line-clamp-2">
+                                    {item.menuItem.name}
+                                  </h4>
+                                  {item.menuItem.weight && (
+                                    <p className="font-body text-xs text-accent-foreground mt-0.5">
+                                      {item.menuItem.weight}g
+                                    </p>
+                                  )}
+                                </div>
                                 <Button
                                   variant="ghost"
                                   size="icon"

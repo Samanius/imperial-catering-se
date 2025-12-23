@@ -109,9 +109,16 @@ export default function TastingMenu({ restaurantId, restaurantName, description,
                     onClick={() => addToCart(item)}
                   >
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-heading text-base sm:text-lg font-medium mb-1">
-                        {item.name}
-                      </h4>
+                      <div className="flex items-baseline gap-2 mb-1">
+                        <h4 className="font-heading text-base sm:text-lg font-medium">
+                          {item.name}
+                        </h4>
+                        {item.weight && (
+                          <span className="font-body text-xs text-accent-foreground whitespace-nowrap">
+                            {item.weight}g
+                          </span>
+                        )}
+                      </div>
                       {item.description && (
                         <p className="font-body text-xs sm:text-sm text-muted-foreground leading-relaxed">
                           {item.description}
