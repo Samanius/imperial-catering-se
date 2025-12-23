@@ -5,6 +5,7 @@ import type { Restaurant } from '@/lib/types'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs'
 import VisualMenu from './VisualMenu'
 import TastingMenu from './TastingMenu'
+import ServiceSelector from './ServiceSelector'
 
 interface RestaurantDetailProps {
   restaurantId: string
@@ -101,6 +102,10 @@ export default function RestaurantDetail({ restaurantId }: RestaurantDetailProps
               )}
             </div>
           </div>
+        )}
+
+        {(restaurant.chefServicePrice || restaurant.waiterServicePrice) && (
+          <ServiceSelector restaurant={restaurant} />
         )}
       </section>
 

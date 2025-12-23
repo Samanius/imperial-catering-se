@@ -78,6 +78,18 @@ export default function RestaurantCard({ restaurant, isWide, onClick }: Restaura
           </div>
         )}
 
+        {(restaurant.chefServicePrice || restaurant.waiterServicePrice) && (
+          <div className="mb-4">
+            <p className="font-body text-xs text-accent font-medium">
+              {restaurant.chefServicePrice && restaurant.waiterServicePrice
+                ? 'Chef & Waiter Services Available'
+                : restaurant.chefServicePrice
+                ? 'Chef Service Available'
+                : 'Waiter Service Available'}
+            </p>
+          </div>
+        )}
+
         <div
           className={`transition-opacity duration-300 ${
             isMobile || isHovered ? 'opacity-100' : 'opacity-0'

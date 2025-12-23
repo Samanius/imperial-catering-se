@@ -35,7 +35,9 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
     tastingMenuDescription: '',
     categories: [],
     minimumOrderAmount: undefined,
-    orderDeadlineHours: undefined
+    orderDeadlineHours: undefined,
+    chefServicePrice: undefined,
+    waiterServicePrice: undefined
   })
 
   const [newTag, setNewTag] = useState('')
@@ -67,7 +69,9 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       tastingMenuDescription: '',
       categories: [],
       minimumOrderAmount: undefined,
-      orderDeadlineHours: undefined
+      orderDeadlineHours: undefined,
+      chefServicePrice: undefined,
+      waiterServicePrice: undefined
     })
   }
 
@@ -199,7 +203,9 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       tastingMenuDescription: formData.tastingMenuDescription || '',
       categories: formData.categories || [],
       minimumOrderAmount: formData.minimumOrderAmount ? Number(formData.minimumOrderAmount) : undefined,
-      orderDeadlineHours: formData.orderDeadlineHours ? Number(formData.orderDeadlineHours) : undefined
+      orderDeadlineHours: formData.orderDeadlineHours ? Number(formData.orderDeadlineHours) : undefined,
+      chefServicePrice: formData.chefServicePrice ? Number(formData.chefServicePrice) : undefined,
+      waiterServicePrice: formData.waiterServicePrice ? Number(formData.waiterServicePrice) : undefined
     }
 
     if (selectedRestaurant) {
@@ -431,6 +437,28 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                           value={formData.orderDeadlineHours || ''}
                           onChange={(e) => setFormData(prev => ({ ...prev, orderDeadlineHours: e.target.value ? Number(e.target.value) : undefined }))}
                           placeholder="24"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="chefServicePrice">Chef Service Price ($)</Label>
+                        <Input
+                          id="chefServicePrice"
+                          type="number"
+                          value={formData.chefServicePrice || ''}
+                          onChange={(e) => setFormData(prev => ({ ...prev, chefServicePrice: e.target.value ? Number(e.target.value) : undefined }))}
+                          placeholder="0"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="waiterServicePrice">Waiter Service Price ($ per waiter)</Label>
+                        <Input
+                          id="waiterServicePrice"
+                          type="number"
+                          value={formData.waiterServicePrice || ''}
+                          onChange={(e) => setFormData(prev => ({ ...prev, waiterServicePrice: e.target.value ? Number(e.target.value) : undefined }))}
+                          placeholder="0"
                         />
                       </div>
                     </div>

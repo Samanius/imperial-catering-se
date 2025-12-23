@@ -1,0 +1,193 @@
+import { useState, useEffect } from 'react'
+import { useKV } from '@github/spark/hooks'
+import { Card } from './ui/card'
+import { Button } from './ui/button'
+import { Label } from './ui/label'
+import { Switch } from './ui/switch'
+import { Minus, Plus, ChefHat, UsersThree } from '@phosphor-icons/react'
+import type { Restaurant, Cart } from '@/lib/types'
+import { toast } from 'sonner'
+
+interface ServiceSelectorProps {
+  restaurant: Restaurant
+}
+
+export default function ServiceSelector({ restaurant }: ServiceSelectorProps) {
+  const [cart, setCart] = useKV<Cart>('cart', { items: [], total: 0, services: [] })
+  
+  const [chefSelected, setChefSelected] = useState(false)
+  const [waiterCount, setWaiterCount] = useState(0)
+
+  useEffect(() => {
+    const existingService = cart?.services?.find(s => s.restaurantId === restaurant.id)
+    if (existingService) {
+      setChefSelected(existingService.chefService || false)
+      setWaiterCount(existingService.waiterCount || 0)
+    }
+  }, [cart?.services, restaurant.id])
+
+  const updateServices = (newChefSelected: boolean, newWaiterCount: number) => {
+    setCart((currentCart) => {
+      if (!currentCart) {
+        currentCart = { items: [], total: 0, services: [] }
+      }
+      
+      const services = currentCart.services || []
+      const otherServices = services.filter(s => s.restaurantId !== restaurant.id)
+      
+      if (!newChefSelected && newWaiterCount === 0) {
+        return {
+          ...currentCart,
+          items: currentCart.items || [],
+          total: currentCart.total || 0,
+          services: otherServices
+        }
+      }
+
+      const newService = {
+        restaurantId: restaurant.id,
+        restaurantName: restaurant.name,
+        chefService: newChefSelected,
+        waiterCount: newWaiterCount,
+        chefServicePrice: restaurant.chefServicePrice,
+        waiterServicePrice: restaurant.waiterServicePrice
+      }
+
+      return {
+        ...currentCart,
+        items: currentCart.items || [],
+        total: currentCart.total || 0,
+        services: [...otherServices, newService]
+      }
+    })
+  }
+
+  const handleChefToggle = (checked: boolean) => {
+    setChefSelected(checked)
+    updateServices(checked, waiterCount)
+    if (checked) {
+      toast.success('Chef service added')
+    } else {
+      toast.success('Chef service removed')
+    }
+  }
+
+  const handleWaiterChange = (delta: number) => {
+    const newCount = Math.max(0, waiterCount + delta)
+    setWaiterCount(newCount)
+    updateServices(chefSelected, newCount)
+    
+    if (delta > 0) {
+      toast.success(`Waiter added (${newCount} total)`)
+    } else if (newCount === 0) {
+      toast.success('All waiters removed')
+    } else {
+      toast.success(`Waiter removed (${newCount} remaining)`)
+    }
+  }
+
+  const getTotalServiceCost = () => {
+    let total = 0
+    if (chefSelected && restaurant.chefServicePrice) {
+      total += restaurant.chefServicePrice
+    }
+    if (waiterCount > 0 && restaurant.waiterServicePrice) {
+      total += waiterCount * restaurant.waiterServicePrice
+    }
+    return total
+  }
+
+  return (
+    <Card className="mb-12 sm:mb-16 p-4 sm:p-6 border border-border bg-card/50">
+      <h3 className="font-heading text-lg sm:text-xl font-semibold mb-4">
+        Additional Services
+      </h3>
+      
+      <div className="space-y-6">
+        {restaurant.chefServicePrice && (
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-start gap-3 flex-1">
+              <div className="p-2 rounded-sm bg-accent/10 text-accent">
+                <ChefHat size={24} weight="duotone" />
+              </div>
+              <div>
+                <Label htmlFor="chef-service" className="text-base font-medium cursor-pointer">
+                  Chef Service
+                </Label>
+                <p className="text-sm text-muted-foreground mt-1">
+                  ${restaurant.chefServicePrice}
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="chef-service"
+              checked={chefSelected}
+              onCheckedChange={handleChefToggle}
+            />
+          </div>
+        )}
+
+        {restaurant.waiterServicePrice && (
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-sm bg-accent/10 text-accent">
+                <UsersThree size={24} weight="duotone" />
+              </div>
+              <div className="flex-1">
+                <Label className="text-base font-medium">
+                  Waiter Service
+                </Label>
+                <p className="text-sm text-muted-foreground mt-1">
+                  ${restaurant.waiterServicePrice} per waiter
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3 ml-11">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => handleWaiterChange(-1)}
+                disabled={waiterCount === 0}
+                className="h-9 w-9"
+              >
+                <Minus size={16} weight="bold" />
+              </Button>
+              
+              <div className="flex-1 text-center">
+                <span className="text-lg font-semibold">
+                  {waiterCount}
+                </span>
+                <span className="text-sm text-muted-foreground ml-2">
+                  {waiterCount === 1 ? 'waiter' : 'waiters'}
+                </span>
+              </div>
+              
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => handleWaiterChange(1)}
+                className="h-9 w-9"
+              >
+                <Plus size={16} weight="bold" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {getTotalServiceCost() > 0 && (
+          <div className="pt-4 border-t border-border">
+            <div className="flex justify-between items-center">
+              <span className="font-body text-sm text-muted-foreground">
+                Total service cost:
+              </span>
+              <span className="font-heading text-lg font-semibold">
+                ${getTotalServiceCost()}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+    </Card>
+  )
+}

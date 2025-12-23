@@ -25,6 +25,8 @@ export interface Restaurant {
   categories?: string[]
   minimumOrderAmount?: number
   orderDeadlineHours?: number
+  chefServicePrice?: number
+  waiterServicePrice?: number
 }
 
 export interface CartItem {
@@ -37,4 +39,12 @@ export interface CartItem {
 export interface Cart {
   items: CartItem[]
   total: number
+  services?: {
+    restaurantId: string
+    restaurantName: string
+    chefService?: boolean
+    waiterCount?: number
+    chefServicePrice?: number
+    waiterServicePrice?: number
+  }[]
 }
