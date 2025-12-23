@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { useIsMobile } from '@/hooks/use-mobile'
 import type { Restaurant } from '@/lib/types'
@@ -13,9 +13,20 @@ interface RestaurantDetailProps {
 export default function RestaurantDetail({ restaurantId }: RestaurantDetailProps) {
   const [restaurants] = useKV<Restaurant[]>('restaurants', [])
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [isLoading, setIsLoading] = useState(true)
   const isMobile = useIsMobile()
   
   const restaurant = restaurants?.find(r => r.id === restaurantId)
+
+  useEffect(() => {
+    if (restaurants && restaurants.length > 0) {
+      setIsLoading(false)
+    }
+  }, [restaurants])
+
+  if (isLoading) {
+    return null
+  }
 
   if (!restaurant) {
     return null
