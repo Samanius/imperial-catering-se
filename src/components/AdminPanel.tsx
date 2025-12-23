@@ -419,211 +419,207 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                     )}
                   </div>
 
-                  {(formData.menuType === 'visual' || formData.menuType === 'both') && (
-                    <>
-                      <Separator />
+                  <Separator />
 
-                      <div>
-                        <h3 className="font-heading text-xl font-semibold mb-4">
-                          Menu Categories
-                        </h3>
-                        <div className="flex gap-2 mb-4">
-                          <Input
-                            value={newCategory}
-                            onChange={(e) => setNewCategory(e.target.value)}
-                            placeholder="Starters"
-                            onKeyPress={(e) => e.key === 'Enter' && addCategory()}
-                          />
-                          <Button type="button" onClick={addCategory} size="icon">
-                            <Plus size={16} />
-                          </Button>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {(formData.categories || []).map((category, index) => (
-                            <span
-                              key={index}
-                              className="inline-flex items-center gap-1 px-3 py-1 bg-muted rounded-sm text-sm"
-                            >
-                              {category}
-                              <button
-                                onClick={() => removeCategory(index)}
-                                className="hover:text-destructive"
-                              >
-                                <Trash size={12} />
-                              </button>
-                            </span>
-                          ))}
-                        </div>
+                  <div>
+                    <h3 className="font-heading text-xl font-semibold mb-4">
+                      Menu Categories
+                    </h3>
+                    <div className="flex gap-2 mb-4">
+                      <Input
+                        value={newCategory}
+                        onChange={(e) => setNewCategory(e.target.value)}
+                        placeholder="Starters"
+                        onKeyPress={(e) => e.key === 'Enter' && addCategory()}
+                      />
+                      <Button type="button" onClick={addCategory} size="icon">
+                        <Plus size={16} />
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {(formData.categories || []).map((category, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center gap-1 px-3 py-1 bg-muted rounded-sm text-sm"
+                        >
+                          {category}
+                          <button
+                            onClick={() => removeCategory(index)}
+                            className="hover:text-destructive"
+                          >
+                            <Trash size={12} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h3 className="font-heading text-xl font-semibold mb-4">
+                      Menu Items
+                    </h3>
+
+                    <Card className="p-4 mb-4 bg-muted/30">
+                      <p className="text-sm font-semibold mb-3">Add Menu Item</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <Input
+                          placeholder="Item name"
+                          value={newMenuItem.name}
+                          onChange={(e) => setNewMenuItem(prev => ({ ...prev, name: e.target.value }))}
+                        />
+                        <Input
+                          type="number"
+                          placeholder="Price"
+                          value={newMenuItem.price || ''}
+                          onChange={(e) => setNewMenuItem(prev => ({ ...prev, price: Number(e.target.value) }))}
+                        />
+                        <Input
+                          placeholder="Category"
+                          value={newMenuItem.category}
+                          onChange={(e) => setNewMenuItem(prev => ({ ...prev, category: e.target.value }))}
+                        />
+                        <Input
+                          type="number"
+                          placeholder="Weight (g)"
+                          value={newMenuItem.weight || ''}
+                          onChange={(e) => setNewMenuItem(prev => ({ ...prev, weight: e.target.value ? Number(e.target.value) : undefined }))}
+                        />
+                        <Input
+                          placeholder="Image URL"
+                          value={newMenuItem.image}
+                          onChange={(e) => setNewMenuItem(prev => ({ ...prev, image: e.target.value }))}
+                          className="md:col-span-2"
+                        />
+                        <Textarea
+                          placeholder="Description"
+                          value={newMenuItem.description}
+                          onChange={(e) => setNewMenuItem(prev => ({ ...prev, description: e.target.value }))}
+                          className="md:col-span-2"
+                          rows={2}
+                        />
                       </div>
+                      <Button onClick={addMenuItem} className="mt-3 w-full" size="sm">
+                        <Plus size={16} className="mr-2" />
+                        Add Item
+                      </Button>
+                    </Card>
 
-                      <Separator />
-
-                      <div>
-                        <h3 className="font-heading text-xl font-semibold mb-4">
-                          Menu Items
-                        </h3>
-
-                        <Card className="p-4 mb-4 bg-muted/30">
-                          <p className="text-sm font-semibold mb-3">Add Menu Item</p>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <Input
-                              placeholder="Item name"
-                              value={newMenuItem.name}
-                              onChange={(e) => setNewMenuItem(prev => ({ ...prev, name: e.target.value }))}
-                            />
-                            <Input
-                              type="number"
-                              placeholder="Price"
-                              value={newMenuItem.price || ''}
-                              onChange={(e) => setNewMenuItem(prev => ({ ...prev, price: Number(e.target.value) }))}
-                            />
-                            <Input
-                              placeholder="Category"
-                              value={newMenuItem.category}
-                              onChange={(e) => setNewMenuItem(prev => ({ ...prev, category: e.target.value }))}
-                            />
-                            <Input
-                              type="number"
-                              placeholder="Weight (g)"
-                              value={newMenuItem.weight || ''}
-                              onChange={(e) => setNewMenuItem(prev => ({ ...prev, weight: e.target.value ? Number(e.target.value) : undefined }))}
-                            />
-                            <Input
-                              placeholder="Image URL"
-                              value={newMenuItem.image}
-                              onChange={(e) => setNewMenuItem(prev => ({ ...prev, image: e.target.value }))}
-                              className="md:col-span-2"
-                            />
-                            <Textarea
-                              placeholder="Description"
-                              value={newMenuItem.description}
-                              onChange={(e) => setNewMenuItem(prev => ({ ...prev, description: e.target.value }))}
-                              className="md:col-span-2"
-                              rows={2}
-                            />
-                          </div>
-                          <Button onClick={addMenuItem} className="mt-3 w-full" size="sm">
-                            <Plus size={16} className="mr-2" />
-                            Add Item
-                          </Button>
+                    <div className="space-y-2">
+                      {(formData.menuItems || []).map((item) => (
+                        <Card key={item.id} className="p-3">
+                          {editingItemId === item.id && editingItemData ? (
+                            <div className="space-y-3">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                  <Label className="text-xs">Name</Label>
+                                  <Input
+                                    placeholder="Item name"
+                                    value={editingItemData.name}
+                                    onChange={(e) => setEditingItemData(prev => prev ? ({ ...prev, name: e.target.value }) : null)}
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label className="text-xs">Price</Label>
+                                  <Input
+                                    type="number"
+                                    placeholder="Price"
+                                    value={editingItemData.price || ''}
+                                    onChange={(e) => setEditingItemData(prev => prev ? ({ ...prev, price: Number(e.target.value) }) : null)}
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label className="text-xs">Category</Label>
+                                  <Input
+                                    placeholder="Category"
+                                    value={editingItemData.category}
+                                    onChange={(e) => setEditingItemData(prev => prev ? ({ ...prev, category: e.target.value }) : null)}
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label className="text-xs">Weight (g)</Label>
+                                  <Input
+                                    type="number"
+                                    placeholder="Weight"
+                                    value={editingItemData.weight || ''}
+                                    onChange={(e) => setEditingItemData(prev => prev ? ({ ...prev, weight: e.target.value ? Number(e.target.value) : undefined }) : null)}
+                                  />
+                                </div>
+                                <div className="space-y-1 md:col-span-2">
+                                  <Label className="text-xs">Image URL</Label>
+                                  <Input
+                                    placeholder="Image URL"
+                                    value={editingItemData.image || ''}
+                                    onChange={(e) => setEditingItemData(prev => prev ? ({ ...prev, image: e.target.value }) : null)}
+                                  />
+                                </div>
+                                <div className="space-y-1 md:col-span-2">
+                                  <Label className="text-xs">Description</Label>
+                                  <Textarea
+                                    placeholder="Description"
+                                    value={editingItemData.description}
+                                    onChange={(e) => setEditingItemData(prev => prev ? ({ ...prev, description: e.target.value }) : null)}
+                                    rows={2}
+                                  />
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  onClick={saveEditedItem}
+                                  size="sm"
+                                  className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90"
+                                >
+                                  <Check size={16} weight="bold" className="mr-2" />
+                                  Save
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  onClick={cancelEditingItem}
+                                  size="sm"
+                                  className="flex-1"
+                                >
+                                  <X size={16} weight="bold" className="mr-2" />
+                                  Cancel
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex justify-between items-start gap-3">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">{item.name}</p>
+                                <p className="text-sm text-muted-foreground">{item.category}</p>
+                                <div className="flex gap-2 items-center text-sm font-medium">
+                                  <span>${item.price}</span>
+                                  {item.weight && (
+                                    <span className="text-muted-foreground">• {item.weight}g</span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => startEditingItem(item)}
+                                  className="h-8 w-8 hover:bg-accent/10 hover:text-accent"
+                                >
+                                  <PencilSimple size={16} />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => removeMenuItem(item.id)}
+                                  className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
+                                >
+                                  <Trash size={16} />
+                                </Button>
+                              </div>
+                            </div>
+                          )}
                         </Card>
-
-                        <div className="space-y-2">
-                          {(formData.menuItems || []).map((item) => (
-                            <Card key={item.id} className="p-3">
-                              {editingItemId === item.id && editingItemData ? (
-                                <div className="space-y-3">
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <div className="space-y-1">
-                                      <Label className="text-xs">Name</Label>
-                                      <Input
-                                        placeholder="Item name"
-                                        value={editingItemData.name}
-                                        onChange={(e) => setEditingItemData(prev => prev ? ({ ...prev, name: e.target.value }) : null)}
-                                      />
-                                    </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-xs">Price</Label>
-                                      <Input
-                                        type="number"
-                                        placeholder="Price"
-                                        value={editingItemData.price || ''}
-                                        onChange={(e) => setEditingItemData(prev => prev ? ({ ...prev, price: Number(e.target.value) }) : null)}
-                                      />
-                                    </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-xs">Category</Label>
-                                      <Input
-                                        placeholder="Category"
-                                        value={editingItemData.category}
-                                        onChange={(e) => setEditingItemData(prev => prev ? ({ ...prev, category: e.target.value }) : null)}
-                                      />
-                                    </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-xs">Weight (g)</Label>
-                                      <Input
-                                        type="number"
-                                        placeholder="Weight"
-                                        value={editingItemData.weight || ''}
-                                        onChange={(e) => setEditingItemData(prev => prev ? ({ ...prev, weight: e.target.value ? Number(e.target.value) : undefined }) : null)}
-                                      />
-                                    </div>
-                                    <div className="space-y-1 md:col-span-2">
-                                      <Label className="text-xs">Image URL</Label>
-                                      <Input
-                                        placeholder="Image URL"
-                                        value={editingItemData.image || ''}
-                                        onChange={(e) => setEditingItemData(prev => prev ? ({ ...prev, image: e.target.value }) : null)}
-                                      />
-                                    </div>
-                                    <div className="space-y-1 md:col-span-2">
-                                      <Label className="text-xs">Description</Label>
-                                      <Textarea
-                                        placeholder="Description"
-                                        value={editingItemData.description}
-                                        onChange={(e) => setEditingItemData(prev => prev ? ({ ...prev, description: e.target.value }) : null)}
-                                        rows={2}
-                                      />
-                                    </div>
-                                  </div>
-                                  <div className="flex gap-2">
-                                    <Button
-                                      onClick={saveEditedItem}
-                                      size="sm"
-                                      className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90"
-                                    >
-                                      <Check size={16} weight="bold" className="mr-2" />
-                                      Save
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      onClick={cancelEditingItem}
-                                      size="sm"
-                                      className="flex-1"
-                                    >
-                                      <X size={16} weight="bold" className="mr-2" />
-                                      Cancel
-                                    </Button>
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="flex justify-between items-start gap-3">
-                                  <div className="flex-1 min-w-0">
-                                    <p className="font-medium truncate">{item.name}</p>
-                                    <p className="text-sm text-muted-foreground">{item.category}</p>
-                                    <div className="flex gap-2 items-center text-sm font-medium">
-                                      <span>${item.price}</span>
-                                      {item.weight && (
-                                        <span className="text-muted-foreground">• {item.weight}g</span>
-                                      )}
-                                    </div>
-                                  </div>
-                                  <div className="flex gap-1">
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => startEditingItem(item)}
-                                      className="h-8 w-8 hover:bg-accent/10 hover:text-accent"
-                                    >
-                                      <PencilSimple size={16} />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => removeMenuItem(item.id)}
-                                      className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
-                                    >
-                                      <Trash size={16} />
-                                    </Button>
-                                  </div>
-                                </div>
-                              )}
-                            </Card>
-                          ))}
-                        </div>
-                      </div>
-                    </>
-                  )}
+                      ))}
+                    </div>
+                  </div>
 
                   <Separator />
 
