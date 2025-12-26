@@ -30,6 +30,8 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
   const [googleSheetUrl, setGoogleSheetUrl] = useState('https://docs.google.com/spreadsheets/d/1my60zyjTGdDaY0sen9WAxCWooP7EDPneRTzwVDxoxEQ/edit?gid=0#gid=0')
   const [isImporting, setIsImporting] = useState(false)
+  const [importError, setImportError] = useState<string | null>(null)
+  const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
 
   const [formData, setFormData] = useState<Partial<Restaurant>>({
     name: '',
@@ -415,18 +417,26 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
           console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
           console.groupEnd()
           
-          const errorSummary = result.errors
-            .map(err => {
-              if (err.includes('no valid menu items')) return '• Missing required data (Item Name or Price)'
-              if (err.includes('No changes detected')) return '• All items already exist with identical data'
-              if (err.includes('empty name')) return '• Found sheet with no name'
-              return `• ${err.substring(0, 80)}${err.length > 80 ? '...' : ''}`
-            })
-            .slice(0, 5)
-            .join('\n')
+          const fullErrorText = `IMPORT FAILED\n\n` +
+            `Total errors found: ${result.errors.length}\n\n` +
+            `ERRORS:\n${result.errors.map((err, i) => `${i + 1}. ${err}`).join('\n\n')}\n\n` +
+            `SPREADSHEET REQUIREMENTS:\n` +
+            `• Each sheet = one restaurant (sheet name = restaurant name)\n` +
+            `• First row can be headers (skipped automatically)\n` +
+            `• Required: Column A (Item Name), Column C (Price)\n` +
+            `• Optional: Column B (Description), D (Category), E (Weight), F (Image URL)\n\n` +
+            `COMMON ISSUES:\n` +
+            `1. Empty rows are skipped automatically\n` +
+            `2. Invalid prices - must be numbers (e.g., 25, $25, 25.50)\n` +
+            `3. Missing required fields - Item Name or Price\n` +
+            `4. Invalid image URLs - must start with http:// or https://\n` +
+            `5. All items identical - no update needed if data is the same`
+          
+          setImportError(fullErrorText)
+          setIsErrorDialogOpen(true)
           
           toast.error(
-            `Import failed. Check browser console (F12) for details.\n\nIssues found:\n${errorSummary}`,
+            `Import failed. Check browser console (F12) for details.\n\nIssues found:\n${result.errors.slice(0, 2).map(err => `• ${err.substring(0, 60)}${err.length > 60 ? '...' : ''}`).join('\n')}${result.errors.length > 2 ? `\n• ...and ${result.errors.length - 2} more` : ''}`,
             { duration: 10000 }
           )
         } else {
@@ -435,7 +445,18 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
         }
       }
     } catch (error) {
-      toast.error(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      const fullErrorText = `IMPORT FAILED\n\nError: ${errorMessage}\n\nPlease check:\n` +
+        `1. The Google Sheets URL is correct\n` +
+        `2. The spreadsheet is publicly accessible (Share > Anyone with the link can view)\n` +
+        `3. The spreadsheet contains valid data in the correct format\n` +
+        `4. Your internet connection is working\n\n` +
+        `Full error details:\n${error instanceof Error ? error.stack || errorMessage : String(error)}`
+      
+      setImportError(fullErrorText)
+      setIsErrorDialogOpen(true)
+      
+      toast.error(`Import failed: ${errorMessage}`)
       console.error('Import error:', error)
     } finally {
       setIsImporting(false)
@@ -471,7 +492,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                   Import from Google Sheets
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[600px]">
+              <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col">
                 <DialogHeader>
                   <DialogTitle className="font-heading text-2xl">Import from Google Sheets</DialogTitle>
                   <DialogDescription>
@@ -479,66 +500,68 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                   </DialogDescription>
                 </DialogHeader>
                 
-                <div className="space-y-4 py-4">
-                  <Card className="p-4 bg-muted/30 border-accent/20">
-                    <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                      <strong className="text-foreground">Sheet Structure:</strong>
-                    </p>
-                    <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
-                      <li>Each sheet = one restaurant (sheet name = restaurant name)</li>
-                      <li><strong>First row can be headers</strong> (will be skipped automatically)</li>
-                      <li>Column A: Item Name (required)</li>
-                      <li>Column B: Description (optional)</li>
-                      <li>Column C: Price (required, numbers only or with $)</li>
-                      <li>Column D: Category (optional)</li>
-                      <li>Column E: Weight in grams (optional)</li>
-                      <li>Column F: Image URL (optional)</li>
-                    </ul>
-                    <p className="text-xs text-accent-foreground mt-3 font-medium">
-                      ⚠️ Empty rows are skipped. At least Item Name and Price must be filled.
-                    </p>
-                  </Card>
+                <ScrollArea className="flex-1 max-h-[65vh] pr-4">
+                  <div className="space-y-4 py-4">
+                    <Card className="p-4 bg-muted/30 border-accent/20">
+                      <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                        <strong className="text-foreground">Sheet Structure:</strong>
+                      </p>
+                      <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                        <li>Each sheet = one restaurant (sheet name = restaurant name)</li>
+                        <li><strong>First row can be headers</strong> (will be skipped automatically)</li>
+                        <li>Column A: Item Name (required)</li>
+                        <li>Column B: Description (optional)</li>
+                        <li>Column C: Price (required, numbers only or with $)</li>
+                        <li>Column D: Category (optional)</li>
+                        <li>Column E: Weight in grams (optional)</li>
+                        <li>Column F: Image URL (optional)</li>
+                      </ul>
+                      <p className="text-xs text-accent-foreground mt-3 font-medium">
+                        ⚠️ Empty rows are skipped. At least Item Name and Price must be filled.
+                      </p>
+                    </Card>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="sheet-url">Google Sheets URL</Label>
-                    <Input
-                      id="sheet-url"
-                      value={googleSheetUrl}
-                      onChange={(e) => setGoogleSheetUrl(e.target.value)}
-                      placeholder="https://docs.google.com/spreadsheets/d/..."
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      New restaurants will be added. Existing restaurants will be updated with new menu items only.
-                    </p>
-                  </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="sheet-url">Google Sheets URL</Label>
+                      <Input
+                        id="sheet-url"
+                        value={googleSheetUrl}
+                        onChange={(e) => setGoogleSheetUrl(e.target.value)}
+                        placeholder="https://docs.google.com/spreadsheets/d/..."
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        New restaurants will be added. Existing restaurants will be updated with new menu items only.
+                      </p>
+                    </div>
 
-                  <div className="flex gap-2 pt-2">
-                    <Button
-                      onClick={handleImportFromGoogleSheets}
-                      disabled={isImporting}
-                      className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90"
-                    >
-                      {isImporting ? (
-                        <>
-                          <SpinnerGap size={20} weight="bold" className="mr-2 animate-spin" />
-                          Importing...
-                        </>
-                      ) : (
-                        <>
-                          <FileArrowDown size={20} weight="bold" className="mr-2" />
-                          Import Data
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsImportDialogOpen(false)}
-                      disabled={isImporting}
-                    >
-                      Cancel
-                    </Button>
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        onClick={handleImportFromGoogleSheets}
+                        disabled={isImporting}
+                        className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90"
+                      >
+                        {isImporting ? (
+                          <>
+                            <SpinnerGap size={20} weight="bold" className="mr-2 animate-spin" />
+                            Importing...
+                          </>
+                        ) : (
+                          <>
+                            <FileArrowDown size={20} weight="bold" className="mr-2" />
+                            Import Data
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsImportDialogOpen(false)}
+                        disabled={isImporting}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
                   </div>
-                </div>
+                </ScrollArea>
               </DialogContent>
             </Dialog>
 
@@ -1196,6 +1219,49 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
           </TabsContent>
         </Tabs>
       </div>
+      
+      <Dialog open={isErrorDialogOpen} onOpenChange={setIsErrorDialogOpen}>
+        <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-2xl text-destructive flex items-center gap-2">
+              <X size={28} weight="bold" />
+              Import Error Details
+            </DialogTitle>
+            <DialogDescription>
+              Full error information - check all issues below
+            </DialogDescription>
+          </DialogHeader>
+          
+          <ScrollArea className="flex-1 max-h-[70vh]">
+            <div className="space-y-4 pr-4">
+              <Card className="p-4 bg-destructive/5 border-destructive/20">
+                <pre className="text-xs whitespace-pre-wrap font-mono text-foreground leading-relaxed">
+                  {importError}
+                </pre>
+              </Card>
+              
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => {
+                    navigator.clipboard.writeText(importError || '')
+                    toast.success('Error details copied to clipboard')
+                  }}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Copy Error Details
+                </Button>
+                <Button
+                  onClick={() => setIsErrorDialogOpen(false)}
+                  className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
