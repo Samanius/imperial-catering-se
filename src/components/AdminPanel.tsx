@@ -456,17 +456,51 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      const fullErrorText = `IMPORT FAILED\n\nError: ${errorMessage}\n\nPlease check:\n` +
-        `1. The Google Sheets URL is correct\n` +
-        `2. The spreadsheet is publicly accessible (Share > Anyone with the link can view)\n` +
-        `3. The spreadsheet contains valid data in the correct format\n` +
-        `4. Your internet connection is working\n\n` +
-        `Full error details:\n${error instanceof Error ? error.stack || errorMessage : String(error)}`
+      
+      let displayError = errorMessage
+      let actionableSteps = ''
+      
+      if (errorMessage.includes('Sheets API is not enabled') || errorMessage.includes('SERVICE_DISABLED')) {
+        actionableSteps = '\n\n📋 CHECKLIST TO FIX:\n' +
+          '☐ Go to Google Cloud Console\n' +
+          '☐ Select your project\n' +
+          '☐ Navigate to "APIs & Services" → "Library"\n' +
+          '☐ Search for "Google Sheets API"\n' +
+          '☐ Click "Enable" button\n' +
+          '☐ Wait 2-3 minutes for changes to take effect\n' +
+          '☐ Try importing again'
+      } else if (errorMessage.includes('Access denied')) {
+        actionableSteps = '\n\n📋 CHECKLIST TO FIX:\n' +
+          '☐ Verify Google Sheets API is enabled in Cloud Console\n' +
+          '☐ Check that your API key is valid (not expired/deleted)\n' +
+          '☐ Ensure spreadsheet is shared as "Anyone with the link can view"\n' +
+          '☐ Try creating a new API key if problem persists'
+      } else if (errorMessage.includes('Invalid API key format')) {
+        actionableSteps = '\n\n📋 CHECKLIST TO FIX:\n' +
+          '☐ Copy the COMPLETE API key from Google Cloud Console\n' +
+          '☐ API key should start with "AIza" and be 39 characters\n' +
+          '☐ Make sure no spaces or line breaks were copied\n' +
+          '☐ Try creating a new API key if problem persists'
+      }
+      
+      const fullErrorText = `IMPORT FAILED\n\n` +
+        `Error Details:\n${displayError}${actionableSteps}\n\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+        `SPREADSHEET REQUIREMENTS:\n` +
+        `• Each sheet = one restaurant (sheet name = restaurant name)\n` +
+        `• First row can be headers (skipped automatically)\n` +
+        `• Required: Column A (Item Name), Column C (Price)\n` +
+        `• Optional: Column B (Description), D (Category), E (Weight), F (Image URL)\n\n` +
+        `COMMON SETUP ISSUES:\n` +
+        `1. Google Sheets API not enabled (most common!)\n` +
+        `2. Invalid or incomplete API key\n` +
+        `3. Spreadsheet not shared publicly\n` +
+        `4. Wrong Google Cloud project selected`
       
       setImportError(fullErrorText)
       setIsErrorDialogOpen(true)
       
-      toast.error(`Import failed: ${errorMessage}`)
+      toast.error(`Import failed: ${errorMessage.split('\n')[0]}`, { duration: 8000 })
       console.error('Import error:', error)
     } finally {
       setIsImporting(false)
@@ -514,22 +548,44 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                   <div className="space-y-4 py-4 pb-6">
                     <Card className="p-4 bg-accent/5 border-accent/30">
                       <p className="text-sm font-semibold text-foreground mb-2">
-                        🔑 Google Sheets API Key Required
+                        🔑 Google Sheets API Key Setup (One-Time)
                       </p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
-                        To import data, you need a Google Sheets API key. Don't have one?
+                      <p className="text-xs text-muted-foreground leading-relaxed mb-2">
+                        Follow these steps to create your API key:
                       </p>
-                      <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside mt-2">
-                        <li>Go to <a href="https://console.cloud.google.com" target="_blank" rel="noopener noreferrer" className="text-accent underline hover:text-accent/80">Google Cloud Console</a></li>
-                        <li>Create or select a project</li>
-                        <li>Enable the "Google Sheets API"</li>
-                        <li>Go to "Credentials" → "Create Credentials" → "API Key"</li>
-                        <li>Restrict the key to Google Sheets API only (recommended)</li>
-                        <li>Copy the API key and paste it below</li>
+                      <ol className="text-xs text-muted-foreground space-y-2 list-decimal list-inside mt-2">
+                        <li className="pl-2">
+                          <strong className="text-foreground">Visit Google Cloud Console:</strong><br/>
+                          <a href="https://console.cloud.google.com" target="_blank" rel="noopener noreferrer" className="text-accent underline hover:text-accent/80 ml-6">console.cloud.google.com</a>
+                        </li>
+                        <li className="pl-2">
+                          <strong className="text-foreground">Create or select a project</strong><br/>
+                          <span className="ml-6 text-xs">Click "Select a project" dropdown at the top</span>
+                        </li>
+                        <li className="pl-2">
+                          <strong className="text-foreground">Enable Google Sheets API:</strong><br/>
+                          <span className="ml-6">• Go to "APIs & Services" → "Enable APIs and Services"</span><br/>
+                          <span className="ml-6">• Search for "Google Sheets API"</span><br/>
+                          <span className="ml-6">• Click "Enable" button</span><br/>
+                          <span className="ml-6 text-accent font-medium">⚠️ This step is critical - the API must be enabled!</span>
+                        </li>
+                        <li className="pl-2">
+                          <strong className="text-foreground">Create API Key:</strong><br/>
+                          <span className="ml-6">• Go to "Credentials" → "Create Credentials" → "API Key"</span><br/>
+                          <span className="ml-6">• (Optional) Restrict to Google Sheets API for security</span>
+                        </li>
+                        <li className="pl-2">
+                          <strong className="text-foreground">Copy and paste the key below</strong>
+                        </li>
                       </ol>
-                      <p className="text-xs text-accent mt-2">
-                        📖 <a href="https://github.com/yourusername/yourrepo/blob/main/GOOGLE_SHEETS_SETUP.md" target="_blank" rel="noopener noreferrer" className="underline hover:text-accent/80">View detailed setup guide</a>
-                      </p>
+                      <Card className="mt-3 p-3 bg-destructive/10 border-destructive/30">
+                        <p className="text-xs font-semibold text-destructive mb-1">
+                          ⚠️ Common Error: "SERVICE_DISABLED"
+                        </p>
+                        <p className="text-xs text-destructive/80 leading-relaxed">
+                          If you see this error, it means step 3 (Enable API) was skipped. You must enable the Google Sheets API in your project before the API key will work. After enabling, wait 2-3 minutes before trying to import.
+                        </p>
+                      </Card>
                     </Card>
 
                     <div className="space-y-2">

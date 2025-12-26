@@ -313,8 +313,41 @@ async function fetchAllSheets(spreadsheetId: string, apiKey?: string): Promise<S
     const errorText = await metadataResponse.text()
     console.error('Metadata fetch error:', errorText)
     
-    if (metadataResponse.status === 400 || metadataResponse.status === 403) {
-      throw new Error(`Invalid or expired Google Sheets API key. Please verify your API key and ensure the Sheets API is enabled in Google Cloud Console. ${errorText}`)
+    let errorData: any
+    try {
+      errorData = JSON.parse(errorText)
+    } catch (e) {
+      errorData = null
+    }
+    
+    if (metadataResponse.status === 403) {
+      if (errorData?.error?.message?.includes('Sheets API has not been used') || 
+          errorData?.error?.message?.includes('SERVICE_DISABLED')) {
+        const activationUrl = errorData?.error?.details?.find((d: any) => d['@type'] === 'type.googleapis.com/google.rpc.ErrorInfo')?.metadata?.activationUrl
+        
+        throw new Error(
+          `Google Sheets API is not enabled for your API key.\n\n` +
+          `REQUIRED ACTION:\n` +
+          `1. Visit the activation URL: ${activationUrl || 'Google Cloud Console'}\n` +
+          `2. Click "Enable API" button\n` +
+          `3. Wait 2-3 minutes for changes to propagate\n` +
+          `4. Try importing again\n\n` +
+          `Note: This is a one-time setup. After enabling the API, all future imports will work.`
+        )
+      }
+      
+      throw new Error(
+        `Access denied to Google Sheets.\n\n` +
+        `Possible reasons:\n` +
+        `1. Google Sheets API is not enabled - visit Google Cloud Console and enable it\n` +
+        `2. API key is invalid or expired - check your API key\n` +
+        `3. Spreadsheet is not shared publicly - make sure it's set to "Anyone with the link can view"\n\n` +
+        `Full error: ${errorData?.error?.message || errorText}`
+      )
+    }
+    
+    if (metadataResponse.status === 400) {
+      throw new Error(`Invalid API key format. Please check that you copied the complete API key from Google Cloud Console. ${errorText}`)
     }
     
     throw new Error(`Failed to fetch spreadsheet metadata: ${metadataResponse.statusText}. ${errorText}`)
