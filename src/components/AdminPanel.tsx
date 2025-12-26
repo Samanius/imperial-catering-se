@@ -8,13 +8,12 @@ import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { Separator } from './ui/separator'
-import { ArrowLeft, Plus, Trash, PencilSimple, Check, X, ClockCounterClockwise, DownloadSimple, CaretDown, CaretUp, Eye, EyeSlash, FileArrowDown, SpinnerGap, ArrowsClockwise } from '@phosphor-icons/react'
+import { ArrowLeft, Plus, Trash, PencilSimple, Check, X, Eye, EyeSlash, FileArrowDown, SpinnerGap, ArrowsClockwise } from '@phosphor-icons/react'
 import type { Restaurant, MenuItem, MenuType } from '@/lib/types'
 import { toast } from 'sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 import { ScrollArea } from './ui/scroll-area'
-import { createBackup, getBackups, exportBackupsAsJSON, type BackupEntry } from '@/lib/backup'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible'
+import { createBackup } from '@/lib/backup'
 import { importFromGoogleSheets, extractSpreadsheetId } from '@/lib/google-sheets-import'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog'
 import DatabaseSetup from './DatabaseSetup'
@@ -27,8 +26,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
   const database = useDatabase()
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
   const [isCreating, setIsCreating] = useState(false)
-  const [backups, setBackups] = useState<BackupEntry[]>([])
-  const [activeTab, setActiveTab] = useState<'database' | 'restaurants' | 'backups'>('database')
+  const [activeTab, setActiveTab] = useState<'restaurants' | 'database'>('restaurants')
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
   const [googleSheetUrl, setGoogleSheetUrl] = useState('https://docs.google.com/spreadsheets/d/1my60zyjTGdDaY0sen9WAxCWooP7EDPneRTzwVDxoxEQ/edit?gid=0#gid=0')
   const [googleApiKey, setGoogleApiKey] = useKV<string>('google-sheets-api-key', '')
@@ -69,32 +67,8 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
   const [editingItemData, setEditingItemData] = useState<MenuItem | null>(null)
 
   useEffect(() => {
-    loadBackups()
     setApiKeyInput(googleApiKey || '')
   }, [googleApiKey])
-
-  const loadBackups = async () => {
-    const allBackups = await getBackups()
-    setBackups(allBackups)
-  }
-
-  const downloadBackups = async () => {
-    try {
-      const json = await exportBackupsAsJSON()
-      const blob = new Blob([json], { type: 'application/json' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `meridien-backups-${new Date().toISOString().split('T')[0]}.json`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-      toast.success('Backups exported successfully')
-    } catch (error) {
-      toast.error('Failed to export backups')
-    }
-  }
 
   const startCreating = () => {
     setIsCreating(true)
@@ -267,7 +241,6 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
         toast.success('Restaurant created')
       }
 
-      await loadBackups()
       setIsCreating(false)
       setSelectedRestaurant(null)
     } catch (error: any) {
@@ -286,7 +259,6 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       await createBackup('update', 'restaurant', id, restaurant.name, updatedRestaurant, restaurant)
       await database.updateRestaurant(updatedRestaurant)
       toast.success(`Restaurant ${action}`)
-      await loadBackups()
     } catch (error: any) {
       toast.error(error.message || 'Failed to update restaurant')
     }
@@ -301,7 +273,6 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
         await createBackup('delete', 'restaurant', id, restaurantToDelete.name, restaurantToDelete)
         await database.deleteRestaurant(id)
         toast.success('Restaurant deleted')
-        await loadBackups()
       } catch (error: any) {
         toast.error(error.message || 'Failed to delete restaurant')
       }
@@ -411,7 +382,6 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
           console.groupEnd()
         }
         
-        await loadBackups()
         setIsImportDialogOpen(false)
       } else {
         if (result.errors.length > 0) {
@@ -706,44 +676,11 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'database' | 'restaurants' | 'backups')} className="w-full">
-          <TabsList className="grid w-full max-w-3xl grid-cols-3 mb-6">
-            <TabsTrigger value="database">Database</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'restaurants' | 'database')} className="w-full">
+          <TabsList className="grid w-full max-w-3xl grid-cols-2 mb-6">
             <TabsTrigger value="restaurants">Restaurants</TabsTrigger>
-            <TabsTrigger value="backups">
-              <ClockCounterClockwise size={16} className="mr-2" />
-              Backups ({backups.length})
-            </TabsTrigger>
+            <TabsTrigger value="database">Database</TabsTrigger>
           </TabsList>
-
-          <TabsContent value="database" className="mt-0">
-            <div className="max-w-2xl mx-auto">
-              <DatabaseSetup
-                onSetup={async (gistId, githubToken) => {
-                  await database.configureDatabase(gistId, githubToken)
-                }}
-                onCreateNew={database.createDatabase}
-                isConfigured={database.isConfigured}
-              />
-              
-              {database.isConfigured && (
-                <Card className="mt-6">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">Refresh Database</p>
-                        <p className="text-sm text-muted-foreground">Load latest data from cloud</p>
-                      </div>
-                      <Button onClick={database.refresh} variant="outline" size="sm">
-                        <ArrowsClockwise size={16} className="mr-2" />
-                        Refresh
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </TabsContent>
 
           <TabsContent value="restaurants" className="mt-0">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">{/* ... restaurant management UI ... */}
@@ -1215,168 +1152,33 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
         </div>
           </TabsContent>
 
-          <TabsContent value="backups" className="mt-0">
-            <Card className="p-6">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                <div>
-                  <h2 className="font-heading text-2xl font-semibold">
-                    Data Backups Archive
-                  </h2>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    All logs and image URLs • Automatic backup system
-                  </p>
-                </div>
-                <Button
-                  onClick={downloadBackups}
-                  className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2 whitespace-nowrap"
-                >
-                  <DownloadSimple size={18} weight="bold" />
-                  Download Full Backup
-                </Button>
-              </div>
-
-              <Card className="p-4 mb-6 bg-muted/30 border-accent/20">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-sm bg-accent/10">
-                    <DownloadSimple size={20} className="text-accent" weight="bold" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-heading font-semibold text-sm mb-1">
-                      Backup File Contents
-                    </p>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      JSON file includes: all change logs, current restaurants data, all image URLs (covers, galleries, menu items), timestamps, and detailed change history.
-                    </p>
-                  </div>
-                </div>
-              </Card>
-
-              <ScrollArea className="h-[calc(100vh-300px)]">
-                <div className="space-y-3">
-                  {backups.length === 0 ? (
-                    <div className="text-center py-12">
-                      <ClockCounterClockwise size={48} className="mx-auto mb-3 text-muted-foreground" />
-                      <p className="text-muted-foreground">
-                        No backups yet. All changes will be automatically archived here.
-                      </p>
+          <TabsContent value="database" className="mt-0">
+            <div className="max-w-2xl mx-auto">
+              <DatabaseSetup
+                onSetup={async (gistId, githubToken) => {
+                  await database.configureDatabase(gistId, githubToken)
+                }}
+                onCreateNew={database.createDatabase}
+                isConfigured={database.isConfigured}
+              />
+              
+              {database.isConfigured && (
+                <Card className="mt-6">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Refresh Database</p>
+                        <p className="text-sm text-muted-foreground">Load latest data from cloud</p>
+                      </div>
+                      <Button onClick={database.refresh} variant="outline" size="sm">
+                        <ArrowsClockwise size={16} className="mr-2" />
+                        Refresh
+                      </Button>
                     </div>
-                  ) : (
-                    backups
-                      .sort((a, b) => b.timestamp - a.timestamp)
-                      .map((backup, index) => (
-                        <Collapsible key={index}>
-                          <Card className="p-4">
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span
-                                    className={`px-2 py-0.5 text-xs font-medium rounded ${
-                                      backup.action === 'create'
-                                        ? 'bg-green-500/10 text-green-700'
-                                        : backup.action === 'update'
-                                        ? 'bg-blue-500/10 text-blue-700'
-                                        : 'bg-red-500/10 text-red-700'
-                                    }`}
-                                  >
-                                    {backup.action.toUpperCase()}
-                                  </span>
-                                  <span className="text-xs text-muted-foreground">
-                                    {new Date(backup.timestamp).toLocaleString()}
-                                  </span>
-                                </div>
-                                <p className="font-heading font-medium">
-                                  {backup.entityName}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  ID: {backup.entityId}
-                                </p>
-                                {backup.changesSummary && (
-                                  <p className="text-sm text-foreground mt-2 font-medium">
-                                    {backup.changesSummary}
-                                  </p>
-                                )}
-                              </div>
-                              {backup.changes && backup.changes.length > 0 && (
-                                <CollapsibleTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <CaretDown size={16} className="transition-transform [[data-state=open]_&]:rotate-180" />
-                                  </Button>
-                                </CollapsibleTrigger>
-                              )}
-                            </div>
-                            
-                            {backup.changes && backup.changes.length > 0 && (
-                              <CollapsibleContent className="mt-3">
-                                <Separator className="mb-3" />
-                                <div className="space-y-2">
-                                  <p className="text-xs font-semibold text-muted-foreground uppercase">
-                                    Detailed Changes
-                                  </p>
-                                  {backup.changes.map((change, changeIndex) => (
-                                    <div
-                                      key={changeIndex}
-                                      className="p-2 bg-muted/30 rounded text-xs space-y-1"
-                                    >
-                                      <div className="flex items-center gap-2">
-                                        <span
-                                          className={`px-1.5 py-0.5 rounded font-medium ${
-                                            change.changeType === 'added'
-                                              ? 'bg-green-500/10 text-green-700'
-                                              : change.changeType === 'removed'
-                                              ? 'bg-red-500/10 text-red-700'
-                                              : 'bg-blue-500/10 text-blue-700'
-                                          }`}
-                                        >
-                                          {change.changeType}
-                                        </span>
-                                        <span className="font-medium">{change.field}</span>
-                                      </div>
-                                      {change.changeType === 'modified' && (
-                                        <div className="grid grid-cols-2 gap-2 mt-1">
-                                          <div>
-                                            <span className="text-muted-foreground">Before:</span>
-                                            <div className="mt-0.5 text-foreground break-words">
-                                              {typeof change.oldValue === 'object' && change.oldValue !== null
-                                                ? JSON.stringify(change.oldValue).substring(0, 100)
-                                                : String(change.oldValue)}
-                                            </div>
-                                          </div>
-                                          <div>
-                                            <span className="text-muted-foreground">After:</span>
-                                            <div className="mt-0.5 text-foreground break-words">
-                                              {typeof change.newValue === 'object' && change.newValue !== null
-                                                ? JSON.stringify(change.newValue).substring(0, 100)
-                                                : String(change.newValue)}
-                                            </div>
-                                          </div>
-                                        </div>
-                                      )}
-                                      {change.changeType === 'added' && (
-                                        <div className="text-foreground break-words">
-                                          Value: {typeof change.newValue === 'object' && change.newValue !== null
-                                            ? JSON.stringify(change.newValue).substring(0, 100)
-                                            : String(change.newValue)}
-                                        </div>
-                                      )}
-                                      {change.changeType === 'removed' && (
-                                        <div className="text-foreground break-words">
-                                          Previous value: {typeof change.oldValue === 'object' && change.oldValue !== null
-                                            ? JSON.stringify(change.oldValue).substring(0, 100)
-                                            : String(change.oldValue)}
-                                        </div>
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
-                              </CollapsibleContent>
-                            )}
-                          </Card>
-                        </Collapsible>
-                      ))
-                  )}
-                </div>
-              </ScrollArea>
-            </Card>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       </div>
