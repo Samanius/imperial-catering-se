@@ -307,6 +307,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       const result = await importFromGoogleSheets(spreadsheetId, restaurants || [])
       
       console.log('Import result:', result)
+      console.log('Errors array:', result.errors)
 
       const hasChanges = result.addedCount > 0 || result.updatedCount > 0
 
@@ -327,6 +328,8 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
             updatedList = [...updatedList, ...result.newRestaurants]
           }
           
+          console.log('Updated restaurant list:', updatedList.map(r => r.name))
+          
           return updatedList
         })
         
@@ -343,12 +346,14 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
         )
         
         if (result.errors.length > 0) {
+          console.group('Import messages:')
           result.errors.forEach(error => {
-            console.warn('Import info:', error)
+            console.log(error)
             if (!error.includes('already exists with all')) {
               toast.info(error, { duration: 5000 })
             }
           })
+          console.groupEnd()
         }
         
         await loadBackups()
@@ -356,11 +361,19 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       } else {
         if (result.errors.length > 0) {
           toast.warning('No changes made - check console for details', { duration: 5000 })
-          result.errors.forEach(error => {
-            console.log('Import info:', error)
+          console.group('Import details - why no changes were made:')
+          result.errors.forEach((error, index) => {
+            console.log(`${index + 1}. ${error}`)
           })
+          console.groupEnd()
+          console.log('Check that your spreadsheet has:')
+          console.log('1. Sheet names matching restaurant names')
+          console.log('2. Valid data in columns A (Item Name), B (Description), C (Price)')
+          console.log('3. First row may be headers (will be skipped automatically)')
+          console.log('4. Price should be a number ($ signs are OK)')
         } else {
           toast.info('No data found to import from the spreadsheet.')
+          console.log('No sheets or no data found in spreadsheet')
         }
       }
     } catch (error) {
@@ -415,13 +428,17 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                     </p>
                     <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
                       <li>Each sheet = one restaurant (sheet name = restaurant name)</li>
-                      <li>Column A: Item Name</li>
-                      <li>Column B: Description</li>
-                      <li>Column C: Price</li>
-                      <li>Column D: Category</li>
-                      <li>Column E: Weight (g)</li>
-                      <li>Column F: Image URL</li>
+                      <li><strong>First row can be headers</strong> (will be skipped automatically)</li>
+                      <li>Column A: Item Name (required)</li>
+                      <li>Column B: Description (optional)</li>
+                      <li>Column C: Price (required, numbers only or with $)</li>
+                      <li>Column D: Category (optional)</li>
+                      <li>Column E: Weight in grams (optional)</li>
+                      <li>Column F: Image URL (optional)</li>
                     </ul>
+                    <p className="text-xs text-accent-foreground mt-3 font-medium">
+                      ⚠️ Empty rows are skipped. At least Item Name and Price must be filled.
+                    </p>
                   </Card>
 
                   <div className="space-y-2">

@@ -54,7 +54,16 @@ export async function importFromGoogleSheets(
       
       console.log(`Processing ${sheet.rows.length} rows`)
       
-      for (let i = 0; i < sheet.rows.length; i++) {
+      let startIndex = 0
+      if (sheet.rows.length > 0 && sheet.rows[0].length > 0) {
+        const firstCell = sheet.rows[0][0]?.trim().toLowerCase()
+        if (firstCell === 'item name' || firstCell === 'name' || firstCell === 'item') {
+          console.log('First row appears to be a header, skipping it')
+          startIndex = 1
+        }
+      }
+      
+      for (let i = startIndex; i < sheet.rows.length; i++) {
         const row = sheet.rows[i]
         
         if (row.length < 3) {
@@ -74,14 +83,16 @@ export async function importFromGoogleSheets(
           continue
         }
 
-        const price = parseFloat(priceStr)
-        if (isNaN(price)) {
-          console.log(`Row ${i}: Invalid price "${priceStr}", skipping`)
+        const cleanPriceStr = priceStr.replace(/[^\d.-]/g, '')
+        const price = parseFloat(cleanPriceStr)
+        if (isNaN(price) || price <= 0) {
+          console.log(`Row ${i}: Invalid price "${priceStr}" (cleaned: "${cleanPriceStr}"), skipping`)
           continue
         }
 
-        const weight = weightStr ? parseFloat(weightStr) : undefined
-        const finalWeight = weight && !isNaN(weight) ? weight : undefined
+        const cleanWeightStr = weightStr ? weightStr.replace(/[^\d.-]/g, '') : ''
+        const weight = cleanWeightStr ? parseFloat(cleanWeightStr) : undefined
+        const finalWeight = weight && !isNaN(weight) && weight > 0 ? weight : undefined
 
         const menuItem: MenuItem = {
           id: `${Date.now()}-${i}-${Math.random().toString(36).substr(2, 9)}`,
@@ -93,7 +104,7 @@ export async function importFromGoogleSheets(
           image: imageUrl || ''
         }
 
-        console.log(`Row ${i}: Added item "${itemName}" - $${price}`)
+        console.log(`Row ${i}: Added item "${itemName}" - $${price} ${finalWeight ? `(${finalWeight}g)` : ''}`)
         menuItems.push(menuItem)
       }
 
@@ -101,7 +112,7 @@ export async function importFromGoogleSheets(
 
       if (menuItems.length === 0) {
         console.log(`No valid menu items found for "${restaurantName}"`)
-        errors.push(`Restaurant "${restaurantName}" has no valid menu items, skipping`)
+        errors.push(`Restaurant "${restaurantName}" has no valid menu items (check that rows have Item Name and Price)`)
         continue
       }
 
@@ -180,6 +191,9 @@ export async function importFromGoogleSheets(
       itemsAddedCount,
       errors: errors.length
     })
+    
+    console.log('New restaurants:', newRestaurants.map(r => ({ name: r.name, items: r.menuItems?.length })))
+    console.log('Updated restaurants:', updatedRestaurants.map(r => ({ name: r.name, items: r.menuItems?.length })))
 
     return {
       newRestaurants,
@@ -190,6 +204,7 @@ export async function importFromGoogleSheets(
       errors
     }
   } catch (error) {
+    console.error('Import error:', error)
     errors.push(`Failed to import: ${error instanceof Error ? error.message : 'Unknown error'}`)
     return { newRestaurants, updatedRestaurants, addedCount: 0, updatedCount: 0, itemsAddedCount: 0, errors }
   }
