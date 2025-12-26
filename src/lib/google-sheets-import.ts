@@ -11,12 +11,15 @@ export async function importFromGoogleSheets(
   existingRestaurants: Restaurant[]
 ): Promise<{ 
   newRestaurants: Restaurant[]
+  updatedRestaurants: Restaurant[]
   addedCount: number
+  updatedCount: number
   itemsAddedCount: number
   errors: string[]
 }> {
   const errors: string[] = []
   const newRestaurants: Restaurant[] = []
+  const updatedRestaurants: Restaurant[] = []
   let itemsAddedCount = 0
 
   try {
@@ -24,7 +27,7 @@ export async function importFromGoogleSheets(
     
     if (!sheetsData || sheetsData.length === 0) {
       errors.push('No sheets found in the spreadsheet')
-      return { newRestaurants, addedCount: 0, itemsAddedCount: 0, errors }
+      return { newRestaurants, updatedRestaurants, addedCount: 0, updatedCount: 0, itemsAddedCount: 0, errors }
     }
 
     for (const sheet of sheetsData) {
@@ -39,16 +42,12 @@ export async function importFromGoogleSheets(
         r => r.name.toLowerCase() === restaurantName.toLowerCase()
       )
 
-      if (existingRestaurant) {
-        continue
-      }
-
       const menuItems: MenuItem[] = []
       
       for (let i = 0; i < sheet.rows.length; i++) {
         const row = sheet.rows[i]
         
-        if (row.length < 4) {
+        if (row.length < 3) {
           continue
         }
 
@@ -59,7 +58,7 @@ export async function importFromGoogleSheets(
         const weightStr = row[4]?.trim()
         const imageUrl = row[5]?.trim()
 
-        if (!itemName || !priceStr || !category) {
+        if (!itemName || !priceStr) {
           continue
         }
 
@@ -76,7 +75,7 @@ export async function importFromGoogleSheets(
           name: itemName,
           description: description || '',
           price: price,
-          category: category,
+          category: category || 'Uncategorized',
           weight: finalWeight,
           image: imageUrl || ''
         }
@@ -90,42 +89,70 @@ export async function importFromGoogleSheets(
         continue
       }
 
-      const categories = Array.from(new Set(menuItems.map(item => item.category)))
+      if (existingRestaurant) {
+        const existingItemNames = new Set(
+          (existingRestaurant.menuItems || []).map(item => item.name.toLowerCase())
+        )
+        
+        const newItemsOnly = menuItems.filter(
+          item => !existingItemNames.has(item.name.toLowerCase())
+        )
 
-      const newRestaurant: Restaurant = {
-        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        name: restaurantName,
-        tagline: '',
-        tags: [],
-        description: '',
-        story: `Imported from Google Sheets on ${new Date().toLocaleDateString()}`,
-        menuType: 'visual',
-        coverImage: '',
-        galleryImages: [],
-        menuItems: menuItems,
-        tastingMenuDescription: '',
-        categories: categories,
-        minimumOrderAmount: undefined,
-        orderDeadlineHours: undefined,
-        chefServicePrice: undefined,
-        waiterServicePrice: undefined,
-        isHidden: false
+        if (newItemsOnly.length > 0) {
+          const updatedMenuItems = [...(existingRestaurant.menuItems || []), ...newItemsOnly]
+          
+          const allCategories = Array.from(new Set(updatedMenuItems.map(item => item.category)))
+          
+          const updatedRestaurant: Restaurant = {
+            ...existingRestaurant,
+            menuItems: updatedMenuItems,
+            categories: allCategories
+          }
+          
+          updatedRestaurants.push(updatedRestaurant)
+          
+          await createBackup('update', 'restaurant', updatedRestaurant.id, updatedRestaurant.name, updatedRestaurant, existingRestaurant)
+        }
+      } else {
+        const categories = Array.from(new Set(menuItems.map(item => item.category)))
+
+        const newRestaurant: Restaurant = {
+          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          name: restaurantName,
+          tagline: '',
+          tags: [],
+          description: '',
+          story: `Imported from Google Sheets on ${new Date().toLocaleDateString()}`,
+          menuType: 'visual',
+          coverImage: '',
+          galleryImages: [],
+          menuItems: menuItems,
+          tastingMenuDescription: '',
+          categories: categories,
+          minimumOrderAmount: undefined,
+          orderDeadlineHours: undefined,
+          chefServicePrice: undefined,
+          waiterServicePrice: undefined,
+          isHidden: false
+        }
+
+        newRestaurants.push(newRestaurant)
+        
+        await createBackup('create', 'restaurant', newRestaurant.id, newRestaurant.name, newRestaurant)
       }
-
-      newRestaurants.push(newRestaurant)
-      
-      await createBackup('create', 'restaurant', newRestaurant.id, newRestaurant.name, newRestaurant)
     }
 
     return {
       newRestaurants,
+      updatedRestaurants,
       addedCount: newRestaurants.length,
+      updatedCount: updatedRestaurants.length,
       itemsAddedCount,
       errors
     }
   } catch (error) {
     errors.push(`Failed to import: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    return { newRestaurants, addedCount: 0, itemsAddedCount: 0, errors }
+    return { newRestaurants, updatedRestaurants, addedCount: 0, updatedCount: 0, itemsAddedCount: 0, errors }
   }
 }
 

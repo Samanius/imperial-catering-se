@@ -312,17 +312,44 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
         })
       }
 
-      if (result.addedCount > 0) {
-        setRestaurants((current) => [...(current || []), ...result.newRestaurants])
+      const hasChanges = result.addedCount > 0 || result.updatedCount > 0
+
+      if (hasChanges) {
+        setRestaurants((current) => {
+          const currentRestaurants = current || []
+          
+          let updatedList = [...currentRestaurants]
+          
+          if (result.updatedRestaurants.length > 0) {
+            updatedList = updatedList.map(restaurant => {
+              const updated = result.updatedRestaurants.find(r => r.id === restaurant.id)
+              return updated || restaurant
+            })
+          }
+          
+          if (result.newRestaurants.length > 0) {
+            updatedList = [...updatedList, ...result.newRestaurants]
+          }
+          
+          return updatedList
+        })
+        
+        const messages: string[] = []
+        if (result.addedCount > 0) {
+          messages.push(`${result.addedCount} new restaurant${result.addedCount !== 1 ? 's' : ''}`)
+        }
+        if (result.updatedCount > 0) {
+          messages.push(`${result.updatedCount} updated restaurant${result.updatedCount !== 1 ? 's' : ''}`)
+        }
         
         toast.success(
-          `Successfully imported ${result.addedCount} restaurant${result.addedCount !== 1 ? 's' : ''} with ${result.itemsAddedCount} menu item${result.itemsAddedCount !== 1 ? 's' : ''}`
+          `Successfully imported: ${messages.join(', ')} with ${result.itemsAddedCount} total menu item${result.itemsAddedCount !== 1 ? 's' : ''}`
         )
         
         await loadBackups()
         setIsImportDialogOpen(false)
       } else {
-        toast.info('No new restaurants to import. All restaurants from the sheet already exist.')
+        toast.info('No changes detected. All restaurants and menu items already exist.')
       }
     } catch (error) {
       toast.error(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -394,7 +421,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                       placeholder="https://docs.google.com/spreadsheets/d/..."
                     />
                     <p className="text-xs text-muted-foreground">
-                      Only new restaurants will be imported. Existing restaurants will remain unchanged.
+                      New restaurants will be added. Existing restaurants will be updated with new menu items only.
                     </p>
                   </div>
 
