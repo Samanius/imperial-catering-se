@@ -1269,7 +1269,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       
       <Dialog open={isErrorDialogOpen} onOpenChange={setIsErrorDialogOpen}>
         <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col">
-          <DialogHeader>
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle className="font-heading text-2xl text-destructive flex items-center gap-2">
               <X size={28} weight="bold" />
               Import Error Details
@@ -1279,34 +1279,34 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
             </DialogDescription>
           </DialogHeader>
           
-          <ScrollArea className="flex-1 max-h-[70vh]">
-            <div className="space-y-4 pr-4">
+          <ScrollArea className="flex-1 overflow-auto pr-4 my-4">
+            <div className="space-y-4">
               <Card className="p-4 bg-destructive/5 border-destructive/20">
                 <pre className="text-xs whitespace-pre-wrap font-mono text-foreground leading-relaxed">
                   {importError}
                 </pre>
               </Card>
-              
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => {
-                    navigator.clipboard.writeText(importError || '')
-                    toast.success('Error details copied to clipboard')
-                  }}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  Copy Error Details
-                </Button>
-                <Button
-                  onClick={() => setIsErrorDialogOpen(false)}
-                  className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90"
-                >
-                  Close
-                </Button>
-              </div>
             </div>
           </ScrollArea>
+
+          <div className="flex gap-2 flex-shrink-0 pt-4 border-t">
+            <Button
+              onClick={() => {
+                navigator.clipboard.writeText(importError || '')
+                toast.success('Error details copied to clipboard')
+              }}
+              variant="outline"
+              className="flex-1"
+            >
+              Copy Error Details
+            </Button>
+            <Button
+              onClick={() => setIsErrorDialogOpen(false)}
+              className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90"
+            >
+              Close
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
