@@ -133,22 +133,70 @@ export async function importFromGoogleSheets(
       }
 
       if (existingRestaurant) {
-        console.log(`Restaurant "${restaurantName}" exists, checking for new items`)
-        const existingItemNames = new Set(
-          (existingRestaurant.menuItems || []).map(item => item.name.toLowerCase().trim())
+        console.log(`Restaurant "${restaurantName}" exists, checking for updates and new items`)
+        
+        const existingItemsMap = new Map(
+          (existingRestaurant.menuItems || []).map(item => [item.name.toLowerCase().trim(), item])
         )
         
-        console.log('Existing item names:', Array.from(existingItemNames))
+        console.log('Existing item names:', Array.from(existingItemsMap.keys()))
         
-        const newItemsOnly = menuItems.filter(
-          item => !existingItemNames.has(item.name.toLowerCase().trim())
-        )
-
-        console.log(`New items to add: ${newItemsOnly.length}`)
-
-        if (newItemsOnly.length > 0) {
-          const updatedMenuItems = [...(existingRestaurant.menuItems || []), ...newItemsOnly]
+        const updatedMenuItems: MenuItem[] = []
+        const newItems: string[] = []
+        const updatedItems: string[] = []
+        let hasChanges = false
+        
+        for (const importedItem of menuItems) {
+          const itemKey = importedItem.name.toLowerCase().trim()
+          const existingItem = existingItemsMap.get(itemKey)
           
+          if (existingItem) {
+            const priceChanged = existingItem.price !== importedItem.price
+            const descChanged = (existingItem.description || '') !== (importedItem.description || '')
+            const categoryChanged = existingItem.category !== importedItem.category
+            const weightChanged = (existingItem.weight || undefined) !== (importedItem.weight || undefined)
+            const imageChanged = (existingItem.image || '') !== (importedItem.image || '')
+            
+            if (priceChanged || descChanged || categoryChanged || weightChanged || imageChanged) {
+              console.log(`Item "${importedItem.name}" has changes:`, {
+                price: priceChanged ? `${existingItem.price} → ${importedItem.price}` : 'same',
+                description: descChanged ? 'changed' : 'same',
+                category: categoryChanged ? `${existingItem.category} → ${importedItem.category}` : 'same',
+                weight: weightChanged ? `${existingItem.weight} → ${importedItem.weight}` : 'same',
+                image: imageChanged ? 'changed' : 'same'
+              })
+              
+              updatedMenuItems.push({
+                ...existingItem,
+                price: importedItem.price,
+                description: importedItem.description,
+                category: importedItem.category,
+                weight: importedItem.weight,
+                image: importedItem.image
+              })
+              updatedItems.push(importedItem.name)
+              hasChanges = true
+            } else {
+              updatedMenuItems.push(existingItem)
+            }
+            
+            existingItemsMap.delete(itemKey)
+          } else {
+            console.log(`New item found: "${importedItem.name}"`)
+            updatedMenuItems.push(importedItem)
+            newItems.push(importedItem.name)
+            hasChanges = true
+          }
+        }
+        
+        for (const [, remainingItem] of existingItemsMap) {
+          console.log(`Keeping existing item not in sheet: "${remainingItem.name}"`)
+          updatedMenuItems.push(remainingItem)
+        }
+
+        console.log(`Summary: ${newItems.length} new items, ${updatedItems.length} updated items`)
+
+        if (hasChanges) {
           const allCategories = Array.from(new Set(updatedMenuItems.map(item => item.category)))
           
           const updatedRestaurant: Restaurant = {
@@ -158,14 +206,18 @@ export async function importFromGoogleSheets(
           }
           
           updatedRestaurants.push(updatedRestaurant)
-          itemsAddedCount += newItemsOnly.length
+          itemsAddedCount += newItems.length
           
-          console.log(`Updated restaurant "${restaurantName}" with ${newItemsOnly.length} new items`)
+          const changeSummary: string[] = []
+          if (newItems.length > 0) changeSummary.push(`${newItems.length} new`)
+          if (updatedItems.length > 0) changeSummary.push(`${updatedItems.length} updated`)
+          
+          console.log(`Updated restaurant "${restaurantName}": ${changeSummary.join(', ')}`)
           
           await createBackup('update', 'restaurant', updatedRestaurant.id, updatedRestaurant.name, updatedRestaurant, existingRestaurant)
         } else {
-          console.log(`All ${menuItems.length} items already exist in "${restaurantName}"`)
-          errors.push(`Restaurant "${restaurantName}" already exists with all ${menuItems.length} menu items - no new items to add`)
+          console.log(`No changes for "${restaurantName}" - all items are identical`)
+          errors.push(`Restaurant "${restaurantName}": No changes detected - all menu items are identical`)
         }
       } else {
         console.log(`Creating new restaurant "${restaurantName}" with ${menuItems.length} items`)
