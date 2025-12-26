@@ -66,17 +66,33 @@ export async function importFromGoogleSheets(
       for (let i = startIndex; i < sheet.rows.length; i++) {
         const row = sheet.rows[i]
         
+        if (!row || row.length === 0) {
+          console.log(`Row ${i}: Empty row, skipping`)
+          continue
+        }
+        
         if (row.length < 3) {
           console.log(`Row ${i}: Not enough columns (${row.length}), skipping`)
           continue
         }
 
-        const itemName = row[0]?.trim()
-        const description = row[1]?.trim()
-        const priceStr = row[2]?.trim()
-        const category = row[3]?.trim()
-        const weightStr = row[4]?.trim()
-        const imageUrl = row[5]?.trim()
+        const itemName = row[0]?.toString().trim() || ''
+        const description = row[1]?.toString().trim() || ''
+        const priceStr = row[2]?.toString().trim() || ''
+        const category = row[3]?.toString().trim() || ''
+        const weightStr = row[4]?.toString().trim() || ''
+        let imageUrl = ''
+        
+        try {
+          imageUrl = row[5]?.toString().trim() || ''
+          if (imageUrl && !imageUrl.startsWith('http')) {
+            console.log(`Row ${i}: Image URL doesn't start with http, clearing it`)
+            imageUrl = ''
+          }
+        } catch (e) {
+          console.log(`Row ${i}: Could not parse image URL, setting to empty`)
+          imageUrl = ''
+        }
 
         if (!itemName || !priceStr) {
           console.log(`Row ${i}: Missing name or price, skipping`)
@@ -215,37 +231,51 @@ async function fetchAllSheets(spreadsheetId: string): Promise<SheetData[]> {
   
   const metadataUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?key=${apiKey}`
   
+  console.log('Fetching spreadsheet metadata...')
   const metadataResponse = await fetch(metadataUrl)
   
   if (!metadataResponse.ok) {
-    throw new Error(`Failed to fetch spreadsheet metadata: ${metadataResponse.statusText}`)
+    const errorText = await metadataResponse.text()
+    console.error('Metadata fetch error:', errorText)
+    throw new Error(`Failed to fetch spreadsheet metadata: ${metadataResponse.statusText}. ${errorText}`)
   }
   
   const metadata = await metadataResponse.json()
   const sheets = metadata.sheets || []
   
+  console.log(`Found ${sheets.length} sheet(s) in spreadsheet`)
+  
   const sheetsData: SheetData[] = []
   
   for (const sheet of sheets) {
     const sheetName = sheet.properties.title
-    const sheetId = sheet.properties.sheetId
     
-    const valuesUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(sheetName)}?key=${apiKey}`
+    console.log(`Fetching data for sheet: "${sheetName}"`)
     
-    const valuesResponse = await fetch(valuesUrl)
+    const valuesUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(sheetName)}?key=${apiKey}&valueRenderOption=FORMATTED_VALUE`
     
-    if (!valuesResponse.ok) {
-      console.error(`Failed to fetch sheet "${sheetName}":`, valuesResponse.statusText)
+    try {
+      const valuesResponse = await fetch(valuesUrl)
+      
+      if (!valuesResponse.ok) {
+        const errorText = await valuesResponse.text()
+        console.error(`Failed to fetch sheet "${sheetName}":`, valuesResponse.statusText, errorText)
+        continue
+      }
+      
+      const valuesData = await valuesResponse.json()
+      const rows: string[][] = valuesData.values || []
+      
+      console.log(`Sheet "${sheetName}": ${rows.length} rows fetched`)
+      
+      sheetsData.push({
+        sheetName,
+        rows
+      })
+    } catch (error) {
+      console.error(`Error fetching sheet "${sheetName}":`, error)
       continue
     }
-    
-    const valuesData = await valuesResponse.json()
-    const rows: string[][] = valuesData.values || []
-    
-    sheetsData.push({
-      sheetName,
-      rows
-    })
   }
   
   return sheetsData
