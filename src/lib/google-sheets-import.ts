@@ -30,10 +30,16 @@ export async function importFromGoogleSheets(
       return { newRestaurants, updatedRestaurants, addedCount: 0, updatedCount: 0, itemsAddedCount: 0, errors }
     }
 
+    console.log('Processing sheets:', sheetsData.map(s => s.sheetName))
+    console.log('Existing restaurants:', existingRestaurants.map(r => r.name))
+
     for (const sheet of sheetsData) {
       const restaurantName = sheet.sheetName.trim()
       
+      console.log(`\n=== Processing sheet: "${restaurantName}" ===`)
+      
       if (!restaurantName) {
+        console.log('Sheet name is empty, skipping')
         errors.push('Found sheet with empty name, skipping')
         continue
       }
@@ -42,12 +48,17 @@ export async function importFromGoogleSheets(
         r => r.name.toLowerCase() === restaurantName.toLowerCase()
       )
 
+      console.log('Existing restaurant found:', existingRestaurant ? `Yes (${existingRestaurant.name})` : 'No')
+
       const menuItems: MenuItem[] = []
+      
+      console.log(`Processing ${sheet.rows.length} rows`)
       
       for (let i = 0; i < sheet.rows.length; i++) {
         const row = sheet.rows[i]
         
         if (row.length < 3) {
+          console.log(`Row ${i}: Not enough columns (${row.length}), skipping`)
           continue
         }
 
@@ -59,11 +70,13 @@ export async function importFromGoogleSheets(
         const imageUrl = row[5]?.trim()
 
         if (!itemName || !priceStr) {
+          console.log(`Row ${i}: Missing name or price, skipping`)
           continue
         }
 
         const price = parseFloat(priceStr)
         if (isNaN(price)) {
+          console.log(`Row ${i}: Invalid price "${priceStr}", skipping`)
           continue
         }
 
@@ -80,23 +93,31 @@ export async function importFromGoogleSheets(
           image: imageUrl || ''
         }
 
+        console.log(`Row ${i}: Added item "${itemName}" - $${price}`)
         menuItems.push(menuItem)
-        itemsAddedCount++
       }
 
+      console.log(`Total menu items parsed: ${menuItems.length}`)
+
       if (menuItems.length === 0) {
+        console.log(`No valid menu items found for "${restaurantName}"`)
         errors.push(`Restaurant "${restaurantName}" has no valid menu items, skipping`)
         continue
       }
 
       if (existingRestaurant) {
+        console.log(`Restaurant "${restaurantName}" exists, checking for new items`)
         const existingItemNames = new Set(
           (existingRestaurant.menuItems || []).map(item => item.name.toLowerCase().trim())
         )
         
+        console.log('Existing item names:', Array.from(existingItemNames))
+        
         const newItemsOnly = menuItems.filter(
           item => !existingItemNames.has(item.name.toLowerCase().trim())
         )
+
+        console.log(`New items to add: ${newItemsOnly.length}`)
 
         if (newItemsOnly.length > 0) {
           const updatedMenuItems = [...(existingRestaurant.menuItems || []), ...newItemsOnly]
@@ -110,12 +131,17 @@ export async function importFromGoogleSheets(
           }
           
           updatedRestaurants.push(updatedRestaurant)
+          itemsAddedCount += newItemsOnly.length
+          
+          console.log(`Updated restaurant "${restaurantName}" with ${newItemsOnly.length} new items`)
           
           await createBackup('update', 'restaurant', updatedRestaurant.id, updatedRestaurant.name, updatedRestaurant, existingRestaurant)
         } else {
+          console.log(`All ${menuItems.length} items already exist in "${restaurantName}"`)
           errors.push(`Restaurant "${restaurantName}" already exists with all ${menuItems.length} menu items - no new items to add`)
         }
       } else {
+        console.log(`Creating new restaurant "${restaurantName}" with ${menuItems.length} items`)
         const categories = Array.from(new Set(menuItems.map(item => item.category)))
 
         const newRestaurant: Restaurant = {
@@ -139,6 +165,9 @@ export async function importFromGoogleSheets(
         }
 
         newRestaurants.push(newRestaurant)
+        itemsAddedCount += menuItems.length
+        
+        console.log(`New restaurant added: "${restaurantName}"`)
         
         await createBackup('create', 'restaurant', newRestaurant.id, newRestaurant.name, newRestaurant)
       }
