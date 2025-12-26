@@ -615,9 +615,6 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                         id="api-key"
                         type="password"
                         value={apiKeyInput}
-                        onChange={(e) => setApiKeyInput(e.target.value)}
-                        placeholder="AIza..."
-                      />
                       {googleApiKey && googleApiKey === apiKeyInput ? (
                         <p className="text-xs text-accent-foreground font-medium flex items-center gap-1">
                           <Check size={14} weight="bold" />
@@ -625,6 +622,9 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                         </p>
                       ) : (
                         <p className="text-xs text-muted-foreground">
+                          Your API key will be saved securely after first import and reused automatically
+                        </p>
+                      )}
                           Your API key will be saved securely after first import and reused automatically
                         </p>
                       )}
