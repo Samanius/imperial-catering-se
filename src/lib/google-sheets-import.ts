@@ -91,11 +91,11 @@ export async function importFromGoogleSheets(
 
       if (existingRestaurant) {
         const existingItemNames = new Set(
-          (existingRestaurant.menuItems || []).map(item => item.name.toLowerCase())
+          (existingRestaurant.menuItems || []).map(item => item.name.toLowerCase().trim())
         )
         
         const newItemsOnly = menuItems.filter(
-          item => !existingItemNames.has(item.name.toLowerCase())
+          item => !existingItemNames.has(item.name.toLowerCase().trim())
         )
 
         if (newItemsOnly.length > 0) {
@@ -112,6 +112,8 @@ export async function importFromGoogleSheets(
           updatedRestaurants.push(updatedRestaurant)
           
           await createBackup('update', 'restaurant', updatedRestaurant.id, updatedRestaurant.name, updatedRestaurant, existingRestaurant)
+        } else {
+          errors.push(`Restaurant "${restaurantName}" already exists with all ${menuItems.length} menu items - no new items to add`)
         }
       } else {
         const categories = Array.from(new Set(menuItems.map(item => item.category)))
@@ -141,6 +143,14 @@ export async function importFromGoogleSheets(
         await createBackup('create', 'restaurant', newRestaurant.id, newRestaurant.name, newRestaurant)
       }
     }
+
+    console.log('Import completed:', {
+      totalSheetsProcessed: sheetsData.length,
+      newRestaurants: newRestaurants.length,
+      updatedRestaurants: updatedRestaurants.length,
+      itemsAddedCount,
+      errors: errors.length
+    })
 
     return {
       newRestaurants,

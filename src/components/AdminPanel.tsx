@@ -306,11 +306,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
     try {
       const result = await importFromGoogleSheets(spreadsheetId, restaurants || [])
       
-      if (result.errors.length > 0) {
-        result.errors.forEach(error => {
-          console.warn('Import warning:', error)
-        })
-      }
+      console.log('Import result:', result)
 
       const hasChanges = result.addedCount > 0 || result.updatedCount > 0
 
@@ -346,10 +342,26 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
           `Successfully imported: ${messages.join(', ')} with ${result.itemsAddedCount} total menu item${result.itemsAddedCount !== 1 ? 's' : ''}`
         )
         
+        if (result.errors.length > 0) {
+          result.errors.forEach(error => {
+            console.warn('Import info:', error)
+            if (!error.includes('already exists with all')) {
+              toast.info(error, { duration: 5000 })
+            }
+          })
+        }
+        
         await loadBackups()
         setIsImportDialogOpen(false)
       } else {
-        toast.info('No changes detected. All restaurants and menu items already exist.')
+        if (result.errors.length > 0) {
+          toast.warning('No changes made - check console for details', { duration: 5000 })
+          result.errors.forEach(error => {
+            console.log('Import info:', error)
+          })
+        } else {
+          toast.info('No data found to import from the spreadsheet.')
+        }
       }
     } catch (error) {
       toast.error(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
