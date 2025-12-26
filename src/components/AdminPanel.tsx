@@ -502,16 +502,16 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                   Import from Google Sheets
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col">
-                <DialogHeader>
+              <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+                <DialogHeader className="flex-shrink-0">
                   <DialogTitle className="font-heading text-2xl">Import from Google Sheets</DialogTitle>
                   <DialogDescription>
                     Import restaurants and menu items from your Google Spreadsheet
                   </DialogDescription>
                 </DialogHeader>
                 
-                <ScrollArea className="flex-1 max-h-[65vh] pr-4">
-                  <div className="space-y-4 py-4">
+                <ScrollArea className="flex-1 overflow-auto pr-4">
+                  <div className="space-y-4 py-4 pb-6">
                     <Card className="p-4 bg-accent/5 border-accent/30">
                       <p className="text-sm font-semibold text-foreground mb-2">
                         🔑 Google Sheets API Key Required
