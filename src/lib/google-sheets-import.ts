@@ -63,16 +63,20 @@ export async function importFromGoogleSheets(
         }
       }
       
+      const rowErrors: string[] = []
+      
       for (let i = startIndex; i < sheet.rows.length; i++) {
         const row = sheet.rows[i]
+        const rowNum = i + 1
         
         if (!row || row.length === 0) {
-          console.log(`Row ${i}: Empty row, skipping`)
+          console.log(`Row ${rowNum}: Empty row, skipping`)
           continue
         }
         
         if (row.length < 3) {
-          console.log(`Row ${i}: Not enough columns (${row.length}), skipping`)
+          console.log(`Row ${rowNum}: Not enough columns (${row.length}), skipping`)
+          rowErrors.push(`Row ${rowNum}: Not enough columns (need at least A, B, C)`)
           continue
         }
 
@@ -86,23 +90,29 @@ export async function importFromGoogleSheets(
         try {
           imageUrl = row[5]?.toString().trim() || ''
           if (imageUrl && !imageUrl.startsWith('http')) {
-            console.log(`Row ${i}: Image URL doesn't start with http, clearing it`)
+            console.log(`Row ${rowNum}: Image URL doesn't start with http, clearing it`)
+            rowErrors.push(`Row ${rowNum}: Image URL invalid (must start with http:// or https://), skipped image`)
             imageUrl = ''
           }
         } catch (e) {
-          console.log(`Row ${i}: Could not parse image URL, setting to empty`)
+          console.log(`Row ${rowNum}: Could not parse image URL, setting to empty`)
           imageUrl = ''
         }
 
         if (!itemName || !priceStr) {
-          console.log(`Row ${i}: Missing name or price, skipping`)
+          console.log(`Row ${rowNum}: Missing name or price, skipping`)
+          const missing: string[] = []
+          if (!itemName) missing.push('Item Name (Column A)')
+          if (!priceStr) missing.push('Price (Column C)')
+          rowErrors.push(`Row ${rowNum}: Missing required fields: ${missing.join(', ')}`)
           continue
         }
 
         const cleanPriceStr = priceStr.replace(/[^\d.-]/g, '')
         const price = parseFloat(cleanPriceStr)
         if (isNaN(price) || price <= 0) {
-          console.log(`Row ${i}: Invalid price "${priceStr}" (cleaned: "${cleanPriceStr}"), skipping`)
+          console.log(`Row ${rowNum}: Invalid price "${priceStr}" (cleaned: "${cleanPriceStr}"), skipping`)
+          rowErrors.push(`Row ${rowNum}: Invalid price "${priceStr}" in Column C (must be a number)`)
           continue
         }
 
@@ -120,15 +130,25 @@ export async function importFromGoogleSheets(
           image: imageUrl || ''
         }
 
-        console.log(`Row ${i}: Added item "${itemName}" - $${price} ${finalWeight ? `(${finalWeight}g)` : ''}`)
+        console.log(`Row ${rowNum}: Added item "${itemName}" - $${price} ${finalWeight ? `(${finalWeight}g)` : ''}`)
         menuItems.push(menuItem)
       }
 
       console.log(`Total menu items parsed: ${menuItems.length}`)
+      
+      if (rowErrors.length > 0) {
+        console.log(`Found ${rowErrors.length} row errors:`)
+        rowErrors.forEach(err => console.log(`  ${err}`))
+        errors.push(`Restaurant "${restaurantName}": ${rowErrors.length} row(s) skipped due to errors. See console for details.`)
+      }
 
       if (menuItems.length === 0) {
         console.log(`No valid menu items found for "${restaurantName}"`)
-        errors.push(`Restaurant "${restaurantName}" has no valid menu items (check that rows have Item Name and Price)`)
+        if (rowErrors.length > 0) {
+          errors.push(`Restaurant "${restaurantName}": No valid menu items found. All ${sheet.rows.length - startIndex} rows had errors (see above).`)
+        } else {
+          errors.push(`Restaurant "${restaurantName}": Sheet is empty or has no data rows with Item Name and Price.`)
+        }
         continue
       }
 

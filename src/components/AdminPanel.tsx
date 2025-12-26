@@ -341,17 +341,39 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
           messages.push(`${result.updatedCount} updated restaurant${result.updatedCount !== 1 ? 's' : ''}`)
         }
         
+        console.group('✅ Import Successful!')
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+        console.log(`📊 IMPORT SUMMARY:`)
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+        console.log(`✓ New restaurants added: ${result.addedCount}`)
+        console.log(`✓ Existing restaurants updated: ${result.updatedCount}`)
+        console.log(`✓ Total menu items imported: ${result.itemsAddedCount}`)
+        
+        if (result.newRestaurants.length > 0) {
+          console.log('\n🆕 NEW RESTAURANTS:')
+          result.newRestaurants.forEach(r => {
+            console.log(`  • ${r.name} (${r.menuItems?.length || 0} items)`)
+          })
+        }
+        
+        if (result.updatedRestaurants.length > 0) {
+          console.log('\n🔄 UPDATED RESTAURANTS:')
+          result.updatedRestaurants.forEach(r => {
+            console.log(`  • ${r.name} (${r.menuItems?.length || 0} total items)`)
+          })
+        }
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+        console.groupEnd()
+        
         toast.success(
-          `Successfully imported: ${messages.join(', ')} with ${result.itemsAddedCount} total menu item${result.itemsAddedCount !== 1 ? 's' : ''}`
+          `Successfully imported: ${messages.join(', ')} with ${result.itemsAddedCount} total menu item${result.itemsAddedCount !== 1 ? 's' : ''}`,
+          { duration: 6000 }
         )
         
         if (result.errors.length > 0) {
-          console.group('Import messages:')
-          result.errors.forEach(error => {
-            console.log(error)
-            if (!error.includes('already exists with all')) {
-              toast.info(error, { duration: 5000 })
-            }
+          console.group('ℹ️  Import Warnings:')
+          result.errors.forEach((error, idx) => {
+            console.log(`${idx + 1}. ${error}`)
           })
           console.groupEnd()
         }
@@ -360,17 +382,53 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
         setIsImportDialogOpen(false)
       } else {
         if (result.errors.length > 0) {
-          toast.warning('No changes made - check console for details', { duration: 5000 })
-          console.group('Import details - why no changes were made:')
+          console.group('❌ Import Failed - Detailed Error Report:')
+          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+          console.log(`Total errors found: ${result.errors.length}`)
+          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+          
           result.errors.forEach((error, index) => {
-            console.log(`${index + 1}. ${error}`)
+            console.log(`\n${index + 1}. ${error}`)
           })
+          
+          console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+          console.log('📋 SPREADSHEET REQUIREMENTS:')
+          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+          console.log('✓ Each sheet = one restaurant (sheet name = restaurant name)')
+          console.log('✓ First row can be headers (will be skipped automatically)')
+          console.log('✓ Required columns:')
+          console.log('  • Column A: Item Name (must not be empty)')
+          console.log('  • Column C: Price (must be a valid number, $ signs OK)')
+          console.log('✓ Optional columns:')
+          console.log('  • Column B: Description')
+          console.log('  • Column D: Category')
+          console.log('  • Column E: Weight (in grams)')
+          console.log('  • Column F: Image URL (must start with http or https)')
+          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+          console.log('\n🔍 COMMON ISSUES:')
+          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+          console.log('1. Empty rows - will be automatically skipped')
+          console.log('2. Invalid prices - check that prices are numbers (e.g., 25, $25, 25.50)')
+          console.log('3. Missing Item Name or Price - these are required fields')
+          console.log('4. Invalid image URLs - must start with http:// or https://')
+          console.log('5. All items identical - if restaurant exists and all items are the same, no update needed')
+          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
           console.groupEnd()
-          console.log('Check that your spreadsheet has:')
-          console.log('1. Sheet names matching restaurant names')
-          console.log('2. Valid data in columns A (Item Name), B (Description), C (Price)')
-          console.log('3. First row may be headers (will be skipped automatically)')
-          console.log('4. Price should be a number ($ signs are OK)')
+          
+          const errorSummary = result.errors
+            .map(err => {
+              if (err.includes('no valid menu items')) return '• Missing required data (Item Name or Price)'
+              if (err.includes('No changes detected')) return '• All items already exist with identical data'
+              if (err.includes('empty name')) return '• Found sheet with no name'
+              return `• ${err.substring(0, 80)}${err.length > 80 ? '...' : ''}`
+            })
+            .slice(0, 5)
+            .join('\n')
+          
+          toast.error(
+            `Import failed. Check browser console (F12) for details.\n\nIssues found:\n${errorSummary}`,
+            { duration: 10000 }
+          )
         } else {
           toast.info('No data found to import from the spreadsheet.')
           console.log('No sheets or no data found in spreadsheet')
