@@ -29,6 +29,8 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
   const [activeTab, setActiveTab] = useState<'restaurants' | 'backups'>('restaurants')
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
   const [googleSheetUrl, setGoogleSheetUrl] = useState('https://docs.google.com/spreadsheets/d/1my60zyjTGdDaY0sen9WAxCWooP7EDPneRTzwVDxoxEQ/edit?gid=0#gid=0')
+  const [googleApiKey, setGoogleApiKey] = useKV<string>('google-sheets-api-key', '')
+  const [apiKeyInput, setApiKeyInput] = useState('')
   const [isImporting, setIsImporting] = useState(false)
   const [importError, setImportError] = useState<string | null>(null)
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
@@ -66,7 +68,8 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
 
   useEffect(() => {
     loadBackups()
-  }, [])
+    setApiKeyInput(googleApiKey || '')
+  }, [googleApiKey])
 
   const loadBackups = async () => {
     const allBackups = await getBackups()
@@ -296,6 +299,11 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       return
     }
 
+    if (!apiKeyInput.trim()) {
+      toast.error('Please enter your Google Sheets API key')
+      return
+    }
+
     const spreadsheetId = extractSpreadsheetId(googleSheetUrl)
     
     if (!spreadsheetId) {
@@ -303,10 +311,12 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       return
     }
 
+    setGoogleApiKey(apiKeyInput.trim())
+
     setIsImporting(true)
 
     try {
-      const result = await importFromGoogleSheets(spreadsheetId, restaurants || [])
+      const result = await importFromGoogleSheets(spreadsheetId, restaurants || [], apiKeyInput.trim())
       
       console.log('Import result:', result)
       console.log('Errors array:', result.errors)
@@ -502,6 +512,40 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                 
                 <ScrollArea className="flex-1 max-h-[65vh] pr-4">
                   <div className="space-y-4 py-4">
+                    <Card className="p-4 bg-accent/5 border-accent/30">
+                      <p className="text-sm font-semibold text-foreground mb-2">
+                        🔑 Google Sheets API Key Required
+                      </p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        To import data, you need a Google Sheets API key. Don't have one?
+                      </p>
+                      <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside mt-2">
+                        <li>Go to <a href="https://console.cloud.google.com" target="_blank" rel="noopener noreferrer" className="text-accent underline hover:text-accent/80">Google Cloud Console</a></li>
+                        <li>Create or select a project</li>
+                        <li>Enable the "Google Sheets API"</li>
+                        <li>Go to "Credentials" → "Create Credentials" → "API Key"</li>
+                        <li>Restrict the key to Google Sheets API only (recommended)</li>
+                        <li>Copy the API key and paste it below</li>
+                      </ol>
+                      <p className="text-xs text-accent mt-2">
+                        📖 <a href="https://github.com/yourusername/yourrepo/blob/main/GOOGLE_SHEETS_SETUP.md" target="_blank" rel="noopener noreferrer" className="underline hover:text-accent/80">View detailed setup guide</a>
+                      </p>
+                    </Card>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="api-key">Google Sheets API Key *</Label>
+                      <Input
+                        id="api-key"
+                        type="password"
+                        value={apiKeyInput}
+                        onChange={(e) => setApiKeyInput(e.target.value)}
+                        placeholder="AIza..."
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Your API key is stored securely and only used for importing data.
+                      </p>
+                    </div>
+
                     <Card className="p-4 bg-muted/30 border-accent/20">
                       <p className="text-sm text-muted-foreground leading-relaxed mb-3">
                         <strong className="text-foreground">Sheet Structure:</strong>
@@ -522,7 +566,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                     </Card>
 
                     <div className="space-y-2">
-                      <Label htmlFor="sheet-url">Google Sheets URL</Label>
+                      <Label htmlFor="sheet-url">Google Sheets URL *</Label>
                       <Input
                         id="sheet-url"
                         value={googleSheetUrl}
@@ -530,7 +574,10 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                         placeholder="https://docs.google.com/spreadsheets/d/..."
                       />
                       <p className="text-xs text-muted-foreground">
-                        New restaurants will be added. Existing restaurants will be updated with new menu items only.
+                        ⚠️ <strong>Important:</strong> Your spreadsheet must be shared as "Anyone with the link can view"
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        New restaurants will be added. Existing restaurants will be updated with new menu items.
                       </p>
                     </div>
 

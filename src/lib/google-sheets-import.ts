@@ -8,7 +8,8 @@ interface SheetData {
 
 export async function importFromGoogleSheets(
   spreadsheetId: string,
-  existingRestaurants: Restaurant[]
+  existingRestaurants: Restaurant[],
+  apiKey?: string
 ): Promise<{ 
   newRestaurants: Restaurant[]
   updatedRestaurants: Restaurant[]
@@ -23,7 +24,7 @@ export async function importFromGoogleSheets(
   let itemsAddedCount = 0
 
   try {
-    const sheetsData = await fetchAllSheets(spreadsheetId)
+    const sheetsData = await fetchAllSheets(spreadsheetId, apiKey)
     
     if (!sheetsData || sheetsData.length === 0) {
       errors.push('No sheets found in the spreadsheet')
@@ -298,8 +299,10 @@ export async function importFromGoogleSheets(
   }
 }
 
-async function fetchAllSheets(spreadsheetId: string): Promise<SheetData[]> {
-  const apiKey = 'AIzaSyBOti4mM-6x9WDnZIjIeyEU01cwTBgwng4'
+async function fetchAllSheets(spreadsheetId: string, apiKey?: string): Promise<SheetData[]> {
+  if (!apiKey) {
+    throw new Error('Google Sheets API key is required. Please enter your API key to import data.')
+  }
   
   const metadataUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?key=${apiKey}`
   
@@ -309,6 +312,11 @@ async function fetchAllSheets(spreadsheetId: string): Promise<SheetData[]> {
   if (!metadataResponse.ok) {
     const errorText = await metadataResponse.text()
     console.error('Metadata fetch error:', errorText)
+    
+    if (metadataResponse.status === 400 || metadataResponse.status === 403) {
+      throw new Error(`Invalid or expired Google Sheets API key. Please verify your API key and ensure the Sheets API is enabled in Google Cloud Console. ${errorText}`)
+    }
+    
     throw new Error(`Failed to fetch spreadsheet metadata: ${metadataResponse.statusText}. ${errorText}`)
   }
   
