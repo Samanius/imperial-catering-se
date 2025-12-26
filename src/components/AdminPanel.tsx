@@ -331,7 +331,10 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       return
     }
 
-    setGoogleApiKey(apiKeyInput.trim())
+    if (googleApiKey !== apiKeyInput.trim()) {
+      await setGoogleApiKey(apiKeyInput.trim())
+      toast.success('API key saved for future imports')
+    }
 
     setIsImporting(true)
 
@@ -615,9 +618,16 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                         onChange={(e) => setApiKeyInput(e.target.value)}
                         placeholder="AIza..."
                       />
-                      <p className="text-xs text-muted-foreground">
-                        Your API key is stored securely and only used for importing data.
-                      </p>
+                      {googleApiKey && googleApiKey === apiKeyInput ? (
+                        <p className="text-xs text-accent-foreground font-medium flex items-center gap-1">
+                          <Check size={14} weight="bold" />
+                          API key saved and will be remembered for future imports
+                        </p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">
+                          Your API key will be saved securely after first import and reused automatically
+                        </p>
+                      )}
                     </div>
 
                     <Card className="p-4 bg-muted/30 border-accent/20">
