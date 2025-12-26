@@ -302,15 +302,18 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       return
     }
 
-    if (googleApiKey !== apiKeyInput.trim()) {
-      await setGoogleApiKey(apiKeyInput.trim())
+    const trimmedApiKey = apiKeyInput.trim()
+    
+    if (googleApiKey !== trimmedApiKey) {
+      setGoogleApiKey(trimmedApiKey)
+      await window.spark.kv.set('google-sheets-api-key', trimmedApiKey)
       toast.success('API key saved for future imports')
     }
 
     setIsImporting(true)
 
     try {
-      const result = await importFromGoogleSheets(spreadsheetId, database.restaurants || [], apiKeyInput.trim())
+      const result = await importFromGoogleSheets(spreadsheetId, database.restaurants || [], trimmedApiKey)
       
       console.log('Import result:', result)
       console.log('Errors array:', result.errors)
