@@ -7,13 +7,15 @@ import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { Separator } from './ui/separator'
-import { ArrowLeft, Plus, Trash, PencilSimple, Check, X, ClockCounterClockwise, DownloadSimple, CaretDown, CaretUp, Eye, EyeSlash } from '@phosphor-icons/react'
+import { ArrowLeft, Plus, Trash, PencilSimple, Check, X, ClockCounterClockwise, DownloadSimple, CaretDown, CaretUp, Eye, EyeSlash, FileArrowDown, SpinnerGap } from '@phosphor-icons/react'
 import type { Restaurant, MenuItem, MenuType } from '@/lib/types'
 import { toast } from 'sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 import { ScrollArea } from './ui/scroll-area'
 import { createBackup, getBackups, exportBackupsAsJSON, type BackupEntry } from '@/lib/backup'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible'
+import { importFromGoogleSheets, extractSpreadsheetId } from '@/lib/google-sheets-import'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog'
 
 interface AdminPanelProps {
   onBack: () => void
@@ -25,6 +27,9 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
   const [isCreating, setIsCreating] = useState(false)
   const [backups, setBackups] = useState<BackupEntry[]>([])
   const [activeTab, setActiveTab] = useState<'restaurants' | 'backups'>('restaurants')
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
+  const [googleSheetUrl, setGoogleSheetUrl] = useState('https://docs.google.com/spreadsheets/d/1my60zyjTGdDaY0sen9WAxCWooP7EDPneRTzwVDxoxEQ/edit?gid=0#gid=0')
+  const [isImporting, setIsImporting] = useState(false)
 
   const [formData, setFormData] = useState<Partial<Restaurant>>({
     name: '',
@@ -283,6 +288,50 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
     }
   }
 
+  const handleImportFromGoogleSheets = async () => {
+    if (!googleSheetUrl.trim()) {
+      toast.error('Please enter a Google Sheets URL')
+      return
+    }
+
+    const spreadsheetId = extractSpreadsheetId(googleSheetUrl)
+    
+    if (!spreadsheetId) {
+      toast.error('Invalid Google Sheets URL')
+      return
+    }
+
+    setIsImporting(true)
+
+    try {
+      const result = await importFromGoogleSheets(spreadsheetId, restaurants || [])
+      
+      if (result.errors.length > 0) {
+        result.errors.forEach(error => {
+          console.warn('Import warning:', error)
+        })
+      }
+
+      if (result.addedCount > 0) {
+        setRestaurants((current) => [...(current || []), ...result.newRestaurants])
+        
+        toast.success(
+          `Successfully imported ${result.addedCount} restaurant${result.addedCount !== 1 ? 's' : ''} with ${result.itemsAddedCount} menu item${result.itemsAddedCount !== 1 ? 's' : ''}`
+        )
+        
+        await loadBackups()
+        setIsImportDialogOpen(false)
+      } else {
+        toast.info('No new restaurants to import. All restaurants from the sheet already exist.')
+      }
+    } catch (error) {
+      toast.error(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      console.error('Import error:', error)
+    } finally {
+      setIsImporting(false)
+    }
+  }
+
   return (
     <div className="min-h-screen pt-20 pb-12">
       <div className="container mx-auto px-6 max-w-7xl">
@@ -301,13 +350,92 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
             </div>
           </div>
           
-          <Button
-            onClick={startCreating}
-            className="bg-accent text-accent-foreground hover:bg-accent/90"
-          >
-            <Plus size={20} weight="bold" className="mr-2" />
-            New Restaurant
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="border-accent text-accent-foreground hover:bg-accent/10"
+                >
+                  <FileArrowDown size={20} weight="bold" className="mr-2" />
+                  Import from Google Sheets
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[600px]">
+                <DialogHeader>
+                  <DialogTitle className="font-heading text-2xl">Import from Google Sheets</DialogTitle>
+                  <DialogDescription>
+                    Import restaurants and menu items from your Google Spreadsheet
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <div className="space-y-4 py-4">
+                  <Card className="p-4 bg-muted/30 border-accent/20">
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                      <strong className="text-foreground">Sheet Structure:</strong>
+                    </p>
+                    <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                      <li>Each sheet = one restaurant (sheet name = restaurant name)</li>
+                      <li>Column A: Item Name</li>
+                      <li>Column B: Description</li>
+                      <li>Column C: Price</li>
+                      <li>Column D: Category</li>
+                      <li>Column E: Weight (g)</li>
+                      <li>Column F: Image URL</li>
+                    </ul>
+                  </Card>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="sheet-url">Google Sheets URL</Label>
+                    <Input
+                      id="sheet-url"
+                      value={googleSheetUrl}
+                      onChange={(e) => setGoogleSheetUrl(e.target.value)}
+                      placeholder="https://docs.google.com/spreadsheets/d/..."
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Only new restaurants will be imported. Existing restaurants will remain unchanged.
+                    </p>
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      onClick={handleImportFromGoogleSheets}
+                      disabled={isImporting}
+                      className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90"
+                    >
+                      {isImporting ? (
+                        <>
+                          <SpinnerGap size={20} weight="bold" className="mr-2 animate-spin" />
+                          Importing...
+                        </>
+                      ) : (
+                        <>
+                          <FileArrowDown size={20} weight="bold" className="mr-2" />
+                          Import Data
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsImportDialogOpen(false)}
+                      disabled={isImporting}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            <Button
+              onClick={startCreating}
+              className="bg-accent text-accent-foreground hover:bg-accent/90"
+            >
+              <Plus size={20} weight="bold" className="mr-2" />
+              New Restaurant
+            </Button>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'restaurants' | 'backups')} className="w-full">
