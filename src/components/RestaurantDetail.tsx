@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useKV } from '@github/spark/hooks'
+import { useDatabase } from '@/hooks/use-database'
 import { useIsMobile } from '@/hooks/use-mobile'
 import type { Restaurant } from '@/lib/types'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs'
@@ -12,25 +12,26 @@ interface RestaurantDetailProps {
 }
 
 export default function RestaurantDetail({ restaurantId }: RestaurantDetailProps) {
-  const [restaurants] = useKV<Restaurant[]>('restaurants', [])
+  const { restaurants, isLoading: dbLoading } = useDatabase()
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const [isLoading, setIsLoading] = useState(true)
   const isMobile = useIsMobile()
   
   const restaurant = restaurants?.find(r => r.id === restaurantId)
 
-  useEffect(() => {
-    if (restaurants && restaurants.length > 0) {
-      setIsLoading(false)
-    }
-  }, [restaurants])
-
-  if (isLoading) {
-    return null
+  if (dbLoading) {
+    return (
+      <main className="pt-14 sm:pt-20 flex items-center justify-center min-h-screen">
+        <p className="font-heading text-xl text-muted-foreground">Loading...</p>
+      </main>
+    )
   }
 
   if (!restaurant) {
-    return null
+    return (
+      <main className="pt-14 sm:pt-20 flex items-center justify-center min-h-screen">
+        <p className="font-heading text-xl text-muted-foreground">Restaurant not found</p>
+      </main>
+    )
   }
 
   const galleryImages = [restaurant.coverImage, ...restaurant.galleryImages].filter(Boolean)

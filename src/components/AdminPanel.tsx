@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useKV } from '@github/spark/hooks'
+import { useDatabase } from '@/hooks/use-database'
 import { Button } from './ui/button'
-import { Card } from './ui/card'
+import { Card, CardContent } from './ui/card'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { Separator } from './ui/separator'
-import { ArrowLeft, Plus, Trash, PencilSimple, Check, X, ClockCounterClockwise, DownloadSimple, CaretDown, CaretUp, Eye, EyeSlash, FileArrowDown, SpinnerGap } from '@phosphor-icons/react'
+import { ArrowLeft, Plus, Trash, PencilSimple, Check, X, ClockCounterClockwise, DownloadSimple, CaretDown, CaretUp, Eye, EyeSlash, FileArrowDown, SpinnerGap, ArrowsClockwise } from '@phosphor-icons/react'
 import type { Restaurant, MenuItem, MenuType } from '@/lib/types'
 import { toast } from 'sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
@@ -16,17 +17,18 @@ import { createBackup, getBackups, exportBackupsAsJSON, type BackupEntry } from 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible'
 import { importFromGoogleSheets, extractSpreadsheetId } from '@/lib/google-sheets-import'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog'
+import DatabaseSetup from './DatabaseSetup'
 
 interface AdminPanelProps {
   onBack: () => void
 }
 
 export default function AdminPanel({ onBack }: AdminPanelProps) {
-  const [restaurants, setRestaurants] = useKV<Restaurant[]>('restaurants', [])
+  const database = useDatabase()
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [backups, setBackups] = useState<BackupEntry[]>([])
-  const [activeTab, setActiveTab] = useState<'restaurants' | 'backups'>('restaurants')
+  const [activeTab, setActiveTab] = useState<'database' | 'restaurants' | 'backups'>('database')
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
   const [googleSheetUrl, setGoogleSheetUrl] = useState('https://docs.google.com/spreadsheets/d/1my60zyjTGdDaY0sen9WAxCWooP7EDPneRTzwVDxoxEQ/edit?gid=0#gid=0')
   const [googleApiKey, setGoogleApiKey] = useKV<string>('google-sheets-api-key', '')
@@ -230,6 +232,11 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       return
     }
 
+    if (!database.isConfigured) {
+      toast.error('Database not configured. Please set up the database first.')
+      return
+    }
+
     const restaurant: Restaurant = {
       id: selectedRestaurant?.id || Date.now().toString(),
       name: formData.name,
@@ -249,47 +256,55 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       waiterServicePrice: formData.waiterServicePrice ? Number(formData.waiterServicePrice) : undefined
     }
 
-    if (selectedRestaurant) {
-      await createBackup('update', 'restaurant', restaurant.id, restaurant.name, restaurant, selectedRestaurant)
-      setRestaurants((current) => 
-        (current || []).map(r => r.id === restaurant.id ? restaurant : r)
-      )
-      toast.success('Restaurant updated')
-    } else {
-      await createBackup('create', 'restaurant', restaurant.id, restaurant.name, restaurant)
-      setRestaurants((current) => [...(current || []), restaurant])
-      toast.success('Restaurant created')
-    }
+    try {
+      if (selectedRestaurant) {
+        await createBackup('update', 'restaurant', restaurant.id, restaurant.name, restaurant, selectedRestaurant)
+        await database.updateRestaurant(restaurant)
+        toast.success('Restaurant updated')
+      } else {
+        await createBackup('create', 'restaurant', restaurant.id, restaurant.name, restaurant)
+        await database.addRestaurant(restaurant)
+        toast.success('Restaurant created')
+      }
 
-    await loadBackups()
-    setIsCreating(false)
-    setSelectedRestaurant(null)
+      await loadBackups()
+      setIsCreating(false)
+      setSelectedRestaurant(null)
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to save restaurant')
+    }
   }
 
   const toggleRestaurantVisibility = async (id: string) => {
-    const restaurant = restaurants?.find(r => r.id === id)
+    const restaurant = database.restaurants?.find(r => r.id === id)
     if (!restaurant) return
     
     const updatedRestaurant = { ...restaurant, isHidden: !restaurant.isHidden }
     const action = updatedRestaurant.isHidden ? 'hidden' : 'shown'
     
-    await createBackup('update', 'restaurant', id, restaurant.name, updatedRestaurant, restaurant)
-    setRestaurants((current) => 
-      (current || []).map(r => r.id === id ? updatedRestaurant : r)
-    )
-    toast.success(`Restaurant ${action}`)
-    await loadBackups()
+    try {
+      await createBackup('update', 'restaurant', id, restaurant.name, updatedRestaurant, restaurant)
+      await database.updateRestaurant(updatedRestaurant)
+      toast.success(`Restaurant ${action}`)
+      await loadBackups()
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update restaurant')
+    }
   }
 
   const deleteRestaurant = async (id: string) => {
-    const restaurantToDelete = restaurants?.find(r => r.id === id)
+    const restaurantToDelete = database.restaurants?.find(r => r.id === id)
     if (!restaurantToDelete) return
     
     if (confirm('Are you sure you want to delete this restaurant?')) {
-      await createBackup('delete', 'restaurant', id, restaurantToDelete.name, restaurantToDelete)
-      setRestaurants((current) => (current || []).filter(r => r.id !== id))
-      toast.success('Restaurant deleted')
-      await loadBackups()
+      try {
+        await createBackup('delete', 'restaurant', id, restaurantToDelete.name, restaurantToDelete)
+        await database.deleteRestaurant(id)
+        toast.success('Restaurant deleted')
+        await loadBackups()
+      } catch (error: any) {
+        toast.error(error.message || 'Failed to delete restaurant')
+      }
     }
   }
 
@@ -301,6 +316,11 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
 
     if (!apiKeyInput.trim()) {
       toast.error('Please enter your Google Sheets API key')
+      return
+    }
+
+    if (!database.isConfigured) {
+      toast.error('Database not configured. Please set up the database first.')
       return
     }
 
@@ -316,7 +336,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
     setIsImporting(true)
 
     try {
-      const result = await importFromGoogleSheets(spreadsheetId, restaurants || [], apiKeyInput.trim())
+      const result = await importFromGoogleSheets(spreadsheetId, database.restaurants || [], apiKeyInput.trim())
       
       console.log('Import result:', result)
       console.log('Errors array:', result.errors)
@@ -324,26 +344,24 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       const hasChanges = result.addedCount > 0 || result.updatedCount > 0
 
       if (hasChanges) {
-        setRestaurants((current) => {
-          const currentRestaurants = current || []
-          
-          let updatedList = [...currentRestaurants]
-          
-          if (result.updatedRestaurants.length > 0) {
-            updatedList = updatedList.map(restaurant => {
-              const updated = result.updatedRestaurants.find(r => r.id === restaurant.id)
-              return updated || restaurant
-            })
-          }
-          
-          if (result.newRestaurants.length > 0) {
-            updatedList = [...updatedList, ...result.newRestaurants]
-          }
-          
-          console.log('Updated restaurant list:', updatedList.map(r => r.name))
-          
-          return updatedList
-        })
+        const currentRestaurants = database.restaurants || []
+        
+        let updatedList = [...currentRestaurants]
+        
+        if (result.updatedRestaurants.length > 0) {
+          updatedList = updatedList.map(restaurant => {
+            const updated = result.updatedRestaurants.find(r => r.id === restaurant.id)
+            return updated || restaurant
+          })
+        }
+        
+        if (result.newRestaurants.length > 0) {
+          updatedList = [...updatedList, ...result.newRestaurants]
+        }
+        
+        console.log('Updated restaurant list:', updatedList.map(r => r.name))
+        
+        await database.saveRestaurants(updatedList)
         
         const messages: string[] = []
         if (result.addedCount > 0) {
@@ -678,14 +696,44 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'restaurants' | 'backups')} className="w-full">
-          <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'database' | 'restaurants' | 'backups')} className="w-full">
+          <TabsList className="grid w-full max-w-3xl grid-cols-3 mb-6">
+            <TabsTrigger value="database">Database</TabsTrigger>
             <TabsTrigger value="restaurants">Restaurants</TabsTrigger>
             <TabsTrigger value="backups">
               <ClockCounterClockwise size={16} className="mr-2" />
               Backups ({backups.length})
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="database" className="mt-0">
+            <div className="max-w-2xl mx-auto">
+              <DatabaseSetup
+                onSetup={async (gistId, githubToken) => {
+                  await database.configureDatabase(gistId, githubToken)
+                }}
+                onCreateNew={database.createDatabase}
+                isConfigured={database.isConfigured}
+              />
+              
+              {database.isConfigured && (
+                <Card className="mt-6">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Refresh Database</p>
+                        <p className="text-sm text-muted-foreground">Load latest data from cloud</p>
+                      </div>
+                      <Button onClick={database.refresh} variant="outline" size="sm">
+                        <ArrowsClockwise size={16} className="mr-2" />
+                        Refresh
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
 
           <TabsContent value="restaurants" className="mt-0">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">{/* ... restaurant management UI ... */}
@@ -695,12 +743,12 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
             </h2>
             <ScrollArea className="h-[calc(100vh-300px)]">
               <div className="space-y-2">
-                {!restaurants || restaurants.length === 0 ? (
+                {!database.restaurants || database.restaurants.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">
                     No restaurants yet
                   </p>
                 ) : (
-                  restaurants.map(restaurant => (
+                  database.restaurants.map(restaurant => (
                     <div
                       key={restaurant.id}
                       className={`p-3 rounded-sm border cursor-pointer transition-colors ${

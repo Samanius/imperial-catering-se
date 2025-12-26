@@ -1,4 +1,4 @@
-import { useKV } from '@github/spark/hooks'
+import { useDatabase } from '@/hooks/use-database'
 import { useIsMobile } from '@/hooks/use-mobile'
 import type { Restaurant } from '@/lib/types'
 import RestaurantCard from './RestaurantCard'
@@ -9,7 +9,7 @@ interface RestaurantCatalogProps {
 }
 
 export default function RestaurantCatalog({ onRestaurantSelect }: RestaurantCatalogProps) {
-  const [restaurants] = useKV<Restaurant[]>('restaurants', [])
+  const { restaurants, isLoading } = useDatabase()
   const isMobile = useIsMobile()
 
   const visibleRestaurants = (restaurants || []).filter(r => !r.isHidden)
@@ -43,7 +43,13 @@ export default function RestaurantCatalog({ onRestaurantSelect }: RestaurantCata
       </section>
 
       <section className="px-4 sm:px-6 py-12 sm:py-16 md:py-24 max-w-7xl mx-auto">
-        {!visibleRestaurants || visibleRestaurants.length === 0 ? (
+        {isLoading ? (
+          <div className="text-center py-16 sm:py-24">
+            <p className="font-heading text-xl sm:text-2xl text-muted-foreground mb-2">
+              Loading experiences...
+            </p>
+          </div>
+        ) : !visibleRestaurants || visibleRestaurants.length === 0 ? (
           <div className="text-center py-16 sm:py-24">
             <p className="font-heading text-xl sm:text-2xl text-muted-foreground mb-2">
               Curated Experiences Arriving Soon

@@ -2,6 +2,8 @@
 
 A luxury yacht catering platform that connects discerning clients with exclusive restaurants, embodying the refined elegance of Old Money and Quiet Luxury through sophisticated design and seamless ordering experience.
 
+**IMPORTANT**: The application now uses a centralized cloud database (GitHub Gist) for data persistence. All restaurant data is stored in the cloud and accessible to all users. See DATABASE_SETUP_RU.md for setup instructions.
+
 **Experience Qualities**: 
 1. **Understated Elegance** - Every element exudes quiet sophistication without ostentation, letting quality speak for itself
 2. **Effortless Refinement** - Interactions feel natural and intuitive, as if guided by an invisible concierge
