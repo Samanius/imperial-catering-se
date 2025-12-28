@@ -63,9 +63,9 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured }: Da
       <Card className="border-accent/20 bg-card">
         <CardHeader>
           <div className="flex items-center gap-3">
-            <CheckCircle className="text-accent" size={24} weight="fill" />
+            <CheckCircle className="text-accent" size={28} weight="fill" />
             <div>
-              <CardTitle className="text-lg">✅ Database Connected Successfully</CardTitle>
+              <CardTitle className="text-lg">✅ Database Connected & Ready</CardTitle>
               <CardDescription>Your restaurant data is stored securely in GitHub Gist</CardDescription>
             </div>
           </div>
@@ -74,13 +74,14 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured }: Da
           <Alert className="bg-accent/5 border-accent/20">
             <Info className="h-4 w-4 text-accent" />
             <AlertDescription className="text-sm">
+              <strong>✓ Database is active and working</strong><br />
               ✓ All changes are automatically saved to the cloud<br />
               ✓ Data persists across page refreshes and deployments<br />
               ✓ You can now import restaurants from Google Sheets
             </AlertDescription>
           </Alert>
           <p className="text-xs text-muted-foreground">
-            Your database is ready! Go to the <strong>Restaurants</strong> tab to manage your data or import from Google Sheets.
+            Your database is fully configured! Go to the <strong>Restaurants</strong> tab to manage your data or import from Google Sheets.
           </p>
         </CardContent>
       </Card>
@@ -91,10 +92,10 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured }: Da
     <Card className="border-destructive/20">
       <CardHeader>
         <div className="flex items-center gap-3">
-          <XCircle className="text-destructive" size={24} weight="fill" />
+          <XCircle className="text-destructive" size={28} weight="fill" />
           <div>
             <CardTitle className="text-lg">⚠️ Database Not Configured</CardTitle>
-            <CardDescription>Required: Set up cloud storage to save your restaurants permanently</CardDescription>
+            <CardDescription className="font-semibold">REQUIRED: Set up cloud storage before importing restaurants</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -102,18 +103,25 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured }: Da
         <Alert className="bg-destructive/10 border-destructive/30">
           <Info className="h-4 w-4 text-destructive" />
           <AlertDescription className="text-sm font-medium">
-            <strong>IMPORTANT:</strong> Without database configuration, all restaurant data will be lost when you refresh the page, close the browser, or deploy to production. You MUST set up the database before importing from Google Sheets.
+            <strong>⚠️ CRITICAL:</strong> Without database configuration, all restaurant data will be lost when you refresh the page, close the browser, or deploy to production. You MUST set up the database before importing from Google Sheets or creating restaurants.
           </AlertDescription>
         </Alert>
 
-        <div className="bg-muted/50 p-4 rounded-lg space-y-2 text-sm">
-          <p className="font-semibold text-foreground">Quick Start Guide:</p>
-          <ol className="list-decimal list-inside space-y-1 text-muted-foreground ml-2">
-            <li>Create a GitHub Personal Access Token (link below)</li>
-            <li>Click "Create New" to make a new database</li>
-            <li>Paste your token and click "Create Database"</li>
-            <li>Save the Gist ID shown for future reference</li>
-            <li>Done! Your data will now persist permanently</li>
+        <div className="bg-accent/10 p-4 rounded-lg border border-accent/20 space-y-3">
+          <p className="font-semibold text-foreground flex items-center gap-2">
+            <CheckCircle size={20} className="text-accent" weight="fill" />
+            Quick Start - 3 Easy Steps (~2 minutes):
+          </p>
+          <ol className="list-decimal list-inside space-y-2 text-sm ml-2">
+            <li className="text-foreground">
+              <strong>Get GitHub Token:</strong> <a href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline font-medium">Click here</a> → Check "gist" → Generate token → Copy it
+            </li>
+            <li className="text-foreground">
+              <strong>Create Database:</strong> Click "Create New" button below → Paste token → Click "Create Database"
+            </li>
+            <li className="text-foreground">
+              <strong>Done!</strong> You'll see a green success message and can then import restaurants
+            </li>
           </ol>
         </div>
 
@@ -141,75 +149,84 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured }: Da
             <Alert className="bg-muted/30 border-border">
               <Info className="h-4 w-4" />
               <AlertDescription className="text-xs">
-                Use this option if you already have a Gist ID from a previous setup. If this is your first time, use <strong>"Create New"</strong> instead.
+                <strong>Use this if you already have a Gist ID</strong> from a previous database setup. If this is your first time or you don't have a Gist ID, click <strong>"Create New"</strong> instead.
               </AlertDescription>
             </Alert>
 
             <div className="space-y-2">
-              <Label htmlFor="gist-id">GitHub Gist ID</Label>
+              <Label htmlFor="gist-id" className="font-semibold">GitHub Gist ID</Label>
               <Input
                 id="gist-id"
-                placeholder="abc123def456..."
+                placeholder="abc123def456... (example: 8f3e4d2c1b9a7f6e5d4c3b2a1)"
                 value={gistId}
                 onChange={(e) => setGistId(e.target.value)}
+                className="font-mono text-sm"
               />
               <p className="text-xs text-muted-foreground">
-                The ID from your Gist URL (the long string after /gist/)
+                The long ID from your Gist URL (found after /gist/ in the URL). Example: https://gist.github.com/<strong>abc123def456</strong>
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="github-token">GitHub Personal Access Token</Label>
+              <Label htmlFor="github-token" className="font-semibold">GitHub Personal Access Token</Label>
               <Input
                 id="github-token"
                 type="password"
                 placeholder="ghp_..."
                 value={githubToken}
                 onChange={(e) => setGithubToken(e.target.value)}
+                className="font-mono"
               />
               <p className="text-xs text-muted-foreground">
-                Token with 'gist' scope. <a href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">Create one here</a>
+                Token with 'gist' scope. <a href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline font-medium">Create one here</a>
               </p>
             </div>
 
-            <Button onClick={handleConnect} disabled={isLoading} className="w-full">
+            <Button onClick={handleConnect} disabled={isLoading} className="w-full" size="lg">
               {isLoading ? 'Connecting...' : 'Connect Database'}
             </Button>
           </div>
         ) : (
           <div className="space-y-4">
-            <Alert className="bg-accent/5 border-accent/20">
+            <Alert className="bg-accent/10 border-accent/30">
               <Info className="h-4 w-4 text-accent" />
               <AlertDescription className="text-sm">
-                <strong>Recommended for new users:</strong> This will create a new private GitHub Gist to store your restaurant data. This is the easiest way to get started. You'll receive a Gist ID that you should save for future reference.
+                <strong>✅ Recommended for new users:</strong> This creates a new private GitHub Gist to store your restaurant data securely. It's the easiest and fastest way to get started. Takes only 60 seconds!
               </AlertDescription>
             </Alert>
 
             <div className="space-y-2">
-              <Label htmlFor="github-token-create">GitHub Personal Access Token</Label>
+              <Label htmlFor="github-token-create" className="text-base font-semibold">GitHub Personal Access Token</Label>
               <Input
                 id="github-token-create"
                 type="password"
                 placeholder="ghp_..."
                 value={githubToken}
                 onChange={(e) => setGithubToken(e.target.value)}
+                className="font-mono"
               />
-              <p className="text-xs text-muted-foreground">
-                Need a token? <a href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline font-medium">Click here to create one</a> (only takes 30 seconds)
-              </p>
+              <div className="text-xs text-muted-foreground space-y-1">
+                <p>
+                  <strong>Don't have a token?</strong> <a href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline font-medium">Click here to create one</a> (takes 60 seconds)
+                </p>
+                <p className="text-xs opacity-80">
+                  → On GitHub: Check ONLY "gist" checkbox → Click "Generate token" → Copy and paste here
+                </p>
+              </div>
             </div>
 
-            <Button onClick={handleCreate} disabled={isLoading} className="w-full">
-              {isLoading ? 'Creating...' : 'Create Database'}
+            <Button onClick={handleCreate} disabled={isLoading} className="w-full" size="lg">
+              {isLoading ? 'Creating Database...' : 'Create Database'}
             </Button>
             
-            <div className="bg-muted/30 p-3 rounded text-xs space-y-1">
-              <p className="font-medium">What happens when you click Create:</p>
+            <div className="bg-muted/30 p-3 rounded text-xs space-y-1.5">
+              <p className="font-medium text-foreground">What happens when you click Create:</p>
               <ul className="list-disc list-inside space-y-0.5 ml-2 text-muted-foreground">
-                <li>A new private Gist is created in your GitHub account</li>
-                <li>You'll get a Gist ID (save this for backup/recovery)</li>
+                <li>A new private Gist is created in your GitHub account (free, secure)</li>
+                <li>You'll receive a Gist ID (save this for backup/recovery)</li>
                 <li>Database is automatically connected</li>
-                <li>You can immediately start importing restaurants</li>
+                <li>You can immediately start importing restaurants from Google Sheets</li>
+                <li>All your data will persist forever (survives page refreshes & deployments)</li>
               </ul>
             </div>
           </div>

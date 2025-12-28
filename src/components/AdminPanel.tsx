@@ -30,7 +30,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
   const [googleSheetUrl, setGoogleSheetUrl] = useState('https://docs.google.com/spreadsheets/d/1my60zyjTGdDaY0sen9WAxCWooP7EDPneRTzwVDxoxEQ/edit?gid=0#gid=0')
   const [googleApiKey, setGoogleApiKey] = useKV<string>('google-sheets-api-key', 'AIzaSyDX3Morf9Oeg-ANaP4ABE_irlIRbqMsSyE')
-  const [apiKeyInput, setApiKeyInput] = useState('AIzaSyDX3Morf9Oeg-ANaP4ABE_irlIRbqMsSyE')
+  const [apiKeyInput, setApiKeyInput] = useState('')
   const [isImporting, setIsImporting] = useState(false)
   const [importError, setImportError] = useState<string | null>(null)
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
@@ -67,8 +67,14 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
   const [editingItemData, setEditingItemData] = useState<MenuItem | null>(null)
 
   useEffect(() => {
-    setApiKeyInput(googleApiKey || 'AIzaSyDX3Morf9Oeg-ANaP4ABE_irlIRbqMsSyE')
-  }, [googleApiKey])
+    if (googleApiKey) {
+      setApiKeyInput(googleApiKey)
+    } else {
+      const defaultKey = 'AIzaSyDX3Morf9Oeg-ANaP4ABE_irlIRbqMsSyE'
+      setApiKeyInput(defaultKey)
+      setGoogleApiKey(defaultKey)
+    }
+  }, [])
 
   const startCreating = () => {
     setIsCreating(true)
@@ -300,54 +306,73 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
     const trimmedApiKey = apiKeyInput.trim()
     
     if (googleApiKey !== trimmedApiKey) {
-      await setGoogleApiKey(trimmedApiKey)
-      toast.success('Google Sheets API key saved', { duration: 2000 })
+      setGoogleApiKey((current) => trimmedApiKey)
+      await new Promise(resolve => setTimeout(resolve, 100))
     }
 
     if (!database.isConfigured) {
-      const fullErrorText = `❌ IMPORT FAILED - DATABASE NOT CONFIGURED\n\n` +
+      const fullErrorText = `❌ IMPORT BLOCKED - DATABASE NOT SET UP\n\n` +
         `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-        `🔴 PROBLEM:\n` +
+        `🔴 CRITICAL ISSUE:\n` +
         `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-        `Your database (GitHub Gist) is not configured. Without a database,\n` +
-        `imported restaurants cannot be saved and will be lost on page refresh.\n\n` +
+        `Your database (GitHub Gist) is NOT configured. Without it:\n` +
+        `• Imported restaurants CANNOT be saved\n` +
+        `• All data will be LOST on page refresh\n` +
+        `• The import will NOT work\n\n` +
         `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-        `✅ SOLUTION - Follow these 3 steps:\n` +
+        `✅ REQUIRED SETUP (ONE-TIME, ~3 MINUTES):\n` +
         `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-        `STEP 1: Create GitHub Personal Access Token\n` +
-        `   1. Go to: https://github.com/settings/tokens/new\n` +
+        `STEP 1: Create GitHub Token\n` +
+        `   1. Visit: https://github.com/settings/tokens/new\n` +
         `   2. Description: "Imperial Restaurant Database"\n` +
-        `   3. Check ONLY the "gist" checkbox\n` +
-        `   4. Click "Generate token" at bottom\n` +
-        `   5. Copy the token (starts with "ghp_...")\n\n` +
-        `STEP 2: Set Up Database\n` +
-        `   1. Click "Database" tab at the top of Admin Panel\n` +
-        `   2. Choose "Create New" option\n` +
+        `   3. Check ONLY "gist" (under repository permissions)\n` +
+        `   4. Click green "Generate token" button at bottom\n` +
+        `   5. Copy the token (looks like: ghp_abc123...)\n\n` +
+        `STEP 2: Set Up Database Storage\n` +
+        `   1. Click "Database" tab at TOP of this Admin Panel\n` +
+        `   2. Click "Create New" button\n` +
         `   3. Paste your GitHub token\n` +
         `   4. Click "Create Database"\n` +
-        `   5. Save the Gist ID shown (for future use)\n\n` +
-        `STEP 3: Import Your Data\n` +
+        `   5. Wait for "Database Connected Successfully" message\n\n` +
+        `STEP 3: Import Your Restaurants\n` +
         `   1. Return to "Restaurants" tab\n` +
         `   2. Click "Import from Google Sheets" again\n` +
-        `   3. Your restaurants will now be saved permanently\n\n` +
+        `   3. Done! Your data is now saved permanently\n\n` +
         `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-        `ℹ️  GOOD NEWS:\n` +
+        `ℹ️  IMPORTANT NOTES:\n` +
         `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
         `• Your Google Sheets API key has been saved ✓\n` +
-        `• This is a ONE-TIME setup\n` +
-        `• After database setup, all future imports work automatically\n` +
-        `• Your data will persist across page refreshes and deployments\n\n` +
+        `• Database setup is ONE-TIME only\n` +
+        `• After setup, all imports work automatically\n` +
+        `• Your data survives page refreshes & deployments\n` +
+        `• The GitHub token is FREE and takes 60 seconds\n\n` +
         `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-        `📋 REMINDER - Google Sheets Format:\n` +
+        `NEED HELP? Common Questions:\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+        `Q: Why do I need a GitHub account?\n` +
+        `A: To store restaurant data in a free, secure cloud database.\n\n` +
+        `Q: Is my data private?\n` +
+        `A: Yes! The Gist is private by default. Only you can see it.\n\n` +
+        `Q: What if I skip this?\n` +
+        `A: All restaurants will disappear when you refresh the page.\n\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+        `📋 Your Google Sheets Requirements (reminder):\n` +
         `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
         `• Each sheet = one restaurant (sheet name = restaurant name)\n` +
-        `• Required: Column A (Item Name), Column C (Price)\n` +
-        `• Optional: Column B (Description), D (Category), E (Weight), F (Image URL)\n` +
-        `• First row can be headers (skipped automatically)`
+        `• Column A: Item Name (required)\n` +
+        `• Column B: Description (optional)\n` +
+        `• Column C: Price (required)\n` +
+        `• Column D: Category (optional)\n` +
+        `• Column E: Weight (optional)\n` +
+        `• Column F: Image URL (optional)\n` +
+        `• First row can be headers (automatically skipped)\n\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+        `⏩ NEXT STEP: Click "Database Tab" button below → Create New\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
       
       setImportError(fullErrorText)
       setIsErrorDialogOpen(true)
-      toast.error('⚠️ Database not configured! Click to see setup instructions.', { 
+      toast.error('⚠️ Database not configured! See detailed instructions.', { 
         duration: 8000,
         action: {
           label: 'Database Tab',
