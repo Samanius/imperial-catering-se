@@ -4,7 +4,7 @@ import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
 import { Alert, AlertDescription } from './ui/alert'
-import { Database, Plus, CheckCircle, XCircle, Info } from '@phosphor-icons/react'
+import { Database, Plus, CheckCircle, XCircle, Info, ArrowSquareOut } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 
 interface DatabaseSetupProps {
@@ -214,6 +214,31 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured }: Da
 
         {mode === 'connect' ? (
           <div className="space-y-4">
+            <Alert className="bg-accent/5 border-accent/20">
+              <Info className="h-4 w-4 text-accent" />
+              <AlertDescription className="text-xs space-y-2">
+                <p className="font-semibold">Quick Links:</p>
+                <div className="flex flex-col gap-1">
+                  <a 
+                    href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-accent hover:underline inline-flex items-center gap-1"
+                  >
+                    Create API Token <ArrowSquareOut size={14} weight="bold" />
+                  </a>
+                  <a 
+                    href="https://gist.github.com/" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-accent hover:underline inline-flex items-center gap-1"
+                  >
+                    View Your Gists <ArrowSquareOut size={14} weight="bold" />
+                  </a>
+                </div>
+              </AlertDescription>
+            </Alert>
+
             <div className="space-y-2">
               <Label htmlFor="gist-id" className="font-semibold">GitHub Gist ID</Label>
               <Input
@@ -223,6 +248,18 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured }: Da
                 onChange={(e) => setGistId(e.target.value)}
                 className="font-mono text-sm"
               />
+              <p className="text-xs text-muted-foreground">
+                Find your Gist ID at{' '}
+                <a 
+                  href="https://gist.github.com/" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-accent hover:underline"
+                >
+                  gist.github.com
+                </a>
+                {' '}(it's in the URL)
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -235,6 +272,18 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured }: Da
                 onChange={(e) => setGithubToken(e.target.value)}
                 className="font-mono"
               />
+              <p className="text-xs text-muted-foreground">
+                Create token at{' '}
+                <a 
+                  href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-accent hover:underline"
+                >
+                  github.com/settings/tokens/new
+                </a>
+                {' '}(check only "gist" scope)
+              </p>
             </div>
 
             <Button onClick={handleConnect} disabled={isLoading} className="w-full" size="lg">
@@ -243,6 +292,31 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured }: Da
           </div>
         ) : (
           <div className="space-y-4">
+            <Alert className="bg-accent/5 border-accent/20">
+              <Info className="h-4 w-4 text-accent" />
+              <AlertDescription className="text-xs space-y-2">
+                <p className="font-semibold">Quick Links:</p>
+                <div className="flex flex-col gap-1">
+                  <a 
+                    href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-accent hover:underline inline-flex items-center gap-1"
+                  >
+                    Create API Token <ArrowSquareOut size={14} weight="bold" />
+                  </a>
+                  <a 
+                    href="https://gist.github.com/" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-accent hover:underline inline-flex items-center gap-1"
+                  >
+                    View Your Gists <ArrowSquareOut size={14} weight="bold" />
+                  </a>
+                </div>
+              </AlertDescription>
+            </Alert>
+
             <div className="space-y-2">
               <Label htmlFor="github-token-create" className="text-base font-semibold">GitHub Personal Access Token</Label>
               <Input
