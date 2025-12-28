@@ -418,7 +418,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
           console.log('3. Missing Item Name or Price - these are required fields')
           console.log('4. Invalid image URLs - must start with http:// or https://')
           console.log('5. All items identical - if restaurant exists and all items are the same, no update needed')
-          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━���━━')
           console.groupEnd()
           
           const fullErrorText = `IMPORT FAILED\n\n` +
