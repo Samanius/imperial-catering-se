@@ -65,18 +65,23 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured }: Da
           <div className="flex items-center gap-3">
             <CheckCircle className="text-accent" size={24} weight="fill" />
             <div>
-              <CardTitle className="text-lg">Database Connected</CardTitle>
-              <CardDescription>Your restaurant data is stored in GitHub Gist</CardDescription>
+              <CardTitle className="text-lg">✅ Database Connected Successfully</CardTitle>
+              <CardDescription>Your restaurant data is stored securely in GitHub Gist</CardDescription>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <Alert className="bg-muted/30 border-accent/20">
+        <CardContent className="space-y-3">
+          <Alert className="bg-accent/5 border-accent/20">
             <Info className="h-4 w-4 text-accent" />
             <AlertDescription className="text-sm">
-              All changes are now saved to the cloud and will be visible to all users.
+              ✓ All changes are automatically saved to the cloud<br />
+              ✓ Data persists across page refreshes and deployments<br />
+              ✓ You can now import restaurants from Google Sheets
             </AlertDescription>
           </Alert>
+          <p className="text-xs text-muted-foreground">
+            Your database is ready! Go to the <strong>Restaurants</strong> tab to manage your data or import from Google Sheets.
+          </p>
         </CardContent>
       </Card>
     )
@@ -88,18 +93,29 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured }: Da
         <div className="flex items-center gap-3">
           <XCircle className="text-destructive" size={24} weight="fill" />
           <div>
-            <CardTitle className="text-lg">Database Not Configured</CardTitle>
-            <CardDescription>Set up cloud storage to save your restaurants</CardDescription>
+            <CardTitle className="text-lg">⚠️ Database Not Configured</CardTitle>
+            <CardDescription>Required: Set up cloud storage to save your restaurants permanently</CardDescription>
           </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        <Alert className="bg-destructive/5 border-destructive/20">
+        <Alert className="bg-destructive/10 border-destructive/30">
           <Info className="h-4 w-4 text-destructive" />
-          <AlertDescription className="text-sm">
-            Without database configuration, all data will be lost when you refresh the page or deploy to production.
+          <AlertDescription className="text-sm font-medium">
+            <strong>IMPORTANT:</strong> Without database configuration, all restaurant data will be lost when you refresh the page, close the browser, or deploy to production. You MUST set up the database before importing from Google Sheets.
           </AlertDescription>
         </Alert>
+
+        <div className="bg-muted/50 p-4 rounded-lg space-y-2 text-sm">
+          <p className="font-semibold text-foreground">Quick Start Guide:</p>
+          <ol className="list-decimal list-inside space-y-1 text-muted-foreground ml-2">
+            <li>Create a GitHub Personal Access Token (link below)</li>
+            <li>Click "Create New" to make a new database</li>
+            <li>Paste your token and click "Create Database"</li>
+            <li>Save the Gist ID shown for future reference</li>
+            <li>Done! Your data will now persist permanently</li>
+          </ol>
+        </div>
 
         <div className="flex gap-2">
           <Button
@@ -122,6 +138,13 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured }: Da
 
         {mode === 'connect' ? (
           <div className="space-y-4">
+            <Alert className="bg-muted/30 border-border">
+              <Info className="h-4 w-4" />
+              <AlertDescription className="text-xs">
+                Use this option if you already have a Gist ID from a previous setup. If this is your first time, use <strong>"Create New"</strong> instead.
+              </AlertDescription>
+            </Alert>
+
             <div className="space-y-2">
               <Label htmlFor="gist-id">GitHub Gist ID</Label>
               <Input
@@ -131,7 +154,7 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured }: Da
                 onChange={(e) => setGistId(e.target.value)}
               />
               <p className="text-xs text-muted-foreground">
-                The ID from your Gist URL (after /gist/)
+                The ID from your Gist URL (the long string after /gist/)
               </p>
             </div>
 
@@ -145,7 +168,7 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured }: Da
                 onChange={(e) => setGithubToken(e.target.value)}
               />
               <p className="text-xs text-muted-foreground">
-                Token with 'gist' scope. <a href="https://github.com/settings/tokens/new?scopes=gist&description=MERIDIEN%20Database" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">Create one here</a>
+                Token with 'gist' scope. <a href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">Create one here</a>
               </p>
             </div>
 
@@ -158,7 +181,7 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured }: Da
             <Alert className="bg-accent/5 border-accent/20">
               <Info className="h-4 w-4 text-accent" />
               <AlertDescription className="text-sm">
-                This will create a new private GitHub Gist to store your restaurant data. You'll receive a Gist ID that you should save.
+                <strong>Recommended for new users:</strong> This will create a new private GitHub Gist to store your restaurant data. This is the easiest way to get started. You'll receive a Gist ID that you should save for future reference.
               </AlertDescription>
             </Alert>
 
@@ -172,25 +195,38 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured }: Da
                 onChange={(e) => setGithubToken(e.target.value)}
               />
               <p className="text-xs text-muted-foreground">
-                Token with 'gist' scope. <a href="https://github.com/settings/tokens/new?scopes=gist&description=MERIDIEN%20Database" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">Create one here</a>
+                Need a token? <a href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline font-medium">Click here to create one</a> (only takes 30 seconds)
               </p>
             </div>
 
             <Button onClick={handleCreate} disabled={isLoading} className="w-full">
               {isLoading ? 'Creating...' : 'Create Database'}
             </Button>
+            
+            <div className="bg-muted/30 p-3 rounded text-xs space-y-1">
+              <p className="font-medium">What happens when you click Create:</p>
+              <ul className="list-disc list-inside space-y-0.5 ml-2 text-muted-foreground">
+                <li>A new private Gist is created in your GitHub account</li>
+                <li>You'll get a Gist ID (save this for backup/recovery)</li>
+                <li>Database is automatically connected</li>
+                <li>You can immediately start importing restaurants</li>
+              </ul>
+            </div>
           </div>
         )}
 
         <Alert className="bg-muted/30">
           <Info className="h-4 w-4" />
           <AlertDescription className="text-xs space-y-2">
-            <p className="font-medium">How to set up:</p>
+            <p className="font-medium">🚀 How to set up (first time):</p>
             <ol className="list-decimal list-inside space-y-1 ml-2">
-              <li>Create a GitHub Personal Access Token with 'gist' scope</li>
-              <li>Either connect to an existing Gist or create a new one</li>
-              <li>Save your Gist ID securely for future use</li>
+              <li>Go to <a href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">GitHub Settings → Tokens → New Token</a></li>
+              <li>Check ONLY the "gist" checkbox</li>
+              <li>Click "Generate token" and copy it</li>
+              <li>Click "Create New" above and paste your token</li>
+              <li>Save the Gist ID you receive</li>
             </ol>
+            <p className="text-muted-foreground mt-2">💡 This is a one-time setup that takes about 2 minutes.</p>
           </AlertDescription>
         </Alert>
       </CardContent>

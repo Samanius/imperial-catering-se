@@ -305,32 +305,55 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
     }
 
     if (!database.isConfigured) {
-      const fullErrorText = `IMPORT FAILED\n\n` +
-        `Error Details:\n` +
-        `Database not configured. You need to set up your GitHub Gist database first.\n\n` +
+      const fullErrorText = `❌ IMPORT FAILED - DATABASE NOT CONFIGURED\n\n` +
         `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-        `REQUIRED ACTION:\n` +
-        `☐ Go to the "Database" tab in Admin Panel\n` +
-        `☐ Set up GitHub Gist credentials (or create a new database)\n` +
-        `☐ Return to Restaurants tab and try importing again\n\n` +
-        `NOTE: Your Google Sheets API key has been saved successfully.\n` +
-        `Once you configure the database, you can import directly without\n` +
-        `re-entering the API key.\n\n` +
+        `🔴 PROBLEM:\n` +
         `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-        `SPREADSHEET REQUIREMENTS:\n` +
+        `Your database (GitHub Gist) is not configured. Without a database,\n` +
+        `imported restaurants cannot be saved and will be lost on page refresh.\n\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+        `✅ SOLUTION - Follow these 3 steps:\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `STEP 1: Create GitHub Personal Access Token\n` +
+        `   1. Go to: https://github.com/settings/tokens/new\n` +
+        `   2. Description: "Imperial Restaurant Database"\n` +
+        `   3. Check ONLY the "gist" checkbox\n` +
+        `   4. Click "Generate token" at bottom\n` +
+        `   5. Copy the token (starts with "ghp_...")\n\n` +
+        `STEP 2: Set Up Database\n` +
+        `   1. Click "Database" tab at the top of Admin Panel\n` +
+        `   2. Choose "Create New" option\n` +
+        `   3. Paste your GitHub token\n` +
+        `   4. Click "Create Database"\n` +
+        `   5. Save the Gist ID shown (for future use)\n\n` +
+        `STEP 3: Import Your Data\n` +
+        `   1. Return to "Restaurants" tab\n` +
+        `   2. Click "Import from Google Sheets" again\n` +
+        `   3. Your restaurants will now be saved permanently\n\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+        `ℹ️  GOOD NEWS:\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+        `• Your Google Sheets API key has been saved ✓\n` +
+        `• This is a ONE-TIME setup\n` +
+        `• After database setup, all future imports work automatically\n` +
+        `• Your data will persist across page refreshes and deployments\n\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+        `📋 REMINDER - Google Sheets Format:\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
         `• Each sheet = one restaurant (sheet name = restaurant name)\n` +
-        `• First row can be headers (skipped automatically)\n` +
         `• Required: Column A (Item Name), Column C (Price)\n` +
-        `• Optional: Column B (Description), D (Category), E (Weight), F (Image URL)\n\n` +
-        `COMMON SETUP ISSUES:\n` +
-        `1. Google Sheets API not enabled (most common!)\n` +
-        `2. Invalid or incomplete API key\n` +
-        `3. Spreadsheet not shared publicly\n` +
-        `4. Wrong Google Cloud project selected`
+        `• Optional: Column B (Description), D (Category), E (Weight), F (Image URL)\n` +
+        `• First row can be headers (skipped automatically)`
       
       setImportError(fullErrorText)
       setIsErrorDialogOpen(true)
-      toast.error('Database not configured. Please set up the database first in the Database tab.')
+      toast.error('⚠️ Database not configured! Click to see setup instructions.', { 
+        duration: 8000,
+        action: {
+          label: 'Database Tab',
+          onClick: () => setActiveTab('database')
+        }
+      })
       return
     }
 
