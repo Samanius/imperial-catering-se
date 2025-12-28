@@ -300,7 +300,38 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
     const trimmedApiKey = apiKeyInput.trim()
     
     if (googleApiKey !== trimmedApiKey) {
-      setGoogleApiKey(trimmedApiKey)
+      await setGoogleApiKey(trimmedApiKey)
+      toast.success('Google Sheets API key saved', { duration: 2000 })
+    }
+
+    if (!database.isConfigured) {
+      const fullErrorText = `IMPORT FAILED\n\n` +
+        `Error Details:\n` +
+        `Database not configured. You need to set up your GitHub Gist database first.\n\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+        `REQUIRED ACTION:\n` +
+        `☐ Go to the "Database" tab in Admin Panel\n` +
+        `☐ Set up GitHub Gist credentials (or create a new database)\n` +
+        `☐ Return to Restaurants tab and try importing again\n\n` +
+        `NOTE: Your Google Sheets API key has been saved successfully.\n` +
+        `Once you configure the database, you can import directly without\n` +
+        `re-entering the API key.\n\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+        `SPREADSHEET REQUIREMENTS:\n` +
+        `• Each sheet = one restaurant (sheet name = restaurant name)\n` +
+        `• First row can be headers (skipped automatically)\n` +
+        `• Required: Column A (Item Name), Column C (Price)\n` +
+        `• Optional: Column B (Description), D (Category), E (Weight), F (Image URL)\n\n` +
+        `COMMON SETUP ISSUES:\n` +
+        `1. Google Sheets API not enabled (most common!)\n` +
+        `2. Invalid or incomplete API key\n` +
+        `3. Spreadsheet not shared publicly\n` +
+        `4. Wrong Google Cloud project selected`
+      
+      setImportError(fullErrorText)
+      setIsErrorDialogOpen(true)
+      toast.error('Database not configured. Please set up the database first in the Database tab.')
+      return
     }
 
     setIsImporting(true)
@@ -315,34 +346,6 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       const hasChanges = result.addedCount > 0 || result.updatedCount > 0
 
       if (hasChanges) {
-        if (!database.isConfigured) {
-          const fullErrorText = `IMPORT FAILED\n\n` +
-            `Error Details:\n` +
-            `Database not found. Please check your Gist ID.\n\n` +
-            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-            `SPREADSHEET REQUIREMENTS:\n` +
-            `• Each sheet = one restaurant (sheet name = restaurant name)\n` +
-            `• First row can be headers (skipped automatically)\n` +
-            `• Required: Column A (Item Name), Column C (Price)\n` +
-            `• Optional: Column B (Description), D (Category), E (Weight), F (Image URL)\n\n` +
-            `COMMON SETUP ISSUES:\n` +
-            `1. Google Sheets API not enabled (most common!)\n` +
-            `2. Invalid or incomplete API key\n` +
-            `3. Spreadsheet not shared publicly\n` +
-            `4. Wrong Google Cloud project selected\n\n` +
-            `REQUIRED ACTION:\n` +
-            `☐ Go to the "Database" tab in Admin Panel\n` +
-            `☐ Set up GitHub Gist credentials\n` +
-            `☐ Try importing again\n\n` +
-            `NOTE: The import from Google Sheets was successful, but we need\n` +
-            `a database to save the data. Please configure the database first.`
-          
-          setImportError(fullErrorText)
-          setIsErrorDialogOpen(true)
-          toast.error('Database not configured. Please set up the database first in the Database tab.')
-          return
-        }
-
         const currentRestaurants = database.restaurants || []
         
         let updatedList = [...currentRestaurants]
