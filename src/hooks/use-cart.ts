@@ -1,28 +1,47 @@
 import { useKV } from '@github/spark/hooks'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useEffect } from 'react'
 import type { CartItem, MenuItem } from '@/lib/types'
 
 export function useCart() {
   const [cartItems, setCartItems] = useKV<CartItem[]>('cart-items', [])
 
   const safeCartItems = useMemo(() => {
-    return Array.isArray(cartItems) ? cartItems : []
+    const items = Array.isArray(cartItems) ? cartItems : []
+    return items.filter(item => {
+      const isValid = item?.menuItem?.id && item?.restaurantId && item?.quantity > 0
+      if (!isValid) {
+        console.warn('Removing invalid cart item:', item)
+      }
+      return isValid
+    })
   }, [cartItems])
+
+  useEffect(() => {
+    if (Array.isArray(cartItems) && cartItems.length !== safeCartItems.length) {
+      console.log('Cleaning up invalid cart items')
+      setCartItems(safeCartItems)
+    }
+  }, [cartItems, safeCartItems, setCartItems])
 
   const addToCart = useCallback((
     restaurantId: string,
     restaurantName: string,
     menuItem: MenuItem
   ) => {
+    if (!menuItem?.id) {
+      console.error('Menu item is missing or has no ID:', menuItem)
+      return
+    }
+
     setCartItems((current) => {
       const safeArray = Array.isArray(current) ? current : []
       const existingItem = safeArray.find(
-        item => item.restaurantId === restaurantId && item.menuItem.id === menuItem.id
+        item => item?.restaurantId === restaurantId && item?.menuItem?.id === menuItem.id
       )
 
       if (existingItem) {
         return safeArray.map(item =>
-          item.restaurantId === restaurantId && item.menuItem.id === menuItem.id
+          item?.restaurantId === restaurantId && item?.menuItem?.id === menuItem.id
             ? { ...item, quantity: item.quantity + 1 }
             : item
         )
@@ -40,7 +59,7 @@ export function useCart() {
     setCartItems((current) => {
       const safeArray = Array.isArray(current) ? current : []
       return safeArray.map(item => {
-        if (item.restaurantId === restaurantId && item.menuItem.id === menuItemId) {
+        if (item?.restaurantId === restaurantId && item?.menuItem?.id === menuItemId) {
           const newQuantity = item.quantity + delta
           return newQuantity > 0 ? { ...item, quantity: newQuantity } : null
         }
@@ -53,7 +72,7 @@ export function useCart() {
     setCartItems((current) => {
       const safeArray = Array.isArray(current) ? current : []
       return safeArray.filter(
-        item => !(item.restaurantId === restaurantId && item.menuItem.id === menuItemId)
+        item => !(item?.restaurantId === restaurantId && item?.menuItem?.id === menuItemId)
       )
     })
   }, [setCartItems])
@@ -61,15 +80,17 @@ export function useCart() {
   const itemQuantities = useMemo(() => {
     const quantities: Record<string, number> = {}
     safeCartItems.forEach(item => {
-      const key = `${item.restaurantId}-${item.menuItem.id}`
-      quantities[key] = item.quantity
+      if (item?.restaurantId && item?.menuItem?.id) {
+        const key = `${item.restaurantId}-${item.menuItem.id}`
+        quantities[key] = item.quantity
+      }
     })
     return quantities
   }, [safeCartItems])
 
   const getItemQuantity = useCallback((restaurantId: string, menuItemId: string) => {
     const item = safeCartItems.find(
-      item => item.restaurantId === restaurantId && item.menuItem.id === menuItemId
+      item => item?.restaurantId === restaurantId && item?.menuItem?.id === menuItemId
     )
     return item ? item.quantity : 0
   }, [safeCartItems])
@@ -79,11 +100,18 @@ export function useCart() {
   }, [safeCartItems])
 
   const totalPrice = useMemo(() => {
-    return safeCartItems.reduce((sum, item) => sum + (item.menuItem.price * item.quantity), 0)
+    return safeCartItems.reduce((sum, item) => {
+      if (item?.menuItem?.price && item?.quantity) {
+        return sum + (item.menuItem.price * item.quantity)
+      }
+      return sum
+    }, 0)
   }, [safeCartItems])
 
   const groupedByRestaurant = useMemo(() => {
     return safeCartItems.reduce((acc, item) => {
+      if (!item?.restaurantId || !item?.menuItem) return acc
+      
       if (!acc[item.restaurantId]) {
         acc[item.restaurantId] = {
           restaurantName: item.restaurantName,

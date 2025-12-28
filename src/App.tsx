@@ -35,7 +35,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Header 
         onAdminClick={handleAdminAccess}
         onLogoClick={handleBackToCatalog}
@@ -44,17 +44,35 @@ function App() {
         onBackClick={handleBackToCatalog}
       />
       
-      {currentView === 'catalog' && (
-        <RestaurantCatalog onRestaurantSelect={handleRestaurantSelect} />
-      )}
-      
-      {currentView === 'restaurant' && selectedRestaurantId && (
-        <RestaurantDetail restaurantId={selectedRestaurantId} />
-      )}
-      
-      {currentView === 'admin' && (
-        <AdminPanel onBack={handleBackFromAdmin} />
-      )}
+      <div className="flex-1">
+        {currentView === 'catalog' && (
+          <RestaurantCatalog onRestaurantSelect={handleRestaurantSelect} />
+        )}
+        
+        {currentView === 'restaurant' && selectedRestaurantId && (
+          <RestaurantDetail restaurantId={selectedRestaurantId} />
+        )}
+        
+        {currentView === 'admin' && (
+          <AdminPanel onBack={handleBackFromAdmin} />
+        )}
+      </div>
+
+      <footer className="border-t border-border bg-card/50 backdrop-blur-sm py-4 px-4 sm:px-6 mt-auto">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+          <p className="font-body text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
+            © {new Date().getFullYear()} Imperial Delicious Menu. Curated dining for the high seas.
+          </p>
+          <a 
+            href="/CHANGELOG.md" 
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-body text-xs sm:text-sm text-accent hover:text-accent/80 transition-colors underline underline-offset-2"
+          >
+            Updates & Documentation
+          </a>
+        </div>
+      </footer>
 
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
       

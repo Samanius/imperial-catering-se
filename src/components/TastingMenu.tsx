@@ -38,6 +38,11 @@ export default function TastingMenu({ restaurantId, restaurantName, description,
   }
 
   const handleAddToCart = (menuItem: MenuItem) => {
+    if (!menuItem?.id) {
+      console.error('Menu item is missing or has no ID:', menuItem)
+      toast.error('Unable to add item to cart')
+      return
+    }
     addToCart(restaurantId, restaurantName, menuItem)
     toast.success('Added to cart', {
       description: menuItem.name,
@@ -75,6 +80,11 @@ export default function TastingMenu({ restaurantId, restaurantName, description,
 
             <div className="space-y-5 sm:space-y-6">
               {items.map((item) => {
+                if (!item?.id) {
+                  console.warn('Menu item missing ID, skipping:', item)
+                  return null
+                }
+                
                 const quantity = getItemQuantity(restaurantId, item.id)
                 
                 return (

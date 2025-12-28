@@ -45,6 +45,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     Object.values(groupedByRestaurant).forEach(({ restaurantName, items }) => {
       message += `*${restaurantName}*%0A`
       items.forEach(item => {
+        if (!item?.menuItem) return
         const weight = item.menuItem.weight ? ` (${item.menuItem.weight} g)` : ''
         message += `• ${item.quantity}x ${item.menuItem.name}${weight} - $${(item.menuItem.price * item.quantity).toFixed(2)}%0A`
       })
@@ -117,7 +118,12 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 <div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
                   {Object.entries(groupedByRestaurant).map(([restaurantId, { restaurantName, items }]) => {
                     const restaurantService = cart?.services?.find(s => s.restaurantId === restaurantId)
-                    const restaurantItemsTotal = items.reduce((sum, item) => sum + (item.menuItem.price * item.quantity), 0)
+                    const restaurantItemsTotal = items.reduce((sum, item) => {
+                      if (item?.menuItem?.price && item?.quantity) {
+                        return sum + (item.menuItem.price * item.quantity)
+                      }
+                      return sum
+                    }, 0)
                     
                     return (
                       <div key={restaurantId}>
@@ -131,69 +137,73 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         </div>
                         
                         <div className="space-y-4">
-                          {items.map((item) => (
-                            <div key={item.menuItem.id} className="flex gap-3 sm:gap-4">
-                              {item.menuItem.image && (
-                                <img
-                                  src={item.menuItem.image}
-                                  alt={item.menuItem.name}
-                                  className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-sm flex-shrink-0"
-                                />
-                              )}
-                              
-                              <div className="flex-1 min-w-0">
-                                <div className="flex justify-between items-start mb-1 gap-2">
-                                  <h4 className="font-body font-medium text-sm sm:text-base line-clamp-2 flex-1">
-                                    {item.menuItem.name}
-                                  </h4>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => removeItem(item.restaurantId, item.menuItem.id)}
-                                    className="h-7 w-7 sm:h-6 sm:w-6 hover:bg-destructive/10 hover:text-destructive flex-shrink-0"
-                                  >
-                                    <X size={16} className="sm:hidden" />
-                                    <X size={14} className="hidden sm:block" />
-                                  </Button>
-                                </div>
-                                {item.menuItem.weight && (
-                                  <p className="font-body text-xs text-muted-foreground mb-2">
-                                    {item.menuItem.weight} g
-                                  </p>
+                          {items.map((item) => {
+                            if (!item?.menuItem?.id) return null
+                            
+                            return (
+                              <div key={item.menuItem.id} className="flex gap-3 sm:gap-4">
+                                {item.menuItem.image && (
+                                  <img
+                                    src={item.menuItem.image}
+                                    alt={item.menuItem.name}
+                                    className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-sm flex-shrink-0"
+                                  />
                                 )}
                                 
-                                <div className="flex items-center justify-between gap-3">
-                                  <div className="flex items-center gap-1.5 sm:gap-2 bg-muted rounded-sm">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex justify-between items-start mb-1 gap-2">
+                                    <h4 className="font-body font-medium text-sm sm:text-base line-clamp-2 flex-1">
+                                      {item.menuItem.name}
+                                    </h4>
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      onClick={() => updateQuantity(item.restaurantId, item.menuItem.id, -1)}
-                                      className="h-8 w-8 sm:h-7 sm:w-7"
+                                      onClick={() => removeItem(item.restaurantId, item.menuItem.id)}
+                                      className="h-7 w-7 sm:h-6 sm:w-6 hover:bg-destructive/10 hover:text-destructive flex-shrink-0"
                                     >
-                                      <Minus size={14} weight="bold" className="sm:hidden" />
-                                      <Minus size={12} weight="bold" className="hidden sm:block" />
-                                    </Button>
-                                    <span className="font-body text-sm w-8 text-center font-medium">
-                                      {item.quantity}
-                                    </span>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => updateQuantity(item.restaurantId, item.menuItem.id, 1)}
-                                      className="h-8 w-8 sm:h-7 sm:w-7"
-                                    >
-                                      <Plus size={14} weight="bold" className="sm:hidden" />
-                                      <Plus size={12} weight="bold" className="hidden sm:block" />
+                                      <X size={16} className="sm:hidden" />
+                                      <X size={14} className="hidden sm:block" />
                                     </Button>
                                   </div>
+                                  {item.menuItem.weight && (
+                                    <p className="font-body text-xs text-muted-foreground mb-2">
+                                      {item.menuItem.weight} g
+                                    </p>
+                                  )}
                                   
-                                  <span className="font-body text-sm sm:text-base font-medium flex-shrink-0">
-                                    ${(item.menuItem.price * item.quantity).toFixed(2)}
-                                  </span>
+                                  <div className="flex items-center justify-between gap-3">
+                                    <div className="flex items-center gap-1.5 sm:gap-2 bg-muted rounded-sm">
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => updateQuantity(item.restaurantId, item.menuItem.id, -1)}
+                                        className="h-8 w-8 sm:h-7 sm:w-7"
+                                      >
+                                        <Minus size={14} weight="bold" className="sm:hidden" />
+                                        <Minus size={12} weight="bold" className="hidden sm:block" />
+                                      </Button>
+                                      <span className="font-body text-sm w-8 text-center font-medium">
+                                        {item.quantity}
+                                      </span>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => updateQuantity(item.restaurantId, item.menuItem.id, 1)}
+                                        className="h-8 w-8 sm:h-7 sm:w-7"
+                                      >
+                                        <Plus size={14} weight="bold" className="sm:hidden" />
+                                        <Plus size={12} weight="bold" className="hidden sm:block" />
+                                      </Button>
+                                    </div>
+                                    
+                                    <span className="font-body text-sm sm:text-base font-medium flex-shrink-0">
+                                      ${(item.menuItem.price * item.quantity).toFixed(2)}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          ))}
+                            )
+                          })}
                         </div>
                         
                         {restaurantService && (restaurantService.chefService || (restaurantService.waiterCount && restaurantService.waiterCount > 0)) && (

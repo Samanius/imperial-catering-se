@@ -25,6 +25,11 @@ export default function VisualMenu({
   const isMobile = useIsMobile()
 
   const handleAddToCart = (menuItem: MenuItem) => {
+    if (!menuItem?.id) {
+      console.error('Menu item is missing or has no ID:', menuItem)
+      toast.error('Unable to add item to cart')
+      return
+    }
     addToCart(restaurantId, restaurantName, menuItem)
     toast.success('Added to cart', {
       description: menuItem.name,
@@ -53,6 +58,11 @@ export default function VisualMenu({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {items.map((item) => {
+              if (!item?.id) {
+                console.warn('Menu item missing ID, skipping:', item)
+                return null
+              }
+
               const quantity = getItemQuantity(restaurantId, item.id)
               const isHovered = hoveredItem === item.id
 
