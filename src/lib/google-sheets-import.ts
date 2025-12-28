@@ -307,7 +307,23 @@ async function fetchAllSheets(spreadsheetId: string, apiKey?: string): Promise<S
   const metadataUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?key=${apiKey}`
   
   console.log('Fetching spreadsheet metadata...')
-  const metadataResponse = await fetch(metadataUrl)
+  
+  let metadataResponse: Response
+  try {
+    metadataResponse = await fetch(metadataUrl)
+  } catch (fetchError) {
+    console.error('Network error during fetch:', fetchError)
+    throw new Error(
+      `Network error: Unable to connect to Google Sheets API.\n\n` +
+      `This could be caused by:\n` +
+      `1. No internet connection\n` +
+      `2. Browser blocking the request (check console for CORS errors)\n` +
+      `3. Google Sheets API is temporarily unavailable\n` +
+      `4. Firewall or network restrictions\n\n` +
+      `Error details: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}\n\n` +
+      `Please check your internet connection and try again.`
+    )
+  }
   
   if (!metadataResponse.ok) {
     const errorText = await metadataResponse.text()

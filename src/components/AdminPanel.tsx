@@ -29,8 +29,8 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
   const [activeTab, setActiveTab] = useState<'restaurants' | 'database'>('restaurants')
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
   const [googleSheetUrl, setGoogleSheetUrl] = useState('https://docs.google.com/spreadsheets/d/1my60zyjTGdDaY0sen9WAxCWooP7EDPneRTzwVDxoxEQ/edit?gid=0#gid=0')
-  const [googleApiKey, setGoogleApiKey] = useKV<string>('google-sheets-api-key', '')
-  const [apiKeyInput, setApiKeyInput] = useState('')
+  const [googleApiKey, setGoogleApiKey] = useKV<string>('google-sheets-api-key', 'AIzaSyDX3Morf9Oeg-ANaP4ABE_irlIRbqMsSyE')
+  const [apiKeyInput, setApiKeyInput] = useState('AIzaSyDX3Morf9Oeg-ANaP4ABE_irlIRbqMsSyE')
   const [isImporting, setIsImporting] = useState(false)
   const [importError, setImportError] = useState<string | null>(null)
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
@@ -67,7 +67,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
   const [editingItemData, setEditingItemData] = useState<MenuItem | null>(null)
 
   useEffect(() => {
-    setApiKeyInput(googleApiKey || '')
+    setApiKeyInput(googleApiKey || 'AIzaSyDX3Morf9Oeg-ANaP4ABE_irlIRbqMsSyE')
   }, [googleApiKey])
 
   const startCreating = () => {
