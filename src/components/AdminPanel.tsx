@@ -1149,7 +1149,20 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                         <p className="font-medium">Refresh Database</p>
                         <p className="text-sm text-muted-foreground">Load latest data from cloud</p>
                       </div>
-                      <Button onClick={database.refresh} variant="outline" size="sm">
+                      <Button 
+                        onClick={async () => {
+                          try {
+                            const loadingToast = toast.loading('Refreshing database...')
+                            await database.refresh()
+                            toast.dismiss(loadingToast)
+                            toast.success('Database refreshed successfully!')
+                          } catch (error: any) {
+                            toast.error(error.message || 'Failed to refresh database')
+                          }
+                        }} 
+                        variant="outline" 
+                        size="sm"
+                      >
                         <ArrowsClockwise size={16} className="mr-2" />
                         Refresh
                       </Button>
