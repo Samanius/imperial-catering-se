@@ -71,7 +71,7 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured }: Da
 
       const gistData = await testResponse.json()
       
-      if (!gistData.files || !gistData.files['imperial-restaurants-database.json']) {
+      if (!gistData.files || !gistData.files['imperial-restaurants.json']) {
         throw new Error('Not a restaurant database Gist')
       }
 
