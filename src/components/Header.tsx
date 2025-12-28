@@ -18,7 +18,7 @@ export default function Header({
   showBackButton,
   onBackClick 
 }: HeaderProps) {
-  const { totalItems, cartItems } = useCart()
+  const { totalItems } = useCart()
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
