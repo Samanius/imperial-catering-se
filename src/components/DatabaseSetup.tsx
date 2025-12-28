@@ -25,9 +25,32 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured }: Da
       return
     }
 
+    const trimmedGistId = gistId.trim()
+    const trimmedToken = githubToken.trim()
+
+    if (trimmedGistId.length < 20) {
+      toast.error('Invalid Gist ID format - must be at least 20 characters long')
+      return
+    }
+
+    if (trimmedGistId.includes('/') || trimmedGistId.includes('gist.github.com')) {
+      toast.error('Enter only the Gist ID, not the full URL. Example: abc123def456...')
+      return
+    }
+
+    if (!trimmedToken.startsWith('ghp_') && !trimmedToken.startsWith('github_pat_')) {
+      toast.error('Invalid GitHub token format - must start with "ghp_" or "github_pat_"')
+      return
+    }
+
+    if (trimmedToken.length < 40) {
+      toast.error('Invalid GitHub token - token appears incomplete (too short)')
+      return
+    }
+
     setIsLoading(true)
     try {
-      await onSetup(gistId.trim(), githubToken.trim())
+      await onSetup(trimmedGistId, trimmedToken)
       toast.success('Database connected successfully')
       setGistId('')
       setGithubToken('')
@@ -44,11 +67,23 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured }: Da
       return
     }
 
+    const trimmedToken = githubToken.trim()
+
+    if (!trimmedToken.startsWith('ghp_') && !trimmedToken.startsWith('github_pat_')) {
+      toast.error('Invalid GitHub token format - must start with "ghp_" or "github_pat_"')
+      return
+    }
+
+    if (trimmedToken.length < 40) {
+      toast.error('Invalid GitHub token - token appears incomplete (too short)')
+      return
+    }
+
     setIsLoading(true)
     try {
-      const result = await onCreateNew(githubToken.trim())
-      toast.success('Database created successfully!')
-      toast.info(`Gist ID: ${result.gistId}`, { duration: 10000 })
+      const result = await onCreateNew(trimmedToken)
+      toast.success('✅ Database created successfully!')
+      toast.info(`Gist ID saved: ${result.gistId}`, { duration: 10000 })
       setGithubToken('')
       setMode('connect')
     } catch (error: any) {
@@ -112,9 +147,26 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured }: Da
             <CheckCircle size={20} className="text-accent" weight="fill" />
             Quick Start - 3 Easy Steps (~2 minutes):
           </p>
-          <ol className="list-decimal list-inside space-y-2 text-sm ml-2">
+          <ol className="list-decimal list-inside space-y-3 text-sm ml-2">
             <li className="text-foreground">
-              <strong>Get GitHub Token:</strong> <a href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline font-medium">Click here</a> → Check "gist" → Generate token → Copy it
+              <strong>Get GitHub Token:</strong>{' '}
+              <a 
+                href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-accent hover:underline font-medium"
+              >
+                Click this direct link
+              </a>
+              <div className="mt-2 ml-6 text-xs space-y-1 text-muted-foreground bg-background/50 p-2 rounded border border-border">
+                <p>→ You'll see a page titled <strong className="text-foreground">"New personal access token (classic)"</strong></p>
+                <p>→ Note field: Already filled with "Imperial Restaurant Database"</p>
+                <p>→ Expiration: Select "No expiration" (or 90 days if you prefer)</p>
+                <p>→ <strong className="text-accent">IMPORTANT:</strong> Check ONLY the box labeled <strong className="text-foreground">"gist"</strong> (under "Select scopes")</p>
+                <p>→ Scroll to bottom → Click green <strong className="text-foreground">"Generate token"</strong> button</p>
+                <p>→ Copy the token that appears (starts with <code className="text-accent">ghp_</code>)</p>
+                <p className="text-destructive font-medium">⚠️ Save it immediately - you won't see it again!</p>
+              </div>
             </li>
             <li className="text-foreground">
               <strong>Create Database:</strong> Click "Create New" button below → Paste token → Click "Create Database"
@@ -157,13 +209,50 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured }: Da
               <Label htmlFor="gist-id" className="font-semibold">GitHub Gist ID</Label>
               <Input
                 id="gist-id"
-                placeholder="abc123def456... (example: 8f3e4d2c1b9a7f6e5d4c3b2a1)"
+                placeholder="Example: 8f3e4d2c1b9a7f6e5d4c3b2a1f0e9d8c"
                 value={gistId}
                 onChange={(e) => setGistId(e.target.value)}
                 className="font-mono text-sm"
               />
+              <div className="bg-background/50 p-3 rounded border border-accent/30 space-y-2">
+                <p className="text-xs font-semibold text-foreground">
+                  🔍 Where to Find Your Gist ID:
+                </p>
+                <ol className="text-xs text-muted-foreground space-y-2 list-decimal list-inside ml-1">
+                  <li>
+                    Go to{' '}
+                    <a 
+                      href="https://gist.github.com/" 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="text-accent hover:underline font-medium"
+                    >
+                      gist.github.com
+                    </a>{' '}
+                    and log in to your GitHub account
+                  </li>
+                  <li className="leading-relaxed">
+                    Find your Gist named <strong className="text-foreground">"imperial-restaurants-database.json"</strong> in your list
+                    <div className="ml-4 mt-1 text-[11px]">
+                      (If you don't see it, you need to create a new database instead)
+                    </div>
+                  </li>
+                  <li className="leading-relaxed">
+                    Click on the Gist to open it. Look at the URL in your browser:
+                    <div className="ml-4 mt-1 font-mono text-[11px] bg-accent/10 p-1.5 rounded text-accent">
+                      https://gist.github.com/yourname/<strong className="underline">8f3e4d2c1b9a7f6e5d4c3b2a1f0e9d8c</strong>
+                    </div>
+                  </li>
+                  <li>
+                    The Gist ID is the <strong className="text-accent">long string of letters and numbers</strong> at the end of the URL
+                  </li>
+                  <li>
+                    Copy <strong className="text-foreground">only that ID</strong> (not the full URL) and paste it above ↑
+                  </li>
+                </ol>
+              </div>
               <p className="text-xs text-muted-foreground">
-                The long ID from your Gist URL (found after /gist/ in the URL). Example: https://gist.github.com/<strong>abc123def456</strong>
+                <strong>Format:</strong> 32 characters, letters and numbers only. Example: <code className="text-accent">abc123def456ghi789...</code>
               </p>
             </div>
 
@@ -172,13 +261,22 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured }: Da
               <Input
                 id="github-token"
                 type="password"
-                placeholder="ghp_..."
+                placeholder="ghp_... (your GitHub token)"
                 value={githubToken}
                 onChange={(e) => setGithubToken(e.target.value)}
                 className="font-mono"
               />
               <p className="text-xs text-muted-foreground">
-                Token with 'gist' scope. <a href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline font-medium">Create one here</a>
+                The same token you used when creating the database. Don't have it?{' '}
+                <a 
+                  href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-accent hover:underline font-medium"
+                >
+                  Create a new token here
+                </a>{' '}
+                (check only "gist" scope)
               </p>
             </div>
 
@@ -200,19 +298,51 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured }: Da
               <Input
                 id="github-token-create"
                 type="password"
-                placeholder="ghp_..."
+                placeholder="ghp_... (paste your token here)"
                 value={githubToken}
                 onChange={(e) => setGithubToken(e.target.value)}
                 className="font-mono"
               />
-              <div className="text-xs text-muted-foreground space-y-1">
-                <p>
-                  <strong>Don't have a token?</strong> <a href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline font-medium">Click here to create one</a> (takes 60 seconds)
+              <div className="bg-background/50 p-3 rounded border border-accent/30 space-y-2">
+                <p className="text-xs font-semibold text-foreground">
+                  🔐 How to Get Your Token (Step-by-Step):
                 </p>
-                <p className="text-xs opacity-80">
-                  → On GitHub: Check ONLY "gist" checkbox → Click "Generate token" → Copy and paste here
-                </p>
+                <ol className="text-xs text-muted-foreground space-y-2 list-decimal list-inside ml-1">
+                  <li>
+                    <a href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline font-medium">
+                      Click here to open GitHub token creation page
+                    </a> (opens in new tab)
+                  </li>
+                  <li className="leading-relaxed">
+                    On the GitHub page you'll see:
+                    <div className="ml-4 mt-1 space-y-1 text-[11px]">
+                      <p>• <strong className="text-foreground">Note:</strong> "Imperial Restaurant Database" (already filled)</p>
+                      <p>• <strong className="text-foreground">Expiration:</strong> Choose "No expiration" (recommended) or "90 days"</p>
+                    </div>
+                  </li>
+                  <li className="leading-relaxed">
+                    <strong className="text-accent">CRITICAL:</strong> Under "Select scopes" section, check <strong className="text-foreground">ONLY the "gist" checkbox</strong>
+                    <div className="ml-4 mt-1 text-[11px] text-destructive font-medium">
+                      ⚠️ Do NOT check "repo" or other options - only "gist"!
+                    </div>
+                  </li>
+                  <li>
+                    Scroll down → Click the green <strong className="text-foreground">"Generate token"</strong> button at the bottom
+                  </li>
+                  <li className="leading-relaxed">
+                    GitHub will show your new token (starts with <code className="text-accent bg-accent/10 px-1 rounded">ghp_</code>)
+                    <div className="ml-4 mt-1 text-[11px] text-destructive font-medium">
+                      ⚠️ Copy it NOW - GitHub shows it only once!
+                    </div>
+                  </li>
+                  <li>
+                    Paste the token into the field above ↑ and click "Create Database" button below ↓
+                  </li>
+                </ol>
               </div>
+              <p className="text-xs text-muted-foreground">
+                <strong>Note:</strong> Token should start with <code className="text-accent">ghp_</code> or <code className="text-accent">github_pat_</code> and be at least 40 characters long
+              </p>
             </div>
 
             <Button onClick={handleCreate} disabled={isLoading} className="w-full" size="lg">
@@ -234,16 +364,59 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured }: Da
 
         <Alert className="bg-muted/30">
           <Info className="h-4 w-4" />
-          <AlertDescription className="text-xs space-y-2">
-            <p className="font-medium">🚀 How to set up (first time):</p>
-            <ol className="list-decimal list-inside space-y-1 ml-2">
-              <li>Go to <a href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">GitHub Settings → Tokens → New Token</a></li>
-              <li>Check ONLY the "gist" checkbox</li>
-              <li>Click "Generate token" and copy it</li>
-              <li>Click "Create New" above and paste your token</li>
-              <li>Save the Gist ID you receive</li>
-            </ol>
-            <p className="text-muted-foreground mt-2">💡 This is a one-time setup that takes about 2 minutes.</p>
+          <AlertDescription className="text-xs space-y-3">
+            <div>
+              <p className="font-semibold text-foreground mb-2">🆘 Troubleshooting Common Issues:</p>
+              <div className="space-y-2 ml-2">
+                <div>
+                  <p className="font-medium text-foreground">❌ "Invalid token" error:</p>
+                  <p className="ml-4 text-muted-foreground">
+                    → Make sure you checked ONLY the "gist" scope when creating the token<br/>
+                    → Token must start with <code className="text-accent">ghp_</code> or <code className="text-accent">github_pat_</code><br/>
+                    → Ensure you copied the entire token (no spaces or line breaks)
+                  </p>
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">❌ "Gist not found" error:</p>
+                  <p className="ml-4 text-muted-foreground">
+                    → Double-check the Gist ID from your Gist URL<br/>
+                    → Make sure the Gist exists in YOUR GitHub account<br/>
+                    → Try clicking "Create New" if you can't find the Gist
+                  </p>
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">❓ Can't find GitHub token settings:</p>
+                  <p className="ml-4 text-muted-foreground">
+                    → Use this direct link: <a href="https://github.com/settings/tokens" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline font-medium">github.com/settings/tokens</a><br/>
+                    → Or: GitHub → Settings (your profile) → Developer settings (bottom left) → Personal access tokens → Tokens (classic)
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="border-t border-border pt-2">
+              <p className="font-medium text-foreground">💡 Quick Setup Guide (First Time):</p>
+              <ol className="list-decimal list-inside space-y-1 ml-2 mt-1">
+                <li>
+                  Click{' '}
+                  <a 
+                    href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-accent hover:underline font-medium"
+                  >
+                    this link
+                  </a>{' '}
+                  to create a token on GitHub
+                </li>
+                <li>Check ONLY the "gist" checkbox</li>
+                <li>Click "Generate token" and copy it immediately</li>
+                <li>Click "Create New" button above</li>
+                <li>Paste your token and click "Create Database"</li>
+                <li>Done! You can now import restaurants from Google Sheets</li>
+              </ol>
+              <p className="text-muted-foreground mt-2">⏱️ Total time: ~2 minutes • This is a one-time setup</p>
+            </div>
           </AlertDescription>
         </Alert>
       </CardContent>
