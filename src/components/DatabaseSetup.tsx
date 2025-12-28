@@ -152,25 +152,81 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured }: Da
 
   if (isConfigured) {
     return (
-      <Card className="border-accent/20 bg-card">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <CheckCircle className="text-accent" size={28} weight="fill" />
-            <div>
-              <CardTitle className="text-lg">Database Connected</CardTitle>
-              <CardDescription>Restaurant data is stored securely in GitHub Gist</CardDescription>
+      <>
+        <Card className="border-accent/20 bg-card">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <CheckCircle className="text-accent" size={28} weight="fill" />
+              <div>
+                <CardTitle className="text-lg">Database Connected</CardTitle>
+                <CardDescription>Restaurant data is stored securely in GitHub Gist</CardDescription>
+              </div>
             </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <Alert className="bg-accent/5 border-accent/20">
-            <Info className="h-4 w-4 text-accent" />
-            <AlertDescription className="text-sm">
-              Database is active. All changes are automatically saved to the cloud.
-            </AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Alert className="bg-accent/5 border-accent/20">
+              <Info className="h-4 w-4 text-accent" />
+              <AlertDescription className="text-sm">
+                Database is active. All changes are automatically saved to the cloud.
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border bg-muted/30 mt-6">
+          <CardHeader>
+            <CardTitle className="text-base">Configuration Details</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3 font-mono text-xs">
+              <div>
+                <div className="font-semibold text-foreground mb-2 font-body">Google</div>
+                <div className="space-y-1.5 pl-2">
+                  <div>
+                    <span className="text-muted-foreground">Folder:</span>
+                    <br />
+                    <a 
+                      href="https://drive.google.com/drive/u/0/folders/1aQW3j8oAtwYSDPcjM2LxpJXRNDDPEVqs" 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="text-accent hover:underline break-all"
+                    >
+                      https://drive.google.com/drive/u/0/folders/1aQW3j8oAtwYSDPcjM2LxpJXRNDDPEVqs
+                    </a>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">File:</span>
+                    <br />
+                    <a 
+                      href="https://docs.google.com/spreadsheets/d/1my60zyjTGdDaY0sen9WAxCWooP7EDPneRTzwVDxoxEQ/edit?gid=0#gid=0" 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="text-accent hover:underline break-all"
+                    >
+                      https://docs.google.com/spreadsheets/d/1my60zyjTGdDaY0sen9WAxCWooP7EDPneRTzwVDxoxEQ/edit?gid=0#gid=0
+                    </a>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Api Key:</span> AIzaSyDX3Morf9Oeg-ANaP4ABE_irlIRbqMsSyE
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div className="font-semibold text-foreground mb-2 font-body">Git</div>
+                <div className="space-y-1.5 pl-2">
+                  <div>
+                    <span className="text-muted-foreground">Api Token:</span> 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
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Database:</span> 4bbee0ab79fb8dc84b54d5bf12b7110b
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </>
     )
   }
 
