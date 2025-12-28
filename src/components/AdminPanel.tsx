@@ -290,11 +290,6 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       return
     }
 
-    if (!database.isConfigured) {
-      toast.error('Database not configured. Please set up the database first.')
-      return
-    }
-
     const spreadsheetId = extractSpreadsheetId(googleSheetUrl)
     
     if (!spreadsheetId) {
@@ -306,11 +301,10 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
     
     if (googleApiKey !== trimmedApiKey) {
       setGoogleApiKey(trimmedApiKey)
-      await window.spark.kv.set('google-sheets-api-key', trimmedApiKey)
-      toast.success('API key saved for future imports')
     }
 
     setIsImporting(true)
+    setImportError(null)
 
     try {
       const result = await importFromGoogleSheets(spreadsheetId, database.restaurants || [], trimmedApiKey)
@@ -321,6 +315,34 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       const hasChanges = result.addedCount > 0 || result.updatedCount > 0
 
       if (hasChanges) {
+        if (!database.isConfigured) {
+          const fullErrorText = `IMPORT FAILED\n\n` +
+            `Error Details:\n` +
+            `Database not found. Please check your Gist ID.\n\n` +
+            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+            `SPREADSHEET REQUIREMENTS:\n` +
+            `• Each sheet = one restaurant (sheet name = restaurant name)\n` +
+            `• First row can be headers (skipped automatically)\n` +
+            `• Required: Column A (Item Name), Column C (Price)\n` +
+            `• Optional: Column B (Description), D (Category), E (Weight), F (Image URL)\n\n` +
+            `COMMON SETUP ISSUES:\n` +
+            `1. Google Sheets API not enabled (most common!)\n` +
+            `2. Invalid or incomplete API key\n` +
+            `3. Spreadsheet not shared publicly\n` +
+            `4. Wrong Google Cloud project selected\n\n` +
+            `REQUIRED ACTION:\n` +
+            `☐ Go to the "Database" tab in Admin Panel\n` +
+            `☐ Set up GitHub Gist credentials\n` +
+            `☐ Try importing again\n\n` +
+            `NOTE: The import from Google Sheets was successful, but we need\n` +
+            `a database to save the data. Please configure the database first.`
+          
+          setImportError(fullErrorText)
+          setIsErrorDialogOpen(true)
+          toast.error('Database not configured. Please set up the database first in the Database tab.')
+          return
+        }
+
         const currentRestaurants = database.restaurants || []
         
         let updatedList = [...currentRestaurants]

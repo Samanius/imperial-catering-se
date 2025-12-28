@@ -320,6 +320,16 @@ async function fetchAllSheets(spreadsheetId: string, apiKey?: string): Promise<S
       errorData = null
     }
     
+    if (metadataResponse.status === 404) {
+      throw new Error(
+        `Spreadsheet not found.\n\n` +
+        `Please check:\n` +
+        `1. The spreadsheet URL is correct\n` +
+        `2. The spreadsheet is shared publicly (Anyone with the link can view)\n` +
+        `3. The spreadsheet has not been deleted`
+      )
+    }
+    
     if (metadataResponse.status === 403) {
       if (errorData?.error?.message?.includes('Sheets API has not been used') || 
           errorData?.error?.message?.includes('SERVICE_DISABLED')) {
@@ -347,7 +357,16 @@ async function fetchAllSheets(spreadsheetId: string, apiKey?: string): Promise<S
     }
     
     if (metadataResponse.status === 400) {
-      throw new Error(`Invalid API key format. Please check that you copied the complete API key from Google Cloud Console. ${errorText}`)
+      if (errorData?.error?.message?.includes('API key not valid')) {
+        throw new Error(
+          `Invalid API key.\n\n` +
+          `Please check:\n` +
+          `1. You copied the complete API key from Google Cloud Console\n` +
+          `2. The API key has not been deleted or restricted\n` +
+          `3. You're using the correct API key (not a different type of credential)`
+        )
+      }
+      throw new Error(`Invalid request. Please check your Google Sheets URL and API key. ${errorText}`)
     }
     
     throw new Error(`Failed to fetch spreadsheet metadata: ${metadataResponse.statusText}. ${errorText}`)
