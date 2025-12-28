@@ -25,7 +25,7 @@ export default function ConciergeOrderButton() {
 
     const phoneNumber = '971528355939'
     const formattedMessage = encodeURIComponent(
-      `🛥️ MERIDIEN Concierge Order\n\n${message.trim()}\n\n---\nSent via MERIDIEN Yacht Catering`
+      `🛥️ Imperial Catering Concierge Order\n\n${message.trim()}\n\n---\nSent via Imperial Delicious Menu`
     )
     
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${formattedMessage}`

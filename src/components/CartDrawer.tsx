@@ -40,7 +40,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
       return
     }
 
-    let message = '*MERIDIEN YACHT CATERING*%0A*Order Summary*%0A%0A'
+    let message = '*IMPERIAL CATERING*%0A*Order Summary*%0A%0A'
 
     Object.values(groupedByRestaurant).forEach(({ restaurantName, items }) => {
       message += `*${restaurantName}*%0A`

@@ -13,7 +13,7 @@
 ### Шаг 1: Создайте GitHub Personal Access Token
 
 1. Перейдите на https://github.com/settings/tokens/new
-2. Введите название токена: `MERIDIEN Database`
+2. Введите название токена: `Imperial Catering Database`
 3. Выберите срок действия: `No expiration` (без срока действия)
 4. Выберите область доступа (scope): **только `gist`** ✓
 5. Нажмите "Generate token" внизу страницы

@@ -1,4 +1,4 @@
-# MERIDIEN Yacht Catering - Система Централизованной Базы Данных
+# Imperial Catering - Система Централизованной Базы Данных
 
 ## ⚠️ ВАЖНО ДЛЯ VERCEL DEPLOYMENT
 
@@ -21,7 +21,7 @@
 
 ```
 1. Перейдите: https://github.com/settings/tokens/new
-2. Название: MERIDIEN Database
+2. Название: Imperial Catering Database
 3. Scope: ✓ gist (только это!)
 4. Срок: No expiration
 5. Generate token

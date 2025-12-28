@@ -1,6 +1,6 @@
 # Sample Restaurants
 
-This catalog includes 12 curated Dubai restaurants showcasing the full MERIDIEN yacht catering experience.
+This catalog includes 12 curated Dubai restaurants showcasing the full Imperial Catering experience.
 
 ## Restaurant Collection
 

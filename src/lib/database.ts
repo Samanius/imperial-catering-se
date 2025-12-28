@@ -1,8 +1,8 @@
 import type { Restaurant } from './types'
 
-const GIST_ID_KEY = 'meridien-gist-id'
-const GITHUB_TOKEN_KEY = 'meridien-github-token'
-const DATA_FILENAME = 'meridien-restaurants.json'
+const GIST_ID_KEY = 'imperial-gist-id'
+const GITHUB_TOKEN_KEY = 'imperial-github-token'
+const DATA_FILENAME = 'imperial-restaurants.json'
 
 export interface DatabaseData {
   restaurants: Restaurant[]
