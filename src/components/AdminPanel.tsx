@@ -311,71 +311,10 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
     }
 
     if (!database.isConfigured) {
-      const fullErrorText = `❌ IMPORT BLOCKED - DATABASE NOT SET UP\n\n` +
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-        `🔴 CRITICAL ISSUE:\n` +
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-        `Your database (GitHub Gist) is NOT configured. Without it:\n` +
-        `• Imported restaurants CANNOT be saved\n` +
-        `• All data will be LOST on page refresh\n` +
-        `• The import will NOT work\n\n` +
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-        `✅ REQUIRED SETUP (ONE-TIME, ~3 MINUTES):\n` +
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-        `STEP 1: Create GitHub Token\n` +
-        `   1. Visit: https://github.com/settings/tokens/new\n` +
-        `   2. Description: "Imperial Restaurant Database"\n` +
-        `   3. Check ONLY "gist" (under repository permissions)\n` +
-        `   4. Click green "Generate token" button at bottom\n` +
-        `   5. Copy the token (looks like: ghp_abc123...)\n\n` +
-        `STEP 2: Set Up Database Storage\n` +
-        `   1. Click "Database" tab at TOP of this Admin Panel\n` +
-        `   2. Click "Create New" button\n` +
-        `   3. Paste your GitHub token\n` +
-        `   4. Click "Create Database"\n` +
-        `   5. Wait for "Database Connected Successfully" message\n\n` +
-        `STEP 3: Import Your Restaurants\n` +
-        `   1. Return to "Restaurants" tab\n` +
-        `   2. Click "Import from Google Sheets" again\n` +
-        `   3. Done! Your data is now saved permanently\n\n` +
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-        `ℹ️  IMPORTANT NOTES:\n` +
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-        `• Your Google Sheets API key has been saved ✓\n` +
-        `• Database setup is ONE-TIME only\n` +
-        `• After setup, all imports work automatically\n` +
-        `• Your data survives page refreshes & deployments\n` +
-        `• The GitHub token is FREE and takes 60 seconds\n\n` +
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-        `NEED HELP? Common Questions:\n` +
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-        `Q: Why do I need a GitHub account?\n` +
-        `A: To store restaurant data in a free, secure cloud database.\n\n` +
-        `Q: Is my data private?\n` +
-        `A: Yes! The Gist is private by default. Only you can see it.\n\n` +
-        `Q: What if I skip this?\n` +
-        `A: All restaurants will disappear when you refresh the page.\n\n` +
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-        `📋 Your Google Sheets Requirements (reminder):\n` +
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-        `• Each sheet = one restaurant (sheet name = restaurant name)\n` +
-        `• Column A: Item Name (required)\n` +
-        `• Column B: Description (optional)\n` +
-        `• Column C: Price (required)\n` +
-        `• Column D: Category (optional)\n` +
-        `• Column E: Weight (optional)\n` +
-        `• Column F: Image URL (optional)\n` +
-        `• First row can be headers (automatically skipped)\n\n` +
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-        `⏩ NEXT STEP: Click "Database Tab" button below → Create New\n` +
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
-      
-      setImportError(fullErrorText)
-      setIsErrorDialogOpen(true)
-      toast.error('⚠️ Database not configured! See detailed instructions.', { 
-        duration: 8000,
+      toast.error('Database not configured. Please set up database first.', { 
+        duration: 5000,
         action: {
-          label: 'Database Tab',
+          label: 'Go to Database',
           onClick: () => setActiveTab('database')
         }
       })
@@ -615,44 +554,18 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                   <div className="space-y-4 py-4 pb-6">
                     <Card className="p-4 bg-accent/5 border-accent/30">
                       <p className="text-sm font-semibold text-foreground mb-2">
-                        🔑 Google Sheets API Key Setup (One-Time)
+                        Google Sheets API Key
                       </p>
-                      <p className="text-xs text-muted-foreground leading-relaxed mb-2">
-                        Follow these steps to create your API key:
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Create API key at{' '}
+                        <a href="https://console.cloud.google.com" target="_blank" rel="noopener noreferrer" className="text-accent underline hover:text-accent/80">
+                          console.cloud.google.com
+                        </a>
+                        {' '}→ APIs & Services → Credentials → Create Credentials → API Key
                       </p>
-                      <ol className="text-xs text-muted-foreground space-y-2 list-decimal list-inside mt-2">
-                        <li className="pl-2">
-                          <strong className="text-foreground">Visit Google Cloud Console:</strong><br/>
-                          <a href="https://console.cloud.google.com" target="_blank" rel="noopener noreferrer" className="text-accent underline hover:text-accent/80 ml-6">console.cloud.google.com</a>
-                        </li>
-                        <li className="pl-2">
-                          <strong className="text-foreground">Create or select a project</strong><br/>
-                          <span className="ml-6 text-xs">Click "Select a project" dropdown at the top</span>
-                        </li>
-                        <li className="pl-2">
-                          <strong className="text-foreground">Enable Google Sheets API:</strong><br/>
-                          <span className="ml-6">• Go to "APIs & Services" → "Enable APIs and Services"</span><br/>
-                          <span className="ml-6">• Search for "Google Sheets API"</span><br/>
-                          <span className="ml-6">• Click "Enable" button</span><br/>
-                          <span className="ml-6 text-accent font-medium">⚠️ This step is critical - the API must be enabled!</span>
-                        </li>
-                        <li className="pl-2">
-                          <strong className="text-foreground">Create API Key:</strong><br/>
-                          <span className="ml-6">• Go to "Credentials" → "Create Credentials" → "API Key"</span><br/>
-                          <span className="ml-6">• (Optional) Restrict to Google Sheets API for security</span>
-                        </li>
-                        <li className="pl-2">
-                          <strong className="text-foreground">Copy and paste the key below</strong>
-                        </li>
-                      </ol>
-                      <Card className="mt-3 p-3 bg-destructive/10 border-destructive/30">
-                        <p className="text-xs font-semibold text-destructive mb-1">
-                          ⚠️ Common Error: "SERVICE_DISABLED"
-                        </p>
-                        <p className="text-xs text-destructive/80 leading-relaxed">
-                          If you see this error, it means step 3 (Enable API) was skipped. You must enable the Google Sheets API in your project before the API key will work. After enabling, wait 2-3 minutes before trying to import.
-                        </p>
-                      </Card>
+                      <p className="text-xs text-destructive mt-2">
+                        ⚠️ Enable "Google Sheets API" in your project before using the key
+                      </p>
                     </Card>
 
                     <div className="space-y-2">
@@ -664,14 +577,10 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                         onChange={(e) => setApiKeyInput(e.target.value)}
                         placeholder="Enter your Google Sheets API key"
                       />
-                      {googleApiKey && googleApiKey === apiKeyInput ? (
+                      {googleApiKey && googleApiKey === apiKeyInput && (
                         <p className="text-xs text-accent-foreground font-medium flex items-center gap-1">
                           <Check size={14} weight="bold" />
-                          API key saved and will be remembered for future imports
-                        </p>
-                      ) : (
-                        <p className="text-xs text-muted-foreground">
-                          Your API key will be saved securely after first import and reused automatically
+                          API key saved
                         </p>
                       )}
                     </div>
@@ -682,17 +591,14 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                       </p>
                       <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
                         <li>Each sheet = one restaurant (sheet name = restaurant name)</li>
-                        <li><strong>First row can be headers</strong> (will be skipped automatically)</li>
+                        <li>First row can be headers (skipped automatically)</li>
                         <li>Column A: Item Name (required)</li>
                         <li>Column B: Description (optional)</li>
-                        <li>Column C: Price (required, numbers only or with $)</li>
+                        <li>Column C: Price (required)</li>
                         <li>Column D: Category (optional)</li>
                         <li>Column E: Weight in grams (optional)</li>
                         <li>Column F: Image URL (optional)</li>
                       </ul>
-                      <p className="text-xs text-accent-foreground mt-3 font-medium">
-                        ⚠️ Empty rows are skipped. At least Item Name and Price must be filled.
-                      </p>
                     </Card>
 
                     <div className="space-y-2">
@@ -704,10 +610,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                         placeholder="https://docs.google.com/spreadsheets/d/..."
                       />
                       <p className="text-xs text-muted-foreground">
-                        ⚠️ <strong>Important:</strong> Your spreadsheet must be shared as "Anyone with the link can view"
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        New restaurants will be added. Existing restaurants will be updated with new menu items.
+                        ⚠️ Spreadsheet must be shared as "Anyone with the link can view"
                       </p>
                     </div>
 
