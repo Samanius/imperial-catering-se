@@ -150,259 +150,258 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured }: Da
     }
   }
 
-  if (isConfigured) {
-    return (
-      <>
-        <Card className="border-accent/20 bg-card">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <CheckCircle className="text-accent" size={28} weight="fill" />
-              <div>
-                <CardTitle className="text-lg">Database Connected</CardTitle>
-                <CardDescription>Restaurant data is stored securely in GitHub Gist</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
+  return (
+    <>
+      <Card className={isConfigured ? "border-accent/20 bg-card" : "border-destructive/20"}>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            {isConfigured ? (
+              <>
+                <CheckCircle className="text-accent" size={28} weight="fill" />
+                <div>
+                  <CardTitle className="text-lg">Database Connected</CardTitle>
+                  <CardDescription>Restaurant data is stored securely in GitHub Gist</CardDescription>
+                </div>
+              </>
+            ) : (
+              <>
+                <XCircle className="text-destructive" size={28} weight="fill" />
+                <div>
+                  <CardTitle className="text-lg">Database Not Configured</CardTitle>
+                  <CardDescription>Set up cloud storage before importing restaurants</CardDescription>
+                </div>
+              </>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {isConfigured ? (
             <Alert className="bg-accent/5 border-accent/20">
               <Info className="h-4 w-4 text-accent" />
               <AlertDescription className="text-sm">
                 Database is active. All changes are automatically saved to the cloud.
               </AlertDescription>
             </Alert>
-          </CardContent>
-        </Card>
+          ) : (
+            <>
+              <Alert className="bg-destructive/10 border-destructive/30">
+                <Info className="h-4 w-4 text-destructive" />
+                <AlertDescription className="text-sm font-medium">
+                  Without database configuration, all restaurant data will be lost when you refresh the page.
+                </AlertDescription>
+              </Alert>
 
-        <Card className="border-border bg-muted/30 mt-6">
-          <CardHeader>
-            <CardTitle className="text-base">Configuration Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3 font-mono text-xs">
-              <div>
-                <div className="font-semibold text-foreground mb-2 font-body">Google</div>
-                <div className="space-y-1.5 pl-2">
-                  <div>
-                    <span className="text-muted-foreground">Folder:</span>
-                    <br />
-                    <a 
-                      href="https://drive.google.com/drive/u/0/folders/1aQW3j8oAtwYSDPcjM2LxpJXRNDDPEVqs" 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="text-accent hover:underline break-all"
-                    >
-                      https://drive.google.com/drive/u/0/folders/1aQW3j8oAtwYSDPcjM2LxpJXRNDDPEVqs
-                    </a>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">File:</span>
-                    <br />
-                    <a 
-                      href="https://docs.google.com/spreadsheets/d/1my60zyjTGdDaY0sen9WAxCWooP7EDPneRTzwVDxoxEQ/edit?gid=0#gid=0" 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="text-accent hover:underline break-all"
-                    >
-                      https://docs.google.com/spreadsheets/d/1my60zyjTGdDaY0sen9WAxCWooP7EDPneRTzwVDxoxEQ/edit?gid=0#gid=0
-                    </a>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Api Key:</span> AIzaSyDX3Morf9Oeg-ANaP4ABE_irlIRbqMsSyE
-                  </div>
-                </div>
+              <div className="flex gap-2">
+                <Button
+                  variant={mode === 'connect' ? 'default' : 'outline'}
+                  onClick={() => setMode('connect')}
+                  className="flex-1"
+                >
+                  <Database size={16} className="mr-2" />
+                  Connect Existing
+                </Button>
+                <Button
+                  variant={mode === 'create' ? 'default' : 'outline'}
+                  onClick={() => setMode('create')}
+                  className="flex-1"
+                >
+                  <Plus size={16} className="mr-2" />
+                  Create New
+                </Button>
               </div>
 
-              <div>
-                <div className="font-semibold text-foreground mb-2 font-body">Git</div>
-                <div className="space-y-1.5 pl-2">
-                  <div>
-                    <span className="text-muted-foreground">Api Token:</span> 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
+              {mode === 'connect' ? (
+                <div className="space-y-4">
+                  <Alert className="bg-accent/5 border-accent/20">
+                    <Info className="h-4 w-4 text-accent" />
+                    <AlertDescription className="text-xs space-y-2">
+                      <p className="font-semibold">Quick Links:</p>
+                      <div className="flex flex-col gap-1">
+                        <a 
+                          href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-accent hover:underline inline-flex items-center gap-1"
+                        >
+                          Create API Token <ArrowSquareOut size={14} weight="bold" />
+                        </a>
+                        <a 
+                          href="https://gist.github.com/" 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-accent hover:underline inline-flex items-center gap-1"
+                        >
+                          View Your Gists <ArrowSquareOut size={14} weight="bold" />
+                        </a>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="gist-id" className="font-semibold">GitHub Gist ID</Label>
+                    <Input
+                      id="gist-id"
+                      placeholder="Example: 8f3e4d2c1b9a7f6e5d4c3b2a1f0e9d8c"
+                      value={gistId}
+                      onChange={(e) => setGistId(e.target.value)}
+                      className="font-mono text-sm"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Find your Gist ID at{' '}
+                      <a 
+                        href="https://gist.github.com/" 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-accent hover:underline"
+                      >
+                        gist.github.com
+                      </a>
+                      {' '}(it's in the URL)
+                    </p>
                   </div>
-                  <div>
-                    <span className="text-muted-foreground">Database:</span> 4bbee0ab79fb8dc84b54d5bf12b7110b
+
+                  <div className="space-y-2">
+                    <Label htmlFor="github-token" className="font-semibold">GitHub Personal Access Token</Label>
+                    <Input
+                      id="github-token"
+                      type="password"
+                      placeholder="ghp_..."
+                      value={githubToken}
+                      onChange={(e) => setGithubToken(e.target.value)}
+                      className="font-mono"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Create token at{' '}
+                      <a 
+                        href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-accent hover:underline"
+                      >
+                        github.com/settings/tokens/new
+                      </a>
+                      {' '}(check only "gist" scope)
+                    </p>
                   </div>
+
+                  <Button onClick={handleConnect} disabled={isLoading} className="w-full" size="lg">
+                    {isLoading ? 'Connecting...' : 'Connect Database'}
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <Alert className="bg-accent/5 border-accent/20">
+                    <Info className="h-4 w-4 text-accent" />
+                    <AlertDescription className="text-xs space-y-2">
+                      <p className="font-semibold">Quick Links:</p>
+                      <div className="flex flex-col gap-1">
+                        <a 
+                          href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-accent hover:underline inline-flex items-center gap-1"
+                        >
+                          Create API Token <ArrowSquareOut size={14} weight="bold" />
+                        </a>
+                        <a 
+                          href="https://gist.github.com/" 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-accent hover:underline inline-flex items-center gap-1"
+                        >
+                          View Your Gists <ArrowSquareOut size={14} weight="bold" />
+                        </a>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="github-token-create" className="text-base font-semibold">GitHub Personal Access Token</Label>
+                    <Input
+                      id="github-token-create"
+                      type="password"
+                      placeholder="ghp_..."
+                      value={githubToken}
+                      onChange={(e) => setGithubToken(e.target.value)}
+                      className="font-mono"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Create token at{' '}
+                      <a 
+                        href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-accent hover:underline"
+                      >
+                        github.com/settings/tokens/new
+                      </a>
+                      {' '}(check only "gist" scope)
+                    </p>
+                  </div>
+
+                  <Button onClick={handleCreate} disabled={isLoading} className="w-full" size="lg">
+                    {isLoading ? 'Creating Database...' : 'Create Database'}
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="border-border bg-muted/30 mt-6">
+        <CardHeader>
+          <CardTitle className="text-base">Configuration Details</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-3 font-mono text-xs">
+            <div>
+              <div className="font-semibold text-foreground mb-2 font-body">Google</div>
+              <div className="space-y-1.5 pl-2">
+                <div>
+                  <span className="text-muted-foreground">Folder:</span>
+                  <br />
+                  <a 
+                    href="https://drive.google.com/drive/u/0/folders/1aQW3j8oAtwYSDPcjM2LxpJXRNDDPEVqs" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-accent hover:underline break-all"
+                  >
+                    https://drive.google.com/drive/u/0/folders/1aQW3j8oAtwYSDPcjM2LxpJXRNDDPEVqs
+                  </a>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">File:</span>
+                  <br />
+                  <a 
+                    href="https://docs.google.com/spreadsheets/d/1my60zyjTGdDaY0sen9WAxCWooP7EDPneRTzwVDxoxEQ/edit?gid=0#gid=0" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-accent hover:underline break-all"
+                  >
+                    https://docs.google.com/spreadsheets/d/1my60zyjTGdDaY0sen9WAxCWooP7EDPneRTzwVDxoxEQ/edit?gid=0#gid=0
+                  </a>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Api Key:</span> AIzaSyDX3Morf9Oeg-ANaP4ABE_irlIRbqMsSyE
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </>
-    )
-  }
 
-  return (
-    <Card className="border-destructive/20">
-      <CardHeader>
-        <div className="flex items-center gap-3">
-          <XCircle className="text-destructive" size={28} weight="fill" />
-          <div>
-            <CardTitle className="text-lg">Database Not Configured</CardTitle>
-            <CardDescription>Set up cloud storage before importing restaurants</CardDescription>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <Alert className="bg-destructive/10 border-destructive/30">
-          <Info className="h-4 w-4 text-destructive" />
-          <AlertDescription className="text-sm font-medium">
-            Without database configuration, all restaurant data will be lost when you refresh the page.
-          </AlertDescription>
-        </Alert>
-
-        <div className="flex gap-2">
-          <Button
-            variant={mode === 'connect' ? 'default' : 'outline'}
-            onClick={() => setMode('connect')}
-            className="flex-1"
-          >
-            <Database size={16} className="mr-2" />
-            Connect Existing
-          </Button>
-          <Button
-            variant={mode === 'create' ? 'default' : 'outline'}
-            onClick={() => setMode('create')}
-            className="flex-1"
-          >
-            <Plus size={16} className="mr-2" />
-            Create New
-          </Button>
-        </div>
-
-        {mode === 'connect' ? (
-          <div className="space-y-4">
-            <Alert className="bg-accent/5 border-accent/20">
-              <Info className="h-4 w-4 text-accent" />
-              <AlertDescription className="text-xs space-y-2">
-                <p className="font-semibold">Quick Links:</p>
-                <div className="flex flex-col gap-1">
-                  <a 
-                    href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="text-accent hover:underline inline-flex items-center gap-1"
-                  >
-                    Create API Token <ArrowSquareOut size={14} weight="bold" />
-                  </a>
-                  <a 
-                    href="https://gist.github.com/" 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="text-accent hover:underline inline-flex items-center gap-1"
-                  >
-                    View Your Gists <ArrowSquareOut size={14} weight="bold" />
-                  </a>
+            <div>
+              <div className="font-semibold text-foreground mb-2 font-body">Git</div>
+              <div className="space-y-1.5 pl-2">
+                <div>
+                  <span className="text-muted-foreground">Api Token:</span> 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
                 </div>
-              </AlertDescription>
-            </Alert>
-
-            <div className="space-y-2">
-              <Label htmlFor="gist-id" className="font-semibold">GitHub Gist ID</Label>
-              <Input
-                id="gist-id"
-                placeholder="Example: 8f3e4d2c1b9a7f6e5d4c3b2a1f0e9d8c"
-                value={gistId}
-                onChange={(e) => setGistId(e.target.value)}
-                className="font-mono text-sm"
-              />
-              <p className="text-xs text-muted-foreground">
-                Find your Gist ID at{' '}
-                <a 
-                  href="https://gist.github.com/" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-accent hover:underline"
-                >
-                  gist.github.com
-                </a>
-                {' '}(it's in the URL)
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="github-token" className="font-semibold">GitHub Personal Access Token</Label>
-              <Input
-                id="github-token"
-                type="password"
-                placeholder="ghp_..."
-                value={githubToken}
-                onChange={(e) => setGithubToken(e.target.value)}
-                className="font-mono"
-              />
-              <p className="text-xs text-muted-foreground">
-                Create token at{' '}
-                <a 
-                  href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-accent hover:underline"
-                >
-                  github.com/settings/tokens/new
-                </a>
-                {' '}(check only "gist" scope)
-              </p>
-            </div>
-
-            <Button onClick={handleConnect} disabled={isLoading} className="w-full" size="lg">
-              {isLoading ? 'Connecting...' : 'Connect Database'}
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <Alert className="bg-accent/5 border-accent/20">
-              <Info className="h-4 w-4 text-accent" />
-              <AlertDescription className="text-xs space-y-2">
-                <p className="font-semibold">Quick Links:</p>
-                <div className="flex flex-col gap-1">
-                  <a 
-                    href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="text-accent hover:underline inline-flex items-center gap-1"
-                  >
-                    Create API Token <ArrowSquareOut size={14} weight="bold" />
-                  </a>
-                  <a 
-                    href="https://gist.github.com/" 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="text-accent hover:underline inline-flex items-center gap-1"
-                  >
-                    View Your Gists <ArrowSquareOut size={14} weight="bold" />
-                  </a>
+                <div>
+                  <span className="text-muted-foreground">Database:</span> 4bbee0ab79fb8dc84b54d5bf12b7110b
                 </div>
-              </AlertDescription>
-            </Alert>
-
-            <div className="space-y-2">
-              <Label htmlFor="github-token-create" className="text-base font-semibold">GitHub Personal Access Token</Label>
-              <Input
-                id="github-token-create"
-                type="password"
-                placeholder="ghp_..."
-                value={githubToken}
-                onChange={(e) => setGithubToken(e.target.value)}
-                className="font-mono"
-              />
-              <p className="text-xs text-muted-foreground">
-                Create token at{' '}
-                <a 
-                  href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-accent hover:underline"
-                >
-                  github.com/settings/tokens/new
-                </a>
-                {' '}(check only "gist" scope)
-              </p>
+              </div>
             </div>
-
-            <Button onClick={handleCreate} disabled={isLoading} className="w-full" size="lg">
-              {isLoading ? 'Creating Database...' : 'Create Database'}
-            </Button>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </>
   )
 }
