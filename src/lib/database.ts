@@ -3,6 +3,7 @@ import type { Restaurant } from './types'
 const GIST_ID_KEY = 'imperial-gist-id'
 const GITHUB_TOKEN_KEY = 'imperial-github-token'
 const DATA_FILENAME = 'imperial-restaurants.json'
+const DEFAULT_GIST_ID = '4bbee0ab79fb8dc84b54d5bf12b7110b'
 
 export interface DatabaseData {
   restaurants: Restaurant[]
@@ -26,8 +27,10 @@ export class Database {
 
   constructor() {
     if (typeof window !== 'undefined') {
-      this.gistId = localStorage.getItem(GIST_ID_KEY)
+      this.gistId = localStorage.getItem(GIST_ID_KEY) || DEFAULT_GIST_ID
       this.githubToken = localStorage.getItem(GITHUB_TOKEN_KEY)
+    } else {
+      this.gistId = DEFAULT_GIST_ID
     }
   }
 
@@ -49,19 +52,28 @@ export class Database {
   }
 
   public hasCredentials(): boolean {
+    return !!this.gistId
+  }
+
+  public hasWriteAccess(): boolean {
     return !!(this.gistId && this.githubToken)
   }
 
   private async fetchGist(): Promise<any> {
-    if (!this.gistId || !this.githubToken) {
+    if (!this.gistId) {
       throw new DatabaseError('Database not configured. Please set up GitHub credentials in Admin Panel.', 'NO_CREDENTIALS')
     }
 
+    const headers: Record<string, string> = {
+      'Accept': 'application/vnd.github.v3+json'
+    }
+
+    if (this.githubToken) {
+      headers['Authorization'] = `Bearer ${this.githubToken}`
+    }
+
     const response = await fetch(`https://api.github.com/gists/${this.gistId}`, {
-      headers: {
-        'Authorization': `Bearer ${this.githubToken}`,
-        'Accept': 'application/vnd.github.v3+json'
-      }
+      headers
     })
 
     if (!response.ok) {
@@ -78,8 +90,12 @@ export class Database {
   }
 
   private async updateGist(data: DatabaseData): Promise<void> {
-    if (!this.gistId || !this.githubToken) {
-      throw new DatabaseError('Database not configured. Please set up GitHub credentials in Admin Panel.', 'NO_CREDENTIALS')
+    if (!this.gistId) {
+      throw new DatabaseError('Database not configured. Please set up Gist ID.', 'NO_GIST_ID')
+    }
+
+    if (!this.githubToken) {
+      throw new DatabaseError('GitHub token required for write operations. Please configure in Admin Panel.', 'NO_TOKEN')
     }
 
     const response = await fetch(`https://api.github.com/gists/${this.gistId}`, {
@@ -131,8 +147,8 @@ export class Database {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        description: 'MERIDIEN Yacht Catering - Restaurant Database',
-        public: false,
+        description: 'Imperial Delicious Menu - Restaurant Database',
+        public: true,
         files: {
           [DATA_FILENAME]: {
             content: JSON.stringify(initialData, null, 2)

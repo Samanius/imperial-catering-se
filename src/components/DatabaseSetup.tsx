@@ -6,34 +6,46 @@ import { Label } from './ui/label'
 import { Alert, AlertDescription } from './ui/alert'
 import { Database, Plus, CheckCircle, XCircle, Info, ArrowSquareOut } from '@phosphor-icons/react'
 import { toast } from 'sonner'
+import { db } from '@/lib/database'
 
 interface DatabaseSetupProps {
   onSetup: (gistId: string, githubToken: string) => Promise<void>
   onCreateNew: (githubToken: string) => Promise<{ gistId: string; url: string }>
   isConfigured: boolean
+  hasWriteAccess?: boolean
 }
 
-export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured }: DatabaseSetupProps) {
+export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured, hasWriteAccess = false }: DatabaseSetupProps) {
   const [mode, setMode] = useState<'connect' | 'create'>('connect')
   const [gistId, setGistId] = useState('')
   const [githubToken, setGithubToken] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
   const handleConnect = async () => {
-    if (!gistId || !githubToken) {
-      toast.error('Please fill all fields')
+    const trimmedToken = githubToken.trim()
+    let trimmedGistId = gistId.trim()
+
+    if (!isConfigured && !trimmedGistId) {
+      toast.error('Please enter Gist ID')
       return
     }
 
-    const trimmedGistId = gistId.trim()
-    const trimmedToken = githubToken.trim()
+    if (isConfigured && !trimmedGistId) {
+      const credentials = db.getCredentials()
+      trimmedGistId = credentials.gistId || ''
+    }
 
-    if (trimmedGistId.length < 20) {
+    if (!trimmedToken) {
+      toast.error('Please enter GitHub token')
+      return
+    }
+
+    if (trimmedGistId && trimmedGistId.length < 20) {
       toast.error('Invalid Gist ID format')
       return
     }
 
-    if (trimmedGistId.includes('/') || trimmedGistId.includes('gist.github.com')) {
+    if (trimmedGistId && (trimmedGistId.includes('/') || trimmedGistId.includes('gist.github.com'))) {
       toast.error('Enter only the Gist ID, not full URL')
       return
     }
@@ -152,17 +164,27 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured }: Da
 
   return (
     <>
-      <Card className={isConfigured ? "border-accent/20 bg-card" : "border-destructive/20"}>
+      <Card className={isConfigured ? (hasWriteAccess ? "border-accent/20 bg-card" : "border-yellow-500/20 bg-card") : "border-destructive/20"}>
         <CardHeader>
           <div className="flex items-center gap-3">
             {isConfigured ? (
-              <>
-                <CheckCircle className="text-accent" size={28} weight="fill" />
-                <div>
-                  <CardTitle className="text-lg">Database Connected</CardTitle>
-                  <CardDescription>Restaurant data is stored securely in GitHub Gist</CardDescription>
-                </div>
-              </>
+              hasWriteAccess ? (
+                <>
+                  <CheckCircle className="text-accent" size={28} weight="fill" />
+                  <div>
+                    <CardTitle className="text-lg">Database Connected (Full Access)</CardTitle>
+                    <CardDescription>Restaurant data is stored securely. You can read and write.</CardDescription>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="text-yellow-600" size={28} weight="fill" />
+                  <div>
+                    <CardTitle className="text-lg">Database Connected (Read-Only)</CardTitle>
+                    <CardDescription>You can view data. Add GitHub token for write access.</CardDescription>
+                  </div>
+                </>
+              )
             ) : (
               <>
                 <XCircle className="text-destructive" size={28} weight="fill" />
@@ -175,13 +197,87 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured }: Da
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          {isConfigured ? (
+          {isConfigured && hasWriteAccess ? (
             <Alert className="bg-accent/5 border-accent/20">
               <Info className="h-4 w-4 text-accent" />
               <AlertDescription className="text-sm">
                 Database is active. All changes are automatically saved to the cloud.
               </AlertDescription>
             </Alert>
+          ) : isConfigured && !hasWriteAccess ? (
+            <>
+              <Alert className="bg-yellow-500/10 border-yellow-500/30">
+                <Info className="h-4 w-4 text-yellow-600" />
+                <AlertDescription className="text-sm font-medium">
+                  You are in read-only mode. To add or edit restaurants, configure your GitHub token below.
+                </AlertDescription>
+              </Alert>
+
+              <div className="flex gap-2">
+                <Button
+                  variant={mode === 'connect' ? 'default' : 'outline'}
+                  onClick={() => setMode('connect')}
+                  className="flex-1"
+                >
+                  <Database size={16} className="mr-2" />
+                  Add Write Access
+                </Button>
+              </div>
+
+              {mode === 'connect' && (
+                <div className="space-y-4">
+                  <Alert className="bg-accent/5 border-accent/20">
+                    <Info className="h-4 w-4 text-accent" />
+                    <AlertDescription className="text-xs space-y-2">
+                      <p className="font-semibold">Quick Links:</p>
+                      <div className="flex flex-col gap-1">
+                        <a 
+                          href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-accent hover:underline inline-flex items-center gap-1"
+                        >
+                          Create API Token <ArrowSquareOut size={14} weight="bold" />
+                        </a>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="github-token-readonly" className="font-semibold">GitHub Personal Access Token</Label>
+                    <Input
+                      id="github-token-readonly"
+                      type="password"
+                      placeholder="ghp_..."
+                      value={githubToken}
+                      onChange={(e) => setGithubToken(e.target.value)}
+                      className="font-mono"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Create token at{' '}
+                      <a 
+                        href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-accent hover:underline"
+                      >
+                        github.com/settings/tokens/new
+                      </a>
+                      {' '}(check only "gist" scope)
+                    </p>
+                  </div>
+
+                  <Button 
+                    onClick={handleConnect} 
+                    disabled={isLoading} 
+                    className="w-full" 
+                    size="lg"
+                  >
+                    {isLoading ? 'Connecting...' : 'Enable Write Access'}
+                  </Button>
+                </div>
+              )}
+            </>
           ) : (
             <>
               <Alert className="bg-destructive/10 border-destructive/30">

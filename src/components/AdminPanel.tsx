@@ -212,8 +212,8 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       return
     }
 
-    if (!database.isConfigured) {
-      toast.error('Database not configured. Please set up the database first.')
+    if (!database.hasWriteAccess) {
+      toast.error('No write access. Please configure GitHub token in Database tab.')
       return
     }
 
@@ -310,7 +310,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       await new Promise(resolve => setTimeout(resolve, 100))
     }
 
-    if (!database.isConfigured) {
+    if (!database.hasWriteAccess) {
       toast.error('Database not configured. Please set up database first.', { 
         duration: 5000,
         action: {
@@ -1139,6 +1139,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                 }}
                 onCreateNew={database.createDatabase}
                 isConfigured={database.isConfigured}
+                hasWriteAccess={database.hasWriteAccess}
               />
               
               {database.isConfigured && (

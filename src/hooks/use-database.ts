@@ -7,10 +7,11 @@ export function useDatabase() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isConfigured, setIsConfigured] = useState(false)
+  const [hasWriteAccess, setHasWriteAccess] = useState(false)
 
   useEffect(() => {
-    const credentials = db.getCredentials()
     setIsConfigured(db.hasCredentials())
+    setHasWriteAccess(db.hasWriteAccess())
     loadRestaurants()
   }, [])
 
@@ -75,10 +76,12 @@ export function useDatabase() {
     try {
       db.setCredentials(gistId, githubToken)
       setIsConfigured(true)
+      setHasWriteAccess(true)
       await loadRestaurants()
       return true
     } catch (err: any) {
       setIsConfigured(false)
+      setHasWriteAccess(false)
       throw new Error(err.message || 'Failed to configure database')
     }
   }, [loadRestaurants])
@@ -89,6 +92,7 @@ export function useDatabase() {
       const result = await db.createDatabase()
       db.setCredentials(result.gistId, githubToken)
       setIsConfigured(true)
+      setHasWriteAccess(true)
       await loadRestaurants()
       return result
     } catch (err: any) {
@@ -114,6 +118,7 @@ export function useDatabase() {
     isLoading,
     error,
     isConfigured,
+    hasWriteAccess,
     loadRestaurants,
     addRestaurant,
     updateRestaurant,
