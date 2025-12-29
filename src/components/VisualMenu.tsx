@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Plus, Minus } from '@phosphor-icons/react'
 import { useCart } from '@/hooks/use-cart'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { formatCurrency } from '@/lib/utils'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
 import type { MenuItem } from '@/lib/types'
@@ -89,7 +90,7 @@ export default function VisualMenu({
                         {item.name}
                       </h3>
                       <span className="font-body text-base sm:text-lg font-medium text-muted-foreground flex-shrink-0">
-                        ${item.price}
+                        {formatCurrency(item.price)}
                       </span>
                     </div>
 

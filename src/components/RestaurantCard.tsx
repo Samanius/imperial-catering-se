@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Card } from './ui/card'
 import { Button } from './ui/button'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { formatCurrency } from '@/lib/utils'
 import type { Restaurant } from '@/lib/types'
 
 interface RestaurantCardProps {
@@ -67,7 +68,7 @@ export default function RestaurantCard({ restaurant, isWide, onClick }: Restaura
           <div className="mb-4 space-y-1">
             {restaurant.minimumOrderAmount && (
               <p className="font-body text-xs text-muted-foreground">
-                Min. order: ${restaurant.minimumOrderAmount}
+                Min. order: {formatCurrency(restaurant.minimumOrderAmount)}
               </p>
             )}
             {restaurant.orderDeadlineHours && (

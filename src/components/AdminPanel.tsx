@@ -8,6 +8,7 @@ import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { Separator } from './ui/separator'
+import { formatCurrency } from '@/lib/utils'
 import { ArrowLeft, Plus, Trash, PencilSimple, Check, X, Eye, EyeSlash, FileArrowDown, SpinnerGap, ArrowsClockwise } from '@phosphor-icons/react'
 import type { Restaurant, MenuItem, MenuType } from '@/lib/types'
 import { toast } from 'sonner'
@@ -845,7 +846,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="minimumOrderAmount">Minimum Order Amount ($)</Label>
+                        <Label htmlFor="minimumOrderAmount">Minimum Order Amount (د.إ)</Label>
                         <Input
                           id="minimumOrderAmount"
                           type="number"
@@ -867,7 +868,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="chefServicePrice">Chef Service Price ($)</Label>
+                        <Label htmlFor="chefServicePrice">Chef Service Price (د.إ)</Label>
                         <Input
                           id="chefServicePrice"
                           type="number"
@@ -878,7 +879,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="waiterServicePrice">Waiter Service Price ($ per waiter)</Label>
+                        <Label htmlFor="waiterServicePrice">Waiter Service Price (د.إ per waiter)</Label>
                         <Input
                           id="waiterServicePrice"
                           type="number"
@@ -1074,7 +1075,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                                 <p className="font-medium truncate">{item.name}</p>
                                 <p className="text-sm text-muted-foreground">{item.category}</p>
                                 <div className="flex gap-2 items-center text-sm font-medium">
-                                  <span>${item.price}</span>
+                                  <span>{formatCurrency(item.price)}</span>
                                   {item.weight && (
                                     <span className="text-muted-foreground">• {item.weight} g</span>
                                   )}

@@ -5,6 +5,7 @@ import { Textarea } from './ui/textarea'
 import { Label } from './ui/label'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useCart } from '@/hooks/use-cart'
+import { formatCurrency } from '@/lib/utils'
 import type { MenuItem } from '@/lib/types'
 import { WhatsappLogo } from '@phosphor-icons/react'
 import { toast } from 'sonner'
@@ -112,7 +113,7 @@ export default function TastingMenu({ restaurantId, restaurantName, description,
                     </div>
                     <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 ml-2 sm:ml-4">
                       <span className="font-body text-sm sm:text-base text-muted-foreground whitespace-nowrap">
-                        ${item.price.toFixed(2)}
+                        {formatCurrency(item.price)}
                       </span>
                       {quantity > 0 && (
                         <span className="font-body text-sm font-medium text-accent-foreground bg-accent/15 px-2 py-0.5 rounded-sm min-w-[2.5rem] text-center animate-in fade-in slide-in-from-right-2 duration-200">

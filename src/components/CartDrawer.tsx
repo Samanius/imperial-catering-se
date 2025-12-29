@@ -1,6 +1,7 @@
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useCart } from '@/hooks/use-cart'
 import { useKV } from '@github/spark/hooks'
+import { formatCurrency } from '@/lib/utils'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from './ui/drawer'
 import { Button } from './ui/button'
 import { ScrollArea } from './ui/scroll-area'
@@ -47,18 +48,18 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
       items.forEach(item => {
         if (!item?.menuItem) return
         const weight = item.menuItem.weight ? ` (${item.menuItem.weight} g)` : ''
-        message += `• ${item.quantity}x ${item.menuItem.name}${weight} - $${(item.menuItem.price * item.quantity).toFixed(2)}%0A`
+        message += `• ${item.quantity}x ${item.menuItem.name}${weight} - ${formatCurrency(item.menuItem.price * item.quantity)}%0A`
       })
       
       const restaurantService = cart?.services?.find(s => s.restaurantId === items[0]?.restaurantId)
       if (restaurantService) {
         message += '%0A*Services:*%0A'
         if (restaurantService.chefService && restaurantService.chefServicePrice) {
-          message += `• Chef Service - $${restaurantService.chefServicePrice.toFixed(2)}%0A`
+          message += `• Chef Service - ${formatCurrency(restaurantService.chefServicePrice)}%0A`
         }
         if (restaurantService.waiterCount && restaurantService.waiterServicePrice) {
           const waiterTotal = restaurantService.waiterCount * restaurantService.waiterServicePrice
-          message += `• ${restaurantService.waiterCount} Waiter${restaurantService.waiterCount > 1 ? 's' : ''} - $${waiterTotal.toFixed(2)}%0A`
+          message += `• ${restaurantService.waiterCount} Waiter${restaurantService.waiterCount > 1 ? 's' : ''} - ${formatCurrency(waiterTotal)}%0A`
         }
       }
       
@@ -67,11 +68,11 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
     const servicesTotal = calculateServicesTotal()
     if (servicesTotal > 0) {
-      message += `*Subtotal (Food): $${totalPrice.toFixed(2)}*%0A`
-      message += `*Services Total: $${servicesTotal.toFixed(2)}*%0A`
-      message += `*Grand Total: $${grandTotal.toFixed(2)}*`
+      message += `*Subtotal (Food): ${formatCurrency(totalPrice)}*%0A`
+      message += `*Services Total: ${formatCurrency(servicesTotal)}*%0A`
+      message += `*Grand Total: ${formatCurrency(grandTotal)}*`
     } else {
-      message += `*Total: $${totalPrice.toFixed(2)}*`
+      message += `*Total: ${formatCurrency(totalPrice)}*`
     }
 
     const whatsappNumber = '971528355939'
@@ -132,7 +133,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                             {restaurantName}
                           </h3>
                           <span className="font-body text-sm sm:text-base font-medium text-muted-foreground">
-                            ${restaurantItemsTotal.toFixed(2)}
+                            {formatCurrency(restaurantItemsTotal)}
                           </span>
                         </div>
                         
@@ -197,7 +198,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                     </div>
                                     
                                     <span className="font-body text-sm sm:text-base font-medium flex-shrink-0">
-                                      ${(item.menuItem.price * item.quantity).toFixed(2)}
+                                      {formatCurrency(item.menuItem.price * item.quantity)}
                                     </span>
                                   </div>
                                 </div>
@@ -217,7 +218,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                   <ChefHat size={16} weight="duotone" className="text-accent" />
                                   <span className="font-body">Chef Service</span>
                                 </div>
-                                <span className="font-medium">${restaurantService.chefServicePrice.toFixed(2)}</span>
+                                <span className="font-medium">{formatCurrency(restaurantService.chefServicePrice)}</span>
                               </div>
                             )}
                             {restaurantService.waiterCount && restaurantService.waiterCount > 0 && restaurantService.waiterServicePrice && (
@@ -226,7 +227,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                   <UsersThree size={16} weight="duotone" className="text-accent" />
                                   <span className="font-body">{restaurantService.waiterCount} Waiter{restaurantService.waiterCount > 1 ? 's' : ''}</span>
                                 </div>
-                                <span className="font-medium">${(restaurantService.waiterCount * restaurantService.waiterServicePrice).toFixed(2)}</span>
+                                <span className="font-medium">{formatCurrency(restaurantService.waiterCount * restaurantService.waiterServicePrice)}</span>
                               </div>
                             )}
                           </div>
@@ -245,11 +246,11 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 <div className="space-y-2 pb-2">
                   <div className="flex justify-between items-center text-sm">
                     <span className="font-body text-muted-foreground">Food & Beverages</span>
-                    <span className="font-body">${totalPrice.toFixed(2)}</span>
+                    <span className="font-body">{formatCurrency(totalPrice)}</span>
                   </div>
                   <div className="flex justify-between items-center text-sm">
                     <span className="font-body text-muted-foreground">Services</span>
-                    <span className="font-body">${calculateServicesTotal().toFixed(2)}</span>
+                    <span className="font-body">{formatCurrency(calculateServicesTotal())}</span>
                   </div>
                   <Separator />
                 </div>
@@ -258,7 +259,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               <div className="flex justify-between items-center">
                 <span className="font-heading text-lg sm:text-xl">Total</span>
                 <span className="font-heading text-xl sm:text-2xl font-semibold">
-                  ${grandTotal.toFixed(2)}
+                  {formatCurrency(grandTotal)}
                 </span>
               </div>
 

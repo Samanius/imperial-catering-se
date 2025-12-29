@@ -4,6 +4,7 @@ import { Card } from './ui/card'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
 import { Switch } from './ui/switch'
+import { formatCurrency } from '@/lib/utils'
 import { Minus, Plus, ChefHat, UsersThree } from '@phosphor-icons/react'
 import type { Restaurant, Cart } from '@/lib/types'
 import { toast } from 'sonner'
@@ -108,7 +109,7 @@ export default function ServiceSelector({ restaurant }: ServiceSelectorProps) {
           <div className="space-y-2">
             {restaurant.minimumOrderAmount && (
               <p className="font-body text-sm sm:text-base text-foreground/90">
-                <span className="text-muted-foreground">Minimum order amount:</span> ${restaurant.minimumOrderAmount}
+                <span className="text-muted-foreground">Minimum order amount:</span> {formatCurrency(restaurant.minimumOrderAmount)}
               </p>
             )}
             {restaurant.orderDeadlineHours && (
@@ -134,7 +135,7 @@ export default function ServiceSelector({ restaurant }: ServiceSelectorProps) {
                   Chef Service
                 </Label>
                 <p className="text-sm text-muted-foreground mt-1">
-                  ${restaurant.chefServicePrice}
+                  {formatCurrency(restaurant.chefServicePrice)}
                 </p>
               </div>
             </div>
@@ -157,7 +158,7 @@ export default function ServiceSelector({ restaurant }: ServiceSelectorProps) {
                   Waiter Service
                 </Label>
                 <p className="text-sm text-muted-foreground mt-1">
-                  ${restaurant.waiterServicePrice} per waiter
+                  {formatCurrency(restaurant.waiterServicePrice)} per waiter
                 </p>
               </div>
             </div>
@@ -198,7 +199,7 @@ export default function ServiceSelector({ restaurant }: ServiceSelectorProps) {
                 Total service cost:
               </span>
               <span className="font-heading text-lg font-semibold">
-                ${getTotalServiceCost()}
+                {formatCurrency(getTotalServiceCost())}
               </span>
             </div>
           </div>
