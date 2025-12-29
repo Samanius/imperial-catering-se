@@ -1075,9 +1075,8 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                                 <p className="font-medium truncate">{item.name}</p>
                                 <p className="text-sm text-muted-foreground">{item.category}</p>
                                 <div className="flex gap-2 items-center text-sm font-medium">
-                                  <span>{formatCurrency(item.price)}</span>
                                   {item.weight && (
-                                    <span className="text-muted-foreground">• {item.weight} g</span>
+                                  {item.weight && (
                                   )}
                                 </div>
                               </div>
