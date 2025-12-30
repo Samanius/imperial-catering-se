@@ -81,7 +81,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
   }, [])
 
   const startCreating = () => {
-    setIsCreating(true)
+    setFormData({
     setSelectedRestaurant(null)
     setFormData({
       name: '',
