@@ -9,9 +9,10 @@ import { Textarea } from './ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { Separator } from './ui/separator'
 import { formatCurrency } from '@/lib/utils'
-import { ArrowLeft, Plus, Trash, PencilSimple, Check, X, Eye, EyeSlash, FileArrowDown, SpinnerGap, ArrowsClockwise } from '@phosphor-icons/react'
+import { ArrowLeft, Plus, Trash, PencilSimple, Check, X, Eye, EyeSlash, FileArrowDown, SpinnerGap, ArrowsClockwise, UploadSimple, Image as ImageIcon } from '@phosphor-icons/react'
 import type { Restaurant, MenuItem, MenuType } from '@/lib/types'
 import { toast } from 'sonner'
+import { processImageUpload } from '@/lib/file-upload'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 import { ScrollArea } from './ui/scroll-area'
 import { createBackup } from '@/lib/backup'
@@ -66,6 +67,8 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
   })
   const [editingItemId, setEditingItemId] = useState<string | null>(null)
   const [editingItemData, setEditingItemData] = useState<MenuItem | null>(null)
+  const [isUploadingCover, setIsUploadingCover] = useState(false)
+  const [isUploadingMenuItem, setIsUploadingMenuItem] = useState(false)
 
   useEffect(() => {
     if (googleApiKey) {
@@ -283,6 +286,51 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       } catch (error: any) {
         toast.error(error.message || 'Failed to delete restaurant')
       }
+    }
+  }
+
+  const handleCoverImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsUploadingCover(true)
+    try {
+      const base64Image = await processImageUpload(file)
+      setFormData(prev => ({ ...prev, coverImage: base64Image }))
+      toast.success('Cover image uploaded')
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to upload image')
+    } finally {
+      setIsUploadingCover(false)
+    }
+  }
+
+  const handleMenuItemImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsUploadingMenuItem(true)
+    try {
+      const base64Image = await processImageUpload(file)
+      setNewMenuItem(prev => ({ ...prev, image: base64Image }))
+      toast.success('Image uploaded')
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to upload image')
+    } finally {
+      setIsUploadingMenuItem(false)
+    }
+  }
+
+  const handleEditingItemImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    try {
+      const base64Image = await processImageUpload(file)
+      setEditingItemData(prev => prev ? ({ ...prev, image: base64Image }) : null)
+      toast.success('Image uploaded')
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to upload image')
     }
   }
 
@@ -818,13 +866,47 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="coverImage">Cover Image URL</Label>
-                      <Input
-                        id="coverImage"
-                        value={formData.coverImage}
-                        onChange={(e) => setFormData(prev => ({ ...prev, coverImage: e.target.value }))}
-                        placeholder="https://example.com/image.jpg"
-                      />
+                      <Label htmlFor="coverImage">Cover Image</Label>
+                      <div className="space-y-3">
+                        <div className="flex gap-2">
+                          <div className="relative flex-1">
+                            <Input
+                              id="coverImage"
+                              type="file"
+                              accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                              onChange={handleCoverImageUpload}
+                              disabled={isUploadingCover}
+                              className="cursor-pointer"
+                            />
+                          </div>
+                          {isUploadingCover && (
+                            <Button disabled size="icon" variant="outline">
+                              <SpinnerGap size={20} className="animate-spin" />
+                            </Button>
+                          )}
+                        </div>
+                        {formData.coverImage && (
+                          <div className="relative rounded-sm overflow-hidden border border-border">
+                            <img 
+                              src={formData.coverImage} 
+                              alt="Cover preview" 
+                              className="w-full h-48 object-cover"
+                            />
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => setFormData(prev => ({ ...prev, coverImage: '' }))}
+                              className="absolute top-2 right-2"
+                            >
+                              <Trash size={16} className="mr-1" />
+                              Remove
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Upload JPG, PNG, WebP, or GIF (max 5MB)
+                      </p>
                     </div>
 
                     <div className="space-y-2">
@@ -971,12 +1053,39 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                           value={newMenuItem.weight || ''}
                           onChange={(e) => setNewMenuItem(prev => ({ ...prev, weight: e.target.value ? Number(e.target.value) : undefined }))}
                         />
-                        <Input
-                          placeholder="Image URL"
-                          value={newMenuItem.image}
-                          onChange={(e) => setNewMenuItem(prev => ({ ...prev, image: e.target.value }))}
-                          className="md:col-span-2"
-                        />
+                        <div className="md:col-span-2 space-y-2">
+                          <div className="flex gap-2">
+                            <Input
+                              type="file"
+                              accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                              onChange={handleMenuItemImageUpload}
+                              disabled={isUploadingMenuItem}
+                              className="flex-1 cursor-pointer"
+                            />
+                            {isUploadingMenuItem && (
+                              <Button disabled size="icon" variant="outline">
+                                <SpinnerGap size={20} className="animate-spin" />
+                              </Button>
+                            )}
+                          </div>
+                          {newMenuItem.image && (
+                            <div className="relative rounded-sm overflow-hidden border border-border">
+                              <img 
+                                src={newMenuItem.image} 
+                                alt="Menu item preview" 
+                                className="w-full h-32 object-cover"
+                              />
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => setNewMenuItem(prev => ({ ...prev, image: '' }))}
+                                className="absolute top-2 right-2"
+                              >
+                                <Trash size={14} />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                         <Textarea
                           placeholder="Description"
                           value={newMenuItem.description}
@@ -1032,12 +1141,32 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                                   />
                                 </div>
                                 <div className="space-y-1 md:col-span-2">
-                                  <Label className="text-xs">Image URL</Label>
-                                  <Input
-                                    placeholder="Image URL"
-                                    value={editingItemData.image || ''}
-                                    onChange={(e) => setEditingItemData(prev => prev ? ({ ...prev, image: e.target.value }) : null)}
-                                  />
+                                  <Label className="text-xs">Image</Label>
+                                  <div className="space-y-2">
+                                    <Input
+                                      type="file"
+                                      accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                                      onChange={handleEditingItemImageUpload}
+                                      className="cursor-pointer"
+                                    />
+                                    {editingItemData.image && (
+                                      <div className="relative rounded-sm overflow-hidden border border-border">
+                                        <img 
+                                          src={editingItemData.image} 
+                                          alt="Menu item preview" 
+                                          className="w-full h-32 object-cover"
+                                        />
+                                        <Button
+                                          variant="destructive"
+                                          size="sm"
+                                          onClick={() => setEditingItemData(prev => prev ? ({ ...prev, image: '' }) : null)}
+                                          className="absolute top-2 right-2"
+                                        >
+                                          <Trash size={14} />
+                                        </Button>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                                 <div className="space-y-1 md:col-span-2">
                                   <Label className="text-xs">Description</Label>
@@ -1071,17 +1200,26 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                             </div>
                           ) : (
                             <div className="flex justify-between items-start gap-3">
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium truncate">{item.name}</p>
-                                <p className="text-sm text-muted-foreground">{item.category}</p>
-                                <div className="flex gap-2 items-center text-sm font-medium">
-                                  {item.weight && (
-                                    <span className="text-muted-foreground">{item.weight} g</span>
-                                  )}
-                                  <span className="text-accent">{formatCurrency(item.price)}</span>
+                              <div className="flex gap-3 flex-1 min-w-0">
+                                {item.image && (
+                                  <img 
+                                    src={item.image} 
+                                    alt={item.name} 
+                                    className="w-16 h-16 object-cover rounded-sm border border-border flex-shrink-0"
+                                  />
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium truncate">{item.name}</p>
+                                  <p className="text-sm text-muted-foreground">{item.category}</p>
+                                  <div className="flex gap-2 items-center text-sm font-medium">
+                                    {item.weight && (
+                                      <span className="text-muted-foreground">{item.weight} g</span>
+                                    )}
+                                    <span className="text-accent">{formatCurrency(item.price)}</span>
+                                  </div>
                                 </div>
                               </div>
-                              <div className="flex gap-1">
+                              <div className="flex gap-1 flex-shrink-0">
                                 <Button
                                   variant="ghost"
                                   size="icon"
