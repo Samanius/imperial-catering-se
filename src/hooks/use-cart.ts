@@ -1,16 +1,9 @@
 import { useKV } from '@github/spark/hooks'
-import { useCallback, useMemo, useState, useEffect } from 'react'
+import { useCallback, useMemo } from 'react'
 import type { CartItem, MenuItem } from '@/lib/types'
 
 export function useCart() {
-  const [storedCartItems, setStoredCartItems] = useKV<CartItem[]>('cart-items', [])
-  const [cartItems, setCartItems] = useState<CartItem[]>([])
-
-  useEffect(() => {
-    if (storedCartItems) {
-      setCartItems(Array.isArray(storedCartItems) ? storedCartItems : [])
-    }
-  }, [storedCartItems])
+  const [cartItems, setCartItems] = useKV<CartItem[]>('cart-items', [])
 
   const safeCartItems = useMemo(() => {
     const items = Array.isArray(cartItems) ? cartItems : []
@@ -25,38 +18,46 @@ export function useCart() {
     menuItem: MenuItem
   ) => {
     if (!menuItem?.id) {
-      console.error('Menu item is missing or has no ID:', menuItem)
+      console.error('❌ Menu item is missing or has no ID:', menuItem)
       return
     }
 
-    setStoredCartItems((current) => {
+    console.log('➕ Adding to cart:', { restaurantId, restaurantName, menuItem })
+
+    setCartItems((current) => {
       const safeArray = Array.isArray(current) ? current : []
+      console.log('📦 Current cart:', safeArray)
+      
       const existingItem = safeArray.find(
         item => item?.restaurantId === restaurantId && item?.menuItem?.id === menuItem.id
       )
 
       if (existingItem) {
+        console.log('🔄 Updating existing item quantity')
         const updated = safeArray.map(item =>
           item?.restaurantId === restaurantId && item?.menuItem?.id === menuItem.id
             ? { ...item, quantity: item.quantity + 1 }
             : item
         )
-        setCartItems(updated)
+        console.log('✅ Updated cart:', updated)
         return updated
       }
 
+      console.log('🆕 Adding new item to cart')
       const updated = [...safeArray, { restaurantId, restaurantName, menuItem, quantity: 1 }]
-      setCartItems(updated)
+      console.log('✅ Updated cart:', updated)
       return updated
     })
-  }, [setStoredCartItems])
+  }, [setCartItems])
 
   const updateQuantity = useCallback((
     restaurantId: string,
     menuItemId: string,
     delta: number
   ) => {
-    setStoredCartItems((current) => {
+    console.log('🔢 Updating quantity:', { restaurantId, menuItemId, delta })
+    
+    setCartItems((current) => {
       const safeArray = Array.isArray(current) ? current : []
       const updated = safeArray.map(item => {
         if (item?.restaurantId === restaurantId && item?.menuItem?.id === menuItemId) {
@@ -65,32 +66,25 @@ export function useCart() {
         }
         return item
       }).filter(Boolean) as CartItem[]
-      setCartItems(updated)
+      
+      console.log('✅ Quantity updated:', updated)
       return updated
     })
-  }, [setStoredCartItems])
+  }, [setCartItems])
 
   const removeItem = useCallback((restaurantId: string, menuItemId: string) => {
-    setStoredCartItems((current) => {
+    console.log('🗑️ Removing item:', { restaurantId, menuItemId })
+    
+    setCartItems((current) => {
       const safeArray = Array.isArray(current) ? current : []
       const updated = safeArray.filter(
         item => !(item?.restaurantId === restaurantId && item?.menuItem?.id === menuItemId)
       )
-      setCartItems(updated)
+      
+      console.log('✅ Item removed, new cart:', updated)
       return updated
     })
-  }, [setStoredCartItems])
-
-  const itemQuantities = useMemo(() => {
-    const quantities: Record<string, number> = {}
-    safeCartItems.forEach(item => {
-      if (item?.restaurantId && item?.menuItem?.id) {
-        const key = `${item.restaurantId}-${item.menuItem.id}`
-        quantities[key] = item.quantity
-      }
-    })
-    return quantities
-  }, [safeCartItems])
+  }, [setCartItems])
 
   const getItemQuantity = useCallback((restaurantId: string, menuItemId: string) => {
     const item = safeCartItems.find(
@@ -128,9 +122,9 @@ export function useCart() {
   }, [safeCartItems])
 
   const clearCart = useCallback(() => {
+    console.log('🧹 Clearing cart')
     setCartItems([])
-    setStoredCartItems([])
-  }, [setStoredCartItems])
+  }, [setCartItems])
 
   return {
     cartItems: safeCartItems,
@@ -138,7 +132,6 @@ export function useCart() {
     updateQuantity,
     removeItem,
     getItemQuantity,
-    itemQuantities,
     totalItems,
     totalPrice,
     groupedByRestaurant,
