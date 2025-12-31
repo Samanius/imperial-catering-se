@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { useDatabase } from '@/hooks/use-database'
 import { Button } from './ui/button'
@@ -72,6 +72,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
   const [isDraggingCover, setIsDraggingCover] = useState(false)
   const [isDraggingMenuItem, setIsDraggingMenuItem] = useState(false)
   const [isDraggingEditItem, setIsDraggingEditItem] = useState(false)
+  const coverImageInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (googleApiKey) {
@@ -304,6 +305,13 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       toast.error(error.message || 'Failed to upload image')
     } finally {
       setIsUploadingCover(false)
+    }
+  }
+
+  const handleCoverImageInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    await handleCoverImageSelect(e.target.files)
+    if (e.target) {
+      e.target.value = ''
     }
   }
 
@@ -955,8 +963,16 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                     <div className="space-y-2">
                       <Label htmlFor="coverImage">Cover Image</Label>
                       <div className="space-y-3">
+                        <input
+                          ref={coverImageInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleCoverImageInputChange}
+                          className="hidden"
+                        />
                         {!formData.coverImage ? (
                           <div
+                            onClick={() => coverImageInputRef.current?.click()}
                             onDrop={handleCoverImageDrop}
                             onDragOver={handleCoverImageDragOver}
                             onDragEnter={handleCoverImageDragEnter}
@@ -977,7 +993,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                                 <>
                                   <UploadSimple size={32} className="text-muted-foreground" />
                                   <p className="text-sm font-medium text-foreground">
-                                    Drag and drop image here
+                                    Drag and drop image here or click to browse
                                   </p>
                                   <p className="text-xs text-muted-foreground">
                                     JPG, PNG, WebP, or GIF (max 5MB)
