@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useKV } from '@github/spark/hooks'
+import { useLanguage } from '@/hooks/use-language'
+import { t } from '@/lib/i18n'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
@@ -26,6 +28,7 @@ export default function TranslationsEditor() {
     en: {},
     ru: {}
   })
+  const { language } = useLanguage()
   const [flattenedTranslations, setFlattenedTranslations] = useState<FlatTranslation[]>([])
   const [editedValues, setEditedValues] = useState<{ [key: string]: { en: string; ru: string } }>({})
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
@@ -139,19 +142,19 @@ export default function TranslationsEditor() {
     })
     
     setHasUnsavedChanges(false)
-    toast.success('Translations saved successfully!')
+    toast.success(t('translationsEditor.saved', language))
     
     window.location.reload()
   }
 
   const resetToDefaults = () => {
-    if (confirm('Reset all translations to default values? This cannot be undone.')) {
+    if (confirm(t('translationsEditor.confirmReset', language))) {
       setCustomTranslations({
         en: {},
         ru: {}
       })
       setHasUnsavedChanges(false)
-      toast.success('Translations reset to defaults')
+      toast.success(t('translationsEditor.reset', language))
       
       setTimeout(() => {
         window.location.reload()
@@ -184,9 +187,9 @@ export default function TranslationsEditor() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="font-heading text-2xl">Translations Editor</CardTitle>
+              <CardTitle className="font-heading text-2xl">{t('translationsEditor.title', language)}</CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                Edit all website text in English and Russian
+                {t('translationsEditor.subtitle', language)}
               </p>
             </div>
             <div className="flex gap-2">
@@ -196,7 +199,7 @@ export default function TranslationsEditor() {
                 size="sm"
               >
                 <ArrowsClockwise size={16} className="mr-2" />
-                Reset to Defaults
+                {t('translationsEditor.resetToDefaults', language)}
               </Button>
               <Button
                 onClick={saveTranslations}
@@ -205,7 +208,7 @@ export default function TranslationsEditor() {
                 size="sm"
               >
                 <FloppyDisk size={16} weight="bold" className="mr-2" />
-                Save Changes
+                {t('translationsEditor.saveChanges', language)}
               </Button>
             </div>
           </div>
@@ -238,7 +241,7 @@ export default function TranslationsEditor() {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                               <Label htmlFor={`${item.key}-en`} className="text-xs font-medium">
-                                English
+                                {t('translationsEditor.english', language)}
                               </Label>
                               {isMultiline ? (
                                 <Textarea
@@ -259,7 +262,7 @@ export default function TranslationsEditor() {
                             </div>
                             <div className="space-y-2">
                               <Label htmlFor={`${item.key}-ru`} className="text-xs font-medium">
-                                Русский
+                                {t('translationsEditor.russian', language)}
                               </Label>
                               {isMultiline ? (
                                 <Textarea

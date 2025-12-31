@@ -1,6 +1,8 @@
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useCart } from '@/hooks/use-cart'
 import { useKV } from '@github/spark/hooks'
+import { useLanguage } from '@/hooks/use-language'
+import { t } from '@/lib/i18n'
 import { formatCurrency } from '@/lib/utils'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from './ui/drawer'
 import { Button } from './ui/button'
@@ -19,6 +21,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const { cartItems, updateQuantity, removeItem, totalPrice, groupedByRestaurant } = useCart()
   const [cart] = useKV<Cart>('cart', { items: [], total: 0, services: [] })
   const isMobile = useIsMobile()
+  const { language } = useLanguage()
 
   const calculateServicesTotal = () => {
     let total = 0
@@ -37,7 +40,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
   const handleSendOrder = () => {
     if (cartItems.length === 0) {
-      toast.error('Your cart is empty')
+      toast.error(t('cart.empty', language))
       return
     }
 
@@ -87,7 +90,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         <DrawerHeader className="border-b border-border px-4 sm:px-6 flex-shrink-0">
           <div className="flex items-center justify-between">
             <DrawerTitle className="font-heading text-xl sm:text-2xl">
-              Your Selection
+              {t('cart.title', language)}
             </DrawerTitle>
             <Button
               variant="ghost"
@@ -105,10 +108,10 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           <div className="flex-1 flex items-center justify-center text-center p-6 sm:p-8">
             <div>
               <p className="font-heading text-xl sm:text-2xl text-muted-foreground mb-2">
-                Your Voyage Begins Here
+                {t('cart.empty', language)}
               </p>
               <p className="font-body text-sm text-muted-foreground px-4">
-                Select items from our curated restaurants
+                {t('cart.emptyDescription', language)}
               </p>
             </div>
           </div>
@@ -210,13 +213,13 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         {restaurantService && (restaurantService.chefService || (restaurantService.waiterCount && restaurantService.waiterCount > 0)) && (
                           <div className="mt-4 space-y-2 p-3 bg-muted/30 rounded-sm">
                             <p className="font-body text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                              Services
+                              {t('cart.services', language)}
                             </p>
                             {restaurantService.chefService && restaurantService.chefServicePrice && (
                               <div className="flex items-center justify-between text-sm">
                                 <div className="flex items-center gap-2">
                                   <ChefHat size={16} weight="duotone" className="text-accent" />
-                                  <span className="font-body">Chef Service</span>
+                                  <span className="font-body">{t('services.chefService', language)}</span>
                                 </div>
                                 <span className="font-medium">{formatCurrency(restaurantService.chefServicePrice)}</span>
                               </div>
@@ -225,7 +228,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                               <div className="flex items-center justify-between text-sm">
                                 <div className="flex items-center gap-2">
                                   <UsersThree size={16} weight="duotone" className="text-accent" />
-                                  <span className="font-body">{restaurantService.waiterCount} Waiter{restaurantService.waiterCount > 1 ? 's' : ''}</span>
+                                  <span className="font-body">{t('services.waiterService', language, { count: restaurantService.waiterCount.toString() })}</span>
                                 </div>
                                 <span className="font-medium">{formatCurrency(restaurantService.waiterCount * restaurantService.waiterServicePrice)}</span>
                               </div>
@@ -245,11 +248,11 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               {calculateServicesTotal() > 0 && (
                 <div className="space-y-2 pb-2">
                   <div className="flex justify-between items-center text-sm">
-                    <span className="font-body text-muted-foreground">Food & Beverages</span>
+                    <span className="font-body text-muted-foreground">{t('cart.subtotal', language)}</span>
                     <span className="font-body">{formatCurrency(totalPrice)}</span>
                   </div>
                   <div className="flex justify-between items-center text-sm">
-                    <span className="font-body text-muted-foreground">Services</span>
+                    <span className="font-body text-muted-foreground">{t('cart.services', language)}</span>
                     <span className="font-body">{formatCurrency(calculateServicesTotal())}</span>
                   </div>
                   <Separator />
@@ -257,7 +260,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               )}
               
               <div className="flex justify-between items-center">
-                <span className="font-heading text-lg sm:text-xl">Total</span>
+                <span className="font-heading text-lg sm:text-xl">{t('cart.total', language)}</span>
                 <span className="font-heading text-xl sm:text-2xl font-semibold">
                   {formatCurrency(grandTotal)}
                 </span>
@@ -269,7 +272,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               >
                 <WhatsappLogo size={26} weight="fill" className="mr-2 sm:hidden" />
                 <WhatsappLogo size={24} weight="fill" className="mr-2 hidden sm:block" />
-                Send Order via WhatsApp
+                {t('concierge.placeOrder', language)}
               </Button>
             </div>
           </>

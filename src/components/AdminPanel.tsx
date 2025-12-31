@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { useDatabase } from '@/hooks/use-database'
+import { useLanguage } from '@/hooks/use-language'
+import { t } from '@/lib/i18n'
 import { Button } from './ui/button'
 import { Card, CardContent } from './ui/card'
 import { Input } from './ui/input'
@@ -27,6 +29,7 @@ interface AdminPanelProps {
 
 export default function AdminPanel({ onBack }: AdminPanelProps) {
   const database = useDatabase()
+  const { language } = useLanguage()
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [activeTab, setActiveTab] = useState<'restaurants' | 'database' | 'translations'>('restaurants')
@@ -148,7 +151,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
 
   const addMenuItem = () => {
     if (!newMenuItem.name || !newMenuItem.price) {
-      toast.error('Please fill menu item name and price')
+      toast.error(t('admin.fillRequired', language))
       return
     }
 
@@ -176,7 +179,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       weight: undefined
     })
 
-    toast.success('Menu item added')
+    toast.success(t('admin.menuItemAdded', language))
   }
 
   const removeMenuItem = (id: string) => {
@@ -198,7 +201,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
 
   const saveEditedItem = () => {
     if (!editingItemData || !editingItemData.name || !editingItemData.price) {
-      toast.error('Please fill name and price')
+      toast.error(t('admin.fillRequired', language))
       return
     }
 
@@ -209,14 +212,14 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       )
     }))
 
-    toast.success('Menu item updated')
+    toast.success(t('admin.menuItemUpdated', language))
     setEditingItemId(null)
     setEditingItemData(null)
   }
 
   const saveRestaurant = async () => {
     if (!formData.name || !formData.story) {
-      toast.error('Please fill required fields')
+      toast.error(t('admin.fillRequired', language))
       return
     }
 
@@ -251,11 +254,11 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       if (selectedRestaurant) {
         await createBackup('update', 'restaurant', restaurant.id, restaurant.name, restaurant, selectedRestaurant)
         await database.updateRestaurant(restaurant)
-        toast.success('Restaurant updated')
+        toast.success(t('admin.restaurantUpdated', language))
       } else {
         await createBackup('create', 'restaurant', restaurant.id, restaurant.name, restaurant)
         await database.addRestaurant(restaurant)
-        toast.success('Restaurant created')
+        toast.success(t('admin.restaurantCreated', language))
       }
 
       setIsCreating(false)
@@ -286,11 +289,11 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
     const restaurantToDelete = database.restaurants?.find(r => r.id === id)
     if (!restaurantToDelete) return
     
-    if (confirm('Are you sure you want to delete this restaurant?')) {
+    if (confirm(t('admin.confirmDelete', language))) {
       try {
         await createBackup('delete', 'restaurant', id, restaurantToDelete.name, restaurantToDelete)
         await database.deleteRestaurant(id)
-        toast.success('Restaurant deleted')
+        toast.success(t('admin.restaurantDeleted', language))
       } catch (error: any) {
         toast.error(error.message || 'Failed to delete restaurant')
       }
@@ -672,10 +675,10 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
             </Button>
             <div>
               <h1 className="font-heading text-3xl sm:text-4xl font-semibold">
-                Concierge Dashboard
+                {t('admin.dashboard', language)}
               </h1>
               <p className="font-body text-sm text-muted-foreground mt-1">
-                Manage restaurants and menus
+                {t('admin.manageRestaurants', language)}
               </p>
             </div>
           </div>
@@ -688,7 +691,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                   className="border-accent text-accent-foreground hover:bg-accent/10"
                 >
                   <FileArrowDown size={20} weight="bold" className="mr-2" />
-                  Import from Google Sheets
+                  {t('admin.importFromSheets', language)}
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
@@ -799,29 +802,29 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
               className="bg-accent text-accent-foreground hover:bg-accent/90"
             >
               <Plus size={20} weight="bold" className="mr-2" />
-              New Restaurant
+              {t('admin.newRestaurant', language)}
             </Button>
           </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'restaurants' | 'database' | 'translations')} className="w-full">
           <TabsList className="grid w-full max-w-3xl grid-cols-3 mb-6">
-            <TabsTrigger value="restaurants">Restaurants</TabsTrigger>
-            <TabsTrigger value="database">Database</TabsTrigger>
-            <TabsTrigger value="translations">Translations</TabsTrigger>
+            <TabsTrigger value="restaurants">{t('admin.restaurants', language)}</TabsTrigger>
+            <TabsTrigger value="database">{t('admin.database', language)}</TabsTrigger>
+            <TabsTrigger value="translations">{t('admin.translations', language)}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="restaurants" className="mt-0">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">{/* ... restaurant management UI ... */}
           <Card className="p-6 lg:col-span-1">
             <h2 className="font-heading text-xl font-semibold mb-4">
-              Restaurants
+              {t('admin.restaurants', language)}
             </h2>
             <ScrollArea className="h-[calc(100vh-300px)]">
               <div className="space-y-2">
                 {!database.restaurants || database.restaurants.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">
-                    No restaurants yet
+                    {t('admin.noRestaurants', language)}
                   </p>
                 ) : (
                   database.restaurants.map(restaurant => (
@@ -886,7 +889,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
             {!isCreating && !selectedRestaurant ? (
               <div className="text-center py-16">
                 <p className="font-heading text-xl text-muted-foreground">
-                  Select a restaurant or create a new one
+                  {t('admin.selectOrCreate', language)}
                 </p>
               </div>
             ) : (
@@ -894,10 +897,10 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                 <div className="space-y-6 pr-4">
                   <div>
                     <h2 className="font-heading text-2xl font-semibold mb-1">
-                      {isCreating ? 'New Restaurant' : 'Edit Restaurant'}
+                      {isCreating ? t('admin.newRestaurant', language) : t('admin.editRestaurant', language)}
                     </h2>
                     <p className="text-sm text-muted-foreground">
-                      Fill in the details below
+                      {t('admin.fillRequired', language)}
                     </p>
                   </div>
 
@@ -905,7 +908,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
 
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="name">Restaurant Name *</Label>
+                      <Label htmlFor="name">{t('admin.restaurantName', language)} *</Label>
                       <Input
                         id="name"
                         value={formData.name}
@@ -915,7 +918,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="tagline">Tagline</Label>
+                      <Label htmlFor="tagline">{t('admin.tagline', language)}</Label>
                       <Input
                         id="tagline"
                         value={formData.tagline}
@@ -925,7 +928,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Tags</Label>
+                      <Label>{t('admin.tags', language)}</Label>
                       <div className="flex gap-2">
                         <Input
                           value={newTag}
@@ -956,7 +959,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="story">Restaurant Story *</Label>
+                      <Label htmlFor="story">{t('admin.story', language)} *</Label>
                       <Textarea
                         id="story"
                         value={formData.story}
@@ -967,7 +970,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="coverImage">Cover Image</Label>
+                      <Label htmlFor="coverImage">{t('admin.coverImage', language)}</Label>
                       <div className="space-y-3">
                         <input
                           ref={coverImageInputRef}
@@ -993,16 +996,16 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                               {isUploadingCover ? (
                                 <>
                                   <SpinnerGap size={32} className="animate-spin text-accent" />
-                                  <p className="text-sm text-muted-foreground">Uploading...</p>
+                                  <p className="text-sm text-muted-foreground">{t('admin.uploadingImage', language)}</p>
                                 </>
                               ) : (
                                 <>
                                   <UploadSimple size={32} className="text-muted-foreground" />
                                   <p className="text-sm font-medium text-foreground">
-                                    Drag and drop image here or click to browse
+                                    {t('admin.dragAndDrop', language)}
                                   </p>
                                   <p className="text-xs text-muted-foreground">
-                                    JPG, PNG, WebP, or GIF (max 5MB)
+                                    {t('admin.imageFormats', language)}
                                   </p>
                                 </>
                               )}
@@ -1030,7 +1033,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="menuType">Menu Type</Label>
+                      <Label htmlFor="menuType">{t('admin.menuType', language)}</Label>
                       <Select
                         value={formData.menuType}
                         onValueChange={(value: MenuType) => setFormData(prev => ({ ...prev, menuType: value }))}
@@ -1048,7 +1051,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="minimumOrderAmount">Minimum Order Amount (د.إ)</Label>
+                        <Label htmlFor="minimumOrderAmount">{t('admin.minimumOrderAmount', language)} (د.إ)</Label>
                         <Input
                           id="minimumOrderAmount"
                           type="number"
@@ -1059,7 +1062,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="orderDeadlineHours">Order Deadline (hours before charter)</Label>
+                        <Label htmlFor="orderDeadlineHours">{t('admin.orderDeadlineHours', language)}</Label>
                         <Input
                           id="orderDeadlineHours"
                           type="number"
@@ -1070,7 +1073,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="chefServicePrice">Chef Service Price (د.إ)</Label>
+                        <Label htmlFor="chefServicePrice">{t('admin.chefServicePrice', language)} (د.إ)</Label>
                         <Input
                           id="chefServicePrice"
                           type="number"
@@ -1081,7 +1084,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="waiterServicePrice">Waiter Service Price (د.إ per waiter)</Label>
+                        <Label htmlFor="waiterServicePrice">{t('admin.waiterServicePrice', language)} (د.إ)</Label>
                         <Input
                           id="waiterServicePrice"
                           type="number"
@@ -1094,7 +1097,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
 
                     {(formData.menuType === 'tasting' || formData.menuType === 'both') && (
                       <div className="space-y-2">
-                        <Label htmlFor="tastingDescription">Tasting Menu Description</Label>
+                        <Label htmlFor="tastingDescription">{t('admin.tastingMenuDescription', language)}</Label>
                         <Textarea
                           id="tastingDescription"
                           value={formData.tastingMenuDescription}
@@ -1110,7 +1113,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
 
                   <div>
                     <h3 className="font-heading text-xl font-semibold mb-4">
-                      Menu Categories
+                      {t('admin.menuCategories', language)}
                     </h3>
                     <div className="flex gap-2 mb-4">
                       <Input
@@ -1145,31 +1148,31 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
 
                   <div>
                     <h3 className="font-heading text-xl font-semibold mb-4">
-                      Menu Items
+                      {t('admin.menuItems', language)}
                     </h3>
 
                     <Card className="p-4 mb-4 bg-muted/30">
-                      <p className="text-sm font-semibold mb-3">Add Menu Item</p>
+                      <p className="text-sm font-semibold mb-3">{t('admin.addMenuItem', language)}</p>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <Input
-                          placeholder="Item name"
+                          placeholder={t('admin.itemName', language)}
                           value={newMenuItem.name}
                           onChange={(e) => setNewMenuItem(prev => ({ ...prev, name: e.target.value }))}
                         />
                         <Input
                           type="number"
-                          placeholder="Price"
+                          placeholder={t('admin.price', language)}
                           value={newMenuItem.price || ''}
                           onChange={(e) => setNewMenuItem(prev => ({ ...prev, price: Number(e.target.value) }))}
                         />
                         <Input
-                          placeholder="Category"
+                          placeholder={t('admin.category', language)}
                           value={newMenuItem.category}
                           onChange={(e) => setNewMenuItem(prev => ({ ...prev, category: e.target.value }))}
                         />
                         <Input
                           type="number"
-                          placeholder="Weight (g)"
+                          placeholder={t('admin.weight', language)}
                           value={newMenuItem.weight || ''}
                           onChange={(e) => setNewMenuItem(prev => ({ ...prev, weight: e.target.value ? Number(e.target.value) : undefined }))}
                         />
@@ -1226,7 +1229,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                           )}
                         </div>
                         <Textarea
-                          placeholder="Description"
+                          placeholder={t('admin.description', language)}
                           value={newMenuItem.description}
                           onChange={(e) => setNewMenuItem(prev => ({ ...prev, description: e.target.value }))}
                           className="md:col-span-2"
@@ -1235,7 +1238,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                       </div>
                       <Button onClick={addMenuItem} className="mt-3 w-full" size="sm">
                         <Plus size={16} className="mr-2" />
-                        Add Item
+                        {t('admin.addItem', language)}
                       </Button>
                     </Card>
 
@@ -1406,7 +1409,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                       onClick={saveRestaurant}
                       className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90"
                     >
-                      Save Restaurant
+                      {t('admin.saveRestaurant', language)}
                     </Button>
                     <Button
                       variant="outline"
@@ -1415,7 +1418,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                         setSelectedRestaurant(null)
                       }}
                     >
-                      Cancel
+                      {t('common.cancel', language)}
                     </Button>
                   </div>
                 </div>
@@ -1441,25 +1444,25 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                   <CardContent className="pt-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium">Refresh Database</p>
-                        <p className="text-sm text-muted-foreground">Load latest data from cloud</p>
+                        <p className="font-medium">{t('database.refreshDatabase', language)}</p>
+                        <p className="text-sm text-muted-foreground">{t('database.loadLatest', language)}</p>
                       </div>
                       <Button 
                         onClick={async () => {
                           try {
-                            const loadingToast = toast.loading('Refreshing database...')
+                            const loadingToast = toast.loading(t('database.refreshing', language))
                             await database.refresh()
                             toast.dismiss(loadingToast)
-                            toast.success('Database refreshed successfully!')
+                            toast.success(t('database.refreshSuccess', language))
                           } catch (error: any) {
-                            toast.error(error.message || 'Failed to refresh database')
+                            toast.error(error.message || t('database.refreshFailed', language))
                           }
                         }} 
                         variant="outline" 
                         size="sm"
                       >
                         <ArrowsClockwise size={16} className="mr-2" />
-                        Refresh
+                        {t('common.add', language).replace('Add', 'Refresh')}
                       </Button>
                     </div>
                   </CardContent>

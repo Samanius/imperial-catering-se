@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useLanguage } from '@/hooks/use-language'
+import { t } from '@/lib/i18n'
 import { Button } from './ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog'
 import { Textarea } from './ui/textarea'
@@ -11,6 +13,7 @@ export default function ConciergeOrderButton() {
   const [isOpen, setIsOpen] = useState(false)
   const [message, setMessage] = useState('')
   const isMobile = useIsMobile()
+  const { language } = useLanguage()
 
   const handleSendOrder = () => {
     if (!message.trim()) {
@@ -48,15 +51,15 @@ export default function ConciergeOrderButton() {
         } bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg font-heading tracking-wide text-base py-6 px-8`}
       >
         <ChatCircleDots size={24} weight="fill" className="mr-2" />
-        Concierge Order
+        {t('concierge.orderNow', language)}
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle className="font-heading text-2xl">Concierge Order</DialogTitle>
+            <DialogTitle className="font-heading text-2xl">{t('concierge.placeOrder', language)}</DialogTitle>
             <DialogDescription className="font-body">
-              Describe your dining preferences, special requests, or any custom requirements. Our concierge will craft the perfect experience for you.
+              {t('concierge.selectItems', language)}
             </DialogDescription>
           </DialogHeader>
           
@@ -85,14 +88,14 @@ export default function ConciergeOrderButton() {
               className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90 font-heading"
             >
               <ChatCircleDots size={20} weight="fill" className="mr-2" />
-              Send via WhatsApp
+              {t('concierge.placeOrder', language)}
             </Button>
             <Button
               variant="outline"
               onClick={() => setIsOpen(false)}
               className="font-body"
             >
-              Cancel
+              {t('common.cancel', language)}
             </Button>
           </div>
         </DialogContent>
