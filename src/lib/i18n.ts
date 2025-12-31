@@ -341,30 +341,20 @@ export const translations = {
   },
 }
 
-let cachedCustomTranslations: { en: TranslationObject; ru: TranslationObject } | null = null
-
 function loadCustomTranslations(): { en: TranslationObject; ru: TranslationObject } {
-  if (cachedCustomTranslations !== null) {
-    return cachedCustomTranslations
-  }
-  
   try {
     const stored = localStorage.getItem('kv:custom-translations')
     if (stored) {
       const parsed = JSON.parse(stored)
       if (parsed && typeof parsed === 'object') {
-        const result = { en: {}, ru: {}, ...parsed }
-        cachedCustomTranslations = result
-        return result
+        return { en: {}, ru: {}, ...parsed }
       }
     }
   } catch (error) {
     console.error('Failed to load custom translations:', error)
   }
   
-  const emptyTranslations = { en: {}, ru: {} }
-  cachedCustomTranslations = emptyTranslations
-  return emptyTranslations
+  return { en: {}, ru: {} }
 }
 
 function getNestedValue(obj: any, path: string): string | undefined {
