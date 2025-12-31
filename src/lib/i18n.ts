@@ -409,6 +409,7 @@ export function t(key: string, lang: Language, replacements?: Record<string, str
   }
   
   if (typeof value !== 'string') {
+    console.warn(`🔴 Translation missing for key: ${key} in language: ${lang}`)
     return key
   }
   
