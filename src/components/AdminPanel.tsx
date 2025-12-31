@@ -19,6 +19,7 @@ import { createBackup } from '@/lib/backup'
 import { importFromGoogleSheets, extractSpreadsheetId } from '@/lib/google-sheets-import'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog'
 import DatabaseSetup from './DatabaseSetup'
+import TranslationsEditor from './TranslationsEditor'
 
 interface AdminPanelProps {
   onBack: () => void
@@ -28,7 +29,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
   const database = useDatabase()
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
   const [isCreating, setIsCreating] = useState(false)
-  const [activeTab, setActiveTab] = useState<'restaurants' | 'database'>('restaurants')
+  const [activeTab, setActiveTab] = useState<'restaurants' | 'database' | 'translations'>('restaurants')
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
   const [googleSheetUrl, setGoogleSheetUrl] = useState('https://docs.google.com/spreadsheets/d/1my60zyjTGdDaY0sen9WAxCWooP7EDPneRTzwVDxoxEQ/edit?gid=0#gid=0')
   const [googleApiKey, setGoogleApiKey] = useKV<string>('google-sheets-api-key', 'AIzaSyDX3Morf9Oeg-ANaP4ABE_irlIRbqMsSyE')
@@ -803,10 +804,11 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'restaurants' | 'database')} className="w-full">
-          <TabsList className="grid w-full max-w-3xl grid-cols-2 mb-6">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'restaurants' | 'database' | 'translations')} className="w-full">
+          <TabsList className="grid w-full max-w-3xl grid-cols-3 mb-6">
             <TabsTrigger value="restaurants">Restaurants</TabsTrigger>
             <TabsTrigger value="database">Database</TabsTrigger>
+            <TabsTrigger value="translations">Translations</TabsTrigger>
           </TabsList>
 
           <TabsContent value="restaurants" className="mt-0">
@@ -1464,6 +1466,10 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                 </Card>
               )}
             </div>
+          </TabsContent>
+
+          <TabsContent value="translations" className="mt-0">
+            <TranslationsEditor />
           </TabsContent>
         </Tabs>
       </div>

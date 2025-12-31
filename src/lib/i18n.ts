@@ -1,5 +1,9 @@
 export type Language = 'en' | 'ru'
 
+type TranslationObject = {
+  [key: string]: string | TranslationObject
+}
+
 export const translations = {
   en: {
     header: {
@@ -167,7 +171,58 @@ export const translations = {
   },
 }
 
+let cachedCustomTranslations: { en: TranslationObject; ru: TranslationObject } | null = null
+
+function loadCustomTranslations(): { en: TranslationObject; ru: TranslationObject } {
+  if (cachedCustomTranslations !== null) {
+    return cachedCustomTranslations
+  }
+  
+  try {
+    const stored = localStorage.getItem('kv:custom-translations')
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      if (parsed && typeof parsed === 'object') {
+        const result = { en: {}, ru: {}, ...parsed }
+        cachedCustomTranslations = result
+        return result
+      }
+    }
+  } catch (error) {
+    console.error('Failed to load custom translations:', error)
+  }
+  
+  const emptyTranslations = { en: {}, ru: {} }
+  cachedCustomTranslations = emptyTranslations
+  return emptyTranslations
+}
+
+function getNestedValue(obj: any, path: string): string | undefined {
+  const keys = path.split('.')
+  let current = obj
+  
+  for (const key of keys) {
+    if (current && typeof current === 'object' && key in current) {
+      current = current[key]
+    } else {
+      return undefined
+    }
+  }
+  
+  return typeof current === 'string' ? current : undefined
+}
+
 export function t(key: string, lang: Language, replacements?: Record<string, string | number>): string {
+  const customTranslations = loadCustomTranslations()
+  
+  const customValue = getNestedValue(customTranslations[lang], key)
+  if (customValue) {
+    if (replacements) {
+      return customValue.replace(/\{\{(\w+)\}\}/g, (_, key) => String(replacements[key] ?? ''))
+    }
+    return customValue
+  }
+  
   const keys = key.split('.')
   let value: any = translations[lang]
   
