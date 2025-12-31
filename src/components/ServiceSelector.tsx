@@ -161,7 +161,7 @@ export default function ServiceSelector({ restaurant }: ServiceSelectorProps) {
                   {t('restaurant.waiterService', language)}
                 </Label>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {formatCurrency(restaurant.waiterServicePrice)} {language === 'ru' ? 'за официанта' : 'per waiter'}
+                  {formatCurrency(restaurant.waiterServicePrice)} {t('services.perWaiter', language)}
                 </p>
               </div>
             </div>
@@ -199,7 +199,7 @@ export default function ServiceSelector({ restaurant }: ServiceSelectorProps) {
           <div className="pt-4 border-t border-border">
             <div className="flex justify-between items-center">
               <span className="font-body text-sm text-muted-foreground">
-                Total service cost:
+                {t('services.totalServiceCost', language)}:
               </span>
               <span className="font-heading text-lg font-semibold">
                 {formatCurrency(getTotalServiceCost())}

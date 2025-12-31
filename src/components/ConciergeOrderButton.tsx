@@ -17,25 +17,25 @@ export default function ConciergeOrderButton() {
 
   const handleSendOrder = () => {
     if (!message.trim()) {
-      toast.error('Please enter your order details')
+      toast.error(t('concierge.enterDetails', language))
       return
     }
 
     if (message.trim().length < 10) {
-      toast.error('Please provide more details about your order')
+      toast.error(t('concierge.provideDetails', language))
       return
     }
 
     const phoneNumber = '971528355939'
     const formattedMessage = encodeURIComponent(
-      `🛥️ Imperial Catering Concierge Order\n\n${message.trim()}\n\n---\nSent via Imperial Delicious Menu`
+      `🛥️ Imperial Catering ${t('concierge.conciergeOrder', language)}\n\n${message.trim()}\n\n---\nSent via Imperial Delicious Menu`
     )
     
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${formattedMessage}`
     
     window.open(whatsappUrl, '_blank')
     
-    toast.success('Opening WhatsApp...')
+    toast.success(t('concierge.openingWhatsapp', language))
     setMessage('')
     setIsOpen(false)
   }
@@ -59,25 +59,25 @@ export default function ConciergeOrderButton() {
           <DialogHeader>
             <DialogTitle className="font-heading text-2xl">{t('concierge.placeOrder', language)}</DialogTitle>
             <DialogDescription className="font-body">
-              {t('concierge.selectItems', language)}
+              {t('concierge.conciergeDescription', language)}
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="concierge-message" className="font-body">
-                Your Request
+                {t('concierge.yourRequest', language)}
               </Label>
               <Textarea
                 id="concierge-message"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="I would like to order a tasting menu for 6 guests on Friday evening. We prefer seafood and have one vegetarian guest..."
+                placeholder={t('concierge.placeholderLong', language)}
                 rows={8}
                 className="resize-none font-body"
               />
               <p className="text-xs text-muted-foreground">
-                {message.length} characters
+                {t('concierge.charactersCount', language, { count: message.length.toString() })}
               </p>
             </div>
           </div>

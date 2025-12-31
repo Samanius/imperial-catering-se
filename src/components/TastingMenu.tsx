@@ -5,7 +5,9 @@ import { Textarea } from './ui/textarea'
 import { Label } from './ui/label'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useCart } from '@/hooks/use-cart'
-import { formatCurrency } from '@/lib/utils'
+import { useLanguage } from '@/hooks/use-language'
+import { formatCurrency, getLocalizedText } from '@/lib/utils'
+import { t } from '@/lib/i18n'
 import type { MenuItem } from '@/lib/types'
 import { WhatsappLogo } from '@phosphor-icons/react'
 import { toast } from 'sonner'
@@ -22,31 +24,32 @@ export default function TastingMenu({ restaurantId, restaurantName, description,
   const [orderMessage, setOrderMessage] = useState('')
   const { addToCart, getItemQuantity } = useCart()
   const isMobile = useIsMobile()
+  const { language } = useLanguage()
 
   const handleConciergeOrder = () => {
     if (!orderMessage.trim()) {
-      toast.error('Please enter your order details')
+      toast.error(t('common.error', language))
       return
     }
 
     const whatsappNumber = '971528355939'
-    const message = `*MERIDIEN YACHT CATERING*%0A*Concierge Order*%0A%0A*Restaurant:* ${restaurantName}%0A*Request:* ${encodeURIComponent(orderMessage)}`
+    const message = `*IMPERIAL CATERING*%0A*${t('concierge.conciergeOrder', language)}*%0A%0A*${language === 'en' ? 'Restaurant' : 'Ресторан'}:* ${restaurantName}%0A*${language === 'en' ? 'Request' : 'Запрос'}:* ${encodeURIComponent(orderMessage)}`
     
     window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank')
     setIsOpen(false)
     setOrderMessage('')
-    toast.success('Opening WhatsApp...')
+    toast.success(t('common.success', language))
   }
 
   const handleAddToCart = (menuItem: MenuItem) => {
     if (!menuItem?.id) {
       console.error('Menu item is missing or has no ID:', menuItem)
-      toast.error('Unable to add item to cart')
+      toast.error(t('common.error', language))
       return
     }
     addToCart(restaurantId, restaurantName, menuItem)
-    toast.success('Added to cart', {
-      description: menuItem.name,
+    toast.success(t('restaurant.addToCart', language), {
+      description: getLocalizedText(menuItem, 'name', language),
       duration: 2000,
     })
   }
@@ -87,6 +90,8 @@ export default function TastingMenu({ restaurantId, restaurantName, description,
                 }
                 
                 const quantity = getItemQuantity(restaurantId, item.id)
+                const itemName = getLocalizedText(item, 'name', language)
+                const itemDescription = getLocalizedText(item, 'description', language)
                 
                 return (
                   <div 
@@ -97,7 +102,7 @@ export default function TastingMenu({ restaurantId, restaurantName, description,
                     <div className="flex-1 min-w-0">
                       <div className="flex items-baseline gap-2 mb-1">
                         <h4 className="font-heading text-base sm:text-lg font-medium">
-                          {item.name}
+                          {itemName}
                         </h4>
                         {item.weight && (
                           <span className="font-body text-xs text-accent-foreground whitespace-nowrap">
@@ -105,9 +110,9 @@ export default function TastingMenu({ restaurantId, restaurantName, description,
                           </span>
                         )}
                       </div>
-                      {item.description && (
+                      {itemDescription && (
                         <p className="font-body text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                          {item.description}
+                          {itemDescription}
                         </p>
                       )}
                     </div>
@@ -134,7 +139,7 @@ export default function TastingMenu({ restaurantId, restaurantName, description,
 
         <div className="mt-10 sm:mt-12 pt-6 sm:pt-8 border-t border-accent/30 text-center">
           <p className="font-heading text-xs sm:text-sm italic text-muted-foreground">
-            Chef's signature
+            {t('concierge.chefSignature', language)}
           </p>
         </div>
       </div>
@@ -146,32 +151,32 @@ export default function TastingMenu({ restaurantId, restaurantName, description,
               size={isMobile ? "default" : "lg"}
               className={`${isMobile ? 'w-full h-12 text-base' : ''} bg-accent text-accent-foreground hover:bg-accent/90 font-body tracking-wider shadow-xl active:scale-[0.98] transition-transform`}
             >
-              Concierge Order
+              {t('concierge.conciergeOrder', language)}
             </Button>
           </DialogTrigger>
 
           <DialogContent className="w-[calc(100%-2rem)] sm:max-w-md mx-4">
             <DialogHeader>
               <DialogTitle className="font-heading text-xl sm:text-2xl">
-                Concierge Service
+                {t('concierge.conciergeService', language)}
               </DialogTitle>
             </DialogHeader>
 
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="order-message" className="font-body text-sm">
-                  Describe your dining experience
+                  {t('concierge.describeDining', language)}
                 </Label>
                 <Textarea
                   id="order-message"
-                  placeholder="I would like the Tasting Menu for 4 guests on Friday evening..."
+                  placeholder={t('concierge.placeholder', language)}
                   value={orderMessage}
                   onChange={(e) => setOrderMessage(e.target.value)}
                   rows={isMobile ? 5 : 6}
                   className="font-body resize-none text-sm sm:text-base"
                 />
                 <p className="text-xs text-muted-foreground font-body">
-                  Our concierge will personally arrange your experience
+                  {t('concierge.ourConcierge', language)}
                 </p>
               </div>
 
@@ -181,7 +186,7 @@ export default function TastingMenu({ restaurantId, restaurantName, description,
               >
                 <WhatsappLogo size={22} weight="fill" className="mr-2 sm:hidden" />
                 <WhatsappLogo size={20} weight="fill" className="mr-2 hidden sm:block" />
-                Send via WhatsApp
+                {t('concierge.sendViaWhatsapp', language)}
               </Button>
             </div>
           </DialogContent>
