@@ -1350,7 +1350,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                           ) : (
                             <div className="flex justify-between items-start gap-3">
                               <div className="flex gap-3 flex-1 min-w-0">
-                                  </div>
+                                {item.image && (
                                   <img 
                                     src={item.image} 
                                     alt={item.name} 
