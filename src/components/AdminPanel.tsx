@@ -69,6 +69,9 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
   const [editingItemData, setEditingItemData] = useState<MenuItem | null>(null)
   const [isUploadingCover, setIsUploadingCover] = useState(false)
   const [isUploadingMenuItem, setIsUploadingMenuItem] = useState(false)
+  const [isDraggingCover, setIsDraggingCover] = useState(false)
+  const [isDraggingMenuItem, setIsDraggingMenuItem] = useState(false)
+  const [isDraggingEditItem, setIsDraggingEditItem] = useState(false)
 
   useEffect(() => {
     if (googleApiKey) {
@@ -288,11 +291,9 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
     }
   }
 
-  const handleCoverImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+  const handleCoverImageSelect = async (files: FileList | null) => {
+    const file = files?.[0]
     if (!file) return
-
-    e.target.value = ''
 
     setIsUploadingCover(true)
     try {
@@ -309,20 +310,26 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
   const handleCoverImageDrop = async (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     e.stopPropagation()
+    setIsDraggingCover(false)
 
-    const file = e.dataTransfer.files?.[0]
-    if (!file) return
+    await handleCoverImageSelect(e.dataTransfer.files)
+  }
 
-    setIsUploadingCover(true)
-    try {
-      const base64Image = await processImageUpload(file)
-      setFormData(prev => ({ ...prev, coverImage: base64Image }))
-      toast.success('Cover image uploaded')
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to upload image')
-    } finally {
-      setIsUploadingCover(false)
-    }
+  const handleCoverImageDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDraggingCover(true)
+  }
+
+  const handleCoverImageDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDraggingCover(false)
+  }
+
+  const handleCoverImageDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
   }
 
   const handleMenuItemImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -346,6 +353,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
   const handleMenuItemImageDrop = async (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     e.stopPropagation()
+    setIsDraggingMenuItem(false)
 
     const file = e.dataTransfer.files?.[0]
     if (!file) return
@@ -362,24 +370,27 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
     }
   }
 
-  const handleEditingItemImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+  const handleMenuItemDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDraggingMenuItem(true)
+  }
 
-    e.target.value = ''
+  const handleMenuItemDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDraggingMenuItem(false)
+  }
 
-    try {
-      const base64Image = await processImageUpload(file)
-      setEditingItemData(prev => prev ? ({ ...prev, image: base64Image }) : null)
-      toast.success('Image uploaded')
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to upload image')
-    }
+  const handleMenuItemDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
   }
 
   const handleEditingItemImageDrop = async (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     e.stopPropagation()
+    setIsDraggingEditItem(false)
 
     const file = e.dataTransfer.files?.[0]
     if (!file) return
@@ -391,6 +402,23 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
     } catch (error: any) {
       toast.error(error.message || 'Failed to upload image')
     }
+  }
+
+  const handleEditingItemDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDraggingEditItem(true)
+  }
+
+  const handleEditingItemDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDraggingEditItem(false)
+  }
+
+  const handleEditingItemDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
   }
 
   const handleImportFromGoogleSheets = async () => {
@@ -930,19 +958,16 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                         {!formData.coverImage ? (
                           <div
                             onDrop={handleCoverImageDrop}
-                            onDragOver={(e) => { e.preventDefault(); e.stopPropagation() }}
-                            onDragEnter={(e) => { e.preventDefault(); e.stopPropagation() }}
-                            className="relative border-2 border-dashed border-border rounded-sm p-6 transition-colors hover:border-accent hover:bg-accent/5"
+                            onDragOver={handleCoverImageDragOver}
+                            onDragEnter={handleCoverImageDragEnter}
+                            onDragLeave={handleCoverImageDragLeave}
+                            className={`relative border-2 border-dashed rounded-sm p-6 transition-colors cursor-pointer ${
+                              isDraggingCover 
+                                ? 'border-accent bg-accent/10' 
+                                : 'border-border hover:border-accent hover:bg-accent/5'
+                            } ${isUploadingCover ? 'pointer-events-none opacity-75' : ''}`}
                           >
-                            <input
-                              id="coverImage"
-                              type="file"
-                              accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
-                              onChange={handleCoverImageUpload}
-                              disabled={isUploadingCover}
-                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-                            />
-                            <div className="flex flex-col items-center justify-center gap-2 pointer-events-none">
+                            <div className="flex flex-col items-center justify-center gap-2">
                               {isUploadingCover ? (
                                 <>
                                   <SpinnerGap size={32} className="animate-spin text-accent" />
@@ -952,7 +977,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                                 <>
                                   <UploadSimple size={32} className="text-muted-foreground" />
                                   <p className="text-sm font-medium text-foreground">
-                                    Click to upload or drag and drop
+                                    Drag and drop image here
                                   </p>
                                   <p className="text-xs text-muted-foreground">
                                     JPG, PNG, WebP, or GIF (max 5MB)
@@ -1130,18 +1155,16 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                           {!newMenuItem.image ? (
                             <div
                               onDrop={handleMenuItemImageDrop}
-                              onDragOver={(e) => { e.preventDefault(); e.stopPropagation() }}
-                              onDragEnter={(e) => { e.preventDefault(); e.stopPropagation() }}
-                              className="relative border-2 border-dashed border-border rounded-sm p-4 transition-colors hover:border-accent hover:bg-accent/5"
+                              onDragOver={handleMenuItemDragOver}
+                              onDragEnter={handleMenuItemDragEnter}
+                              onDragLeave={handleMenuItemDragLeave}
+                              className={`relative border-2 border-dashed rounded-sm p-4 transition-colors cursor-pointer ${
+                                isDraggingMenuItem 
+                                  ? 'border-accent bg-accent/10' 
+                                  : 'border-border hover:border-accent hover:bg-accent/5'
+                              } ${isUploadingMenuItem ? 'pointer-events-none opacity-75' : ''}`}
                             >
-                              <input
-                                type="file"
-                                accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
-                                onChange={handleMenuItemImageUpload}
-                                disabled={isUploadingMenuItem}
-                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-                              />
-                              <div className="flex items-center justify-center gap-3 pointer-events-none">
+                              <div className="flex items-center justify-center gap-3">
                                 {isUploadingMenuItem ? (
                                   <>
                                     <SpinnerGap size={24} className="animate-spin text-accent" />
@@ -1152,7 +1175,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                                     <ImageIcon size={24} className="text-muted-foreground" />
                                     <div>
                                       <p className="text-xs font-medium text-foreground">
-                                        Click or drag image
+                                        Drag and drop image
                                       </p>
                                       <p className="text-[10px] text-muted-foreground">
                                         JPG, PNG, WebP, GIF (max 5MB)
@@ -1239,21 +1262,20 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                                   {!editingItemData.image ? (
                                     <div
                                       onDrop={handleEditingItemImageDrop}
-                                      onDragOver={(e) => { e.preventDefault(); e.stopPropagation() }}
-                                      onDragEnter={(e) => { e.preventDefault(); e.stopPropagation() }}
-                                      className="relative border-2 border-dashed border-border rounded-sm p-4 transition-colors hover:border-accent hover:bg-accent/5"
+                                      onDragOver={handleEditingItemDragOver}
+                                      onDragEnter={handleEditingItemDragEnter}
+                                      onDragLeave={handleEditingItemDragLeave}
+                                      className={`relative border-2 border-dashed rounded-sm p-4 transition-colors cursor-pointer ${
+                                        isDraggingEditItem 
+                                          ? 'border-accent bg-accent/10' 
+                                          : 'border-border hover:border-accent hover:bg-accent/5'
+                                      }`}
                                     >
-                                      <input
-                                        type="file"
-                                        accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
-                                        onChange={handleEditingItemImageUpload}
-                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                      />
-                                      <div className="flex items-center justify-center gap-3 pointer-events-none">
+                                      <div className="flex items-center justify-center gap-3">
                                         <ImageIcon size={24} className="text-muted-foreground" />
                                         <div>
                                           <p className="text-xs font-medium text-foreground">
-                                            Click or drag image
+                                            Drag and drop image
                                           </p>
                                           <p className="text-[10px] text-muted-foreground">
                                             JPG, PNG, WebP, GIF (max 5MB)
