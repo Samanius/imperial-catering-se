@@ -1,7 +1,9 @@
-import { ShoppingBag, UserCircle, ArrowLeft } from '@phosphor-icons/react'
+import { ShoppingBag, UserCircle, ArrowLeft, Translate } from '@phosphor-icons/react'
 import { Button } from './ui/button'
 import { Badge } from './ui/badge'
 import { useCart } from '@/hooks/use-cart'
+import { useLanguage } from '@/hooks/use-language'
+import { t } from '@/lib/i18n'
 
 interface HeaderProps {
   onAdminClick: () => void
@@ -19,6 +21,7 @@ export default function Header({
   onBackClick 
 }: HeaderProps) {
   const { totalItems } = useCart()
+  const { language, toggleLanguage } = useLanguage()
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
@@ -43,14 +46,28 @@ export default function Header({
             className="text-center hover:opacity-70 transition-opacity flex-shrink min-w-0"
           >
             <div className="font-heading text-lg sm:text-2xl font-semibold tracking-wider whitespace-nowrap">
-              Imperial delicious menu
+              {t('header.title', language)}
             </div>
             <div className="font-body text-[8px] sm:text-[10px] tracking-[0.15em] sm:tracking-[0.2em] text-muted-foreground uppercase mt-0.5 hidden sm:block">
-              Curated Dining for the High Seas
+              {t('header.subtitle', language)}
             </div>
           </button>
 
           <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={toggleLanguage}
+              className="relative hover:bg-accent/10 h-10 w-10 sm:h-9 sm:w-9"
+              title={language === 'en' ? 'Switch to Russian' : 'Переключить на английский'}
+            >
+              <Translate size={24} weight="regular" className="sm:hidden" />
+              <Translate size={22} weight="regular" className="hidden sm:block" />
+              <span className="absolute bottom-0 right-0 text-[8px] font-bold uppercase bg-primary text-primary-foreground rounded-full px-1">
+                {language}
+              </span>
+            </Button>
+
             <Button 
               variant="ghost" 
               size="icon"

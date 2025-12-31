@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react'
 import { Card } from './ui/card'
 import { Button } from './ui/button'
 import { useIsMobile } from '@/hooks/use-mobile'
-import { formatCurrency } from '@/lib/utils'
+import { useLanguage } from '@/hooks/use-language'
+import { formatCurrency, getLocalizedText, getLocalizedArray } from '@/lib/utils'
+import { t } from '@/lib/i18n'
 import type { Restaurant } from '@/lib/types'
 
 interface RestaurantCardProps {
@@ -14,6 +16,7 @@ interface RestaurantCardProps {
 export default function RestaurantCard({ restaurant, isWide, onClick }: RestaurantCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const isMobile = useIsMobile()
+  const { language } = useLanguage()
 
   useEffect(() => {
     if (restaurant.coverImage) {
@@ -22,6 +25,10 @@ export default function RestaurantCard({ restaurant, isWide, onClick }: Restaura
       console.warn(`⚠️ Restaurant "${restaurant.name}" has NO cover image`)
     }
   }, [restaurant])
+
+  const name = getLocalizedText(restaurant, 'name', language)
+  const tagline = getLocalizedText(restaurant, 'tagline', language)
+  const tags = getLocalizedArray(restaurant, 'tags', language)
 
   return (
     <Card
@@ -36,13 +43,13 @@ export default function RestaurantCard({ restaurant, isWide, onClick }: Restaura
         {restaurant.coverImage ? (
           <img
             src={restaurant.coverImage}
-            alt={restaurant.name}
+            alt={name}
             className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
           />
         ) : (
           <div className="w-full h-full bg-muted flex items-center justify-center">
             <span className="font-heading text-3xl sm:text-4xl text-muted-foreground opacity-20">
-              {restaurant.name.charAt(0)}
+              {name.charAt(0)}
             </span>
           </div>
         )}
@@ -51,23 +58,23 @@ export default function RestaurantCard({ restaurant, isWide, onClick }: Restaura
 
       <div className="p-5 sm:p-6 md:p-8">
         <h3 className="font-heading text-2xl sm:text-3xl font-semibold mb-2 tracking-wide">
-          {restaurant.name}
+          {name}
         </h3>
         
-        {restaurant.tagline && (
+        {tagline && (
           <p className="font-body text-sm text-muted-foreground italic mb-3 sm:mb-4">
-            {restaurant.tagline}
+            {tagline}
           </p>
         )}
 
         <div className="flex flex-wrap gap-2 mb-4">
-          {restaurant.tags.map((tag, index) => (
+          {tags.map((tag, index) => (
             <span
               key={index}
               className="font-body text-xs tracking-wider text-muted-foreground uppercase"
             >
               {tag}
-              {index < restaurant.tags.length - 1 && ' •'}
+              {index < tags.length - 1 && ' •'}
             </span>
           ))}
         </div>
@@ -76,12 +83,12 @@ export default function RestaurantCard({ restaurant, isWide, onClick }: Restaura
           <div className="mb-4 space-y-1">
             {restaurant.minimumOrderAmount && (
               <p className="font-body text-xs text-muted-foreground">
-                Min. order: {formatCurrency(restaurant.minimumOrderAmount)}
+                {t('restaurant.minimumOrder', language)}: {formatCurrency(restaurant.minimumOrderAmount)}
               </p>
             )}
             {restaurant.orderDeadlineHours && (
               <p className="font-body text-xs text-muted-foreground">
-                Order {restaurant.orderDeadlineHours}h before charter
+                {t('restaurant.orderDeadline', language, { hours: restaurant.orderDeadlineHours.toString() })}
               </p>
             )}
           </div>
@@ -91,10 +98,10 @@ export default function RestaurantCard({ restaurant, isWide, onClick }: Restaura
           <div className="mb-4">
             <p className="font-body text-xs text-accent font-medium">
               {restaurant.chefServicePrice && restaurant.waiterServicePrice
-                ? 'Chef & Waiter Services Available'
+                ? t('restaurant.chefAndWaiterAvailable', language)
                 : restaurant.chefServicePrice
-                ? 'Chef Service Available'
-                : 'Waiter Service Available'}
+                ? t('restaurant.chefServiceAvailable', language)
+                : t('restaurant.waiterServiceAvailable', language)}
             </p>
           </div>
         )}
@@ -108,7 +115,7 @@ export default function RestaurantCard({ restaurant, isWide, onClick }: Restaura
             variant="outline"
             className="w-full border-accent text-accent-foreground hover:bg-accent/10 font-body tracking-wider h-11 sm:h-10 text-base sm:text-sm"
           >
-            Explore Menu
+            {t('restaurant.exploreMenu', language)}
           </Button>
         </div>
       </div>

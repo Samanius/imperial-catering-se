@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useKV } from '@github/spark/hooks'
+import { useLanguage } from '@/hooks/use-language'
 import { Card } from './ui/card'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
 import { Switch } from './ui/switch'
 import { formatCurrency } from '@/lib/utils'
+import { t } from '@/lib/i18n'
 import { Minus, Plus, ChefHat, UsersThree } from '@phosphor-icons/react'
 import type { Restaurant, Cart } from '@/lib/types'
 import { toast } from 'sonner'
@@ -15,6 +17,7 @@ interface ServiceSelectorProps {
 
 export default function ServiceSelector({ restaurant }: ServiceSelectorProps) {
   const [cart, setCart] = useKV<Cart>('cart', { items: [], total: 0, services: [] })
+  const { language } = useLanguage()
   
   const [chefSelected, setChefSelected] = useState(false)
   const [waiterCount, setWaiterCount] = useState(0)
@@ -67,9 +70,9 @@ export default function ServiceSelector({ restaurant }: ServiceSelectorProps) {
     setChefSelected(checked)
     updateServices(checked, waiterCount)
     if (checked) {
-      toast.success('Chef service added')
+      toast.success(t('common.success', language))
     } else {
-      toast.success('Chef service removed')
+      toast.success(t('common.success', language))
     }
   }
 
@@ -79,11 +82,11 @@ export default function ServiceSelector({ restaurant }: ServiceSelectorProps) {
     updateServices(chefSelected, newCount)
     
     if (delta > 0) {
-      toast.success(`Waiter added (${newCount} total)`)
+      toast.success(t('common.success', language))
     } else if (newCount === 0) {
-      toast.success('All waiters removed')
+      toast.success(t('common.success', language))
     } else {
-      toast.success(`Waiter removed (${newCount} remaining)`)
+      toast.success(t('common.success', language))
     }
   }
 
@@ -101,7 +104,7 @@ export default function ServiceSelector({ restaurant }: ServiceSelectorProps) {
   return (
     <Card className="mb-12 sm:mb-16 p-4 sm:p-6 border border-border bg-card/50">
       <h3 className="font-heading text-lg sm:text-xl font-semibold mb-4">
-        Ordering Information & Services
+        {t('restaurant.orderInformation', language)}
       </h3>
       
       <div className="space-y-6">
@@ -109,12 +112,12 @@ export default function ServiceSelector({ restaurant }: ServiceSelectorProps) {
           <div className="space-y-2">
             {restaurant.minimumOrderAmount && (
               <p className="font-body text-sm sm:text-base text-foreground/90">
-                <span className="text-muted-foreground">Minimum order amount:</span> {formatCurrency(restaurant.minimumOrderAmount)}
+                <span className="text-muted-foreground">{t('restaurant.minimumOrder', language)}:</span> {formatCurrency(restaurant.minimumOrderAmount)}
               </p>
             )}
             {restaurant.orderDeadlineHours && (
               <p className="font-body text-sm sm:text-base text-foreground/90">
-                <span className="text-muted-foreground">Order deadline:</span> {restaurant.orderDeadlineHours} hours before charter
+                <span className="text-muted-foreground">{t('restaurant.orderDeadline', language, { hours: restaurant.orderDeadlineHours.toString() })}</span>
               </p>
             )}
           </div>
@@ -132,7 +135,7 @@ export default function ServiceSelector({ restaurant }: ServiceSelectorProps) {
               </div>
               <div>
                 <Label htmlFor="chef-service" className="text-base font-medium cursor-pointer">
-                  Chef Service
+                  {t('restaurant.chefService', language)}
                 </Label>
                 <p className="text-sm text-muted-foreground mt-1">
                   {formatCurrency(restaurant.chefServicePrice)}
@@ -155,10 +158,10 @@ export default function ServiceSelector({ restaurant }: ServiceSelectorProps) {
               </div>
               <div>
                 <Label className="text-base font-medium">
-                  Waiter Service
+                  {t('restaurant.waiterService', language)}
                 </Label>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {formatCurrency(restaurant.waiterServicePrice)} per waiter
+                  {formatCurrency(restaurant.waiterServicePrice)} {language === 'ru' ? 'за официанта' : 'per waiter'}
                 </p>
               </div>
             </div>

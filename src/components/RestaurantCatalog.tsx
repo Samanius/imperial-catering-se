@@ -1,5 +1,7 @@
 import { useDatabase } from '@/hooks/use-database'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { useLanguage } from '@/hooks/use-language'
+import { t } from '@/lib/i18n'
 import type { Restaurant } from '@/lib/types'
 import RestaurantCard from './RestaurantCard'
 import heroVideo from '@/assets/video/41347-429396488_medium.mp4'
@@ -11,8 +13,17 @@ interface RestaurantCatalogProps {
 export default function RestaurantCatalog({ onRestaurantSelect }: RestaurantCatalogProps) {
   const { restaurants, isLoading } = useDatabase()
   const isMobile = useIsMobile()
+  const { language } = useLanguage()
 
   const visibleRestaurants = (restaurants || []).filter(r => !r.isHidden)
+
+  const heroTitle = language === 'en' 
+    ? 'Exquisite Dining.\nOn your Yacht.' 
+    : 'Изысканная кухня.\nНа вашей яхте.'
+  
+  const heroSubtitle = language === 'en'
+    ? "Curated gastronomy from the Dubai's finest establishments"
+    : 'Лучшие рестораны Дубая для вашего путешествия'
 
   return (
     <main className="pt-14 sm:pt-20">
@@ -31,13 +42,11 @@ export default function RestaurantCatalog({ onRestaurantSelect }: RestaurantCata
         <div className="absolute inset-0 bg-gradient-to-b from-primary/70 via-primary/50 to-background" />
         
         <div className="relative z-10 text-center px-4 sm:px-6 max-w-4xl">
-          <h1 className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold text-card tracking-wide leading-tight mb-4 sm:mb-6">
-            Exquisite Dining.
-            <br />
-            On your Yacht.
+          <h1 className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold text-card tracking-wide leading-tight mb-4 sm:mb-6 whitespace-pre-line">
+            {heroTitle}
           </h1>
           <p className="font-body text-base sm:text-lg md:text-xl text-card/90 tracking-wide font-light px-4">
-            Curated gastronomy from the Dubai's finest establishments
+            {heroSubtitle}
           </p>
         </div>
       </section>
@@ -46,16 +55,13 @@ export default function RestaurantCatalog({ onRestaurantSelect }: RestaurantCata
         {isLoading ? (
           <div className="text-center py-16 sm:py-24">
             <p className="font-heading text-xl sm:text-2xl text-muted-foreground mb-2">
-              Loading experiences...
+              {t('common.loading', language)}
             </p>
           </div>
         ) : !visibleRestaurants || visibleRestaurants.length === 0 ? (
           <div className="text-center py-16 sm:py-24">
             <p className="font-heading text-xl sm:text-2xl text-muted-foreground mb-2">
-              Curated Experiences Arriving Soon
-            </p>
-            <p className="font-body text-sm text-muted-foreground tracking-wide">
-              Our collection is being carefully assembled
+              {t('catalog.noRestaurants', language)}
             </p>
           </div>
         ) : (

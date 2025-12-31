@@ -88,6 +88,10 @@ export async function importFromGoogleSheets(
         const weightStr = row[4]?.toString().trim() || ''
         let imageUrl = ''
         
+        const itemName_ru = row[6]?.toString().trim() || ''
+        const description_ru = row[7]?.toString().trim() || ''
+        const category_ru = row[8]?.toString().trim() || ''
+        
         try {
           imageUrl = row[5]?.toString().trim() || ''
           if (imageUrl && !imageUrl.startsWith('http')) {
@@ -124,14 +128,17 @@ export async function importFromGoogleSheets(
         const menuItem: MenuItem = {
           id: `${Date.now()}-${i}-${Math.random().toString(36).substr(2, 9)}`,
           name: itemName,
+          name_ru: itemName_ru || undefined,
           description: description || '',
+          description_ru: description_ru || undefined,
           price: price,
           category: category || 'Uncategorized',
+          category_ru: category_ru || undefined,
           weight: finalWeight,
           image: imageUrl || ''
         }
 
-        console.log(`Row ${rowNum}: Added item "${itemName}" - $${price} ${finalWeight ? `(${finalWeight}g)` : ''}`)
+        console.log(`Row ${rowNum}: Added item "${itemName}" ${itemName_ru ? `/ "${itemName_ru}"` : ''} - $${price} ${finalWeight ? `(${finalWeight}g)` : ''}`)
         menuItems.push(menuItem)
       }
 
@@ -174,26 +181,35 @@ export async function importFromGoogleSheets(
           if (existingItem) {
             const priceChanged = existingItem.price !== importedItem.price
             const descChanged = (existingItem.description || '') !== (importedItem.description || '')
+            const descRuChanged = (existingItem.description_ru || '') !== (importedItem.description_ru || '')
             const categoryChanged = existingItem.category !== importedItem.category
+            const categoryRuChanged = (existingItem.category_ru || '') !== (importedItem.category_ru || '')
             const weightChanged = (existingItem.weight || undefined) !== (importedItem.weight || undefined)
             const imageChanged = (existingItem.image || '') !== (importedItem.image || '')
+            const nameRuChanged = (existingItem.name_ru || '') !== (importedItem.name_ru || '')
             
-            if (priceChanged || descChanged || categoryChanged || weightChanged || imageChanged) {
+            if (priceChanged || descChanged || descRuChanged || categoryChanged || categoryRuChanged || weightChanged || imageChanged || nameRuChanged) {
               console.log(`Item "${importedItem.name}" has changes:`, {
                 price: priceChanged ? `${existingItem.price} → ${importedItem.price}` : 'same',
                 description: descChanged ? 'changed' : 'same',
+                description_ru: descRuChanged ? 'changed' : 'same',
                 category: categoryChanged ? `${existingItem.category} → ${importedItem.category}` : 'same',
+                category_ru: categoryRuChanged ? 'changed' : 'same',
                 weight: weightChanged ? `${existingItem.weight} → ${importedItem.weight}` : 'same',
-                image: imageChanged ? 'changed' : 'same'
+                image: imageChanged ? 'changed' : 'same',
+                name_ru: nameRuChanged ? 'changed' : 'same'
               })
               
               updatedMenuItems.push({
                 ...existingItem,
                 price: importedItem.price,
                 description: importedItem.description,
+                description_ru: importedItem.description_ru,
                 category: importedItem.category,
+                category_ru: importedItem.category_ru,
                 weight: importedItem.weight,
-                image: importedItem.image
+                image: importedItem.image,
+                name_ru: importedItem.name_ru
               })
               updatedItems.push(importedItem.name)
               hasChanges = true

@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { Plus, Minus } from '@phosphor-icons/react'
 import { useCart } from '@/hooks/use-cart'
 import { useIsMobile } from '@/hooks/use-mobile'
-import { formatCurrency } from '@/lib/utils'
+import { useLanguage } from '@/hooks/use-language'
+import { formatCurrency, getLocalizedText } from '@/lib/utils'
+import { t } from '@/lib/i18n'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
 import type { MenuItem } from '@/lib/types'
@@ -24,16 +26,17 @@ export default function VisualMenu({
   const { addToCart, updateQuantity, getItemQuantity } = useCart()
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
   const isMobile = useIsMobile()
+  const { language } = useLanguage()
 
   const handleAddToCart = (menuItem: MenuItem) => {
     if (!menuItem?.id) {
       console.error('Menu item is missing or has no ID:', menuItem)
-      toast.error('Unable to add item to cart')
+      toast.error(t('common.error', language))
       return
     }
     addToCart(restaurantId, restaurantName, menuItem)
-    toast.success('Added to cart', {
-      description: menuItem.name,
+    toast.success(t('restaurant.addToCart', language), {
+      description: getLocalizedText(menuItem, 'name', language),
       duration: 2000,
     })
   }
@@ -66,6 +69,8 @@ export default function VisualMenu({
 
               const quantity = getItemQuantity(restaurantId, item.id)
               const isHovered = hoveredItem === item.id
+              const itemName = getLocalizedText(item, 'name', language)
+              const itemDescription = getLocalizedText(item, 'description', language)
 
               return (
                 <Card
@@ -78,7 +83,7 @@ export default function VisualMenu({
                     <div className="aspect-square overflow-hidden bg-muted">
                       <img
                         src={item.image}
-                        alt={item.name}
+                        alt={itemName}
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -87,7 +92,7 @@ export default function VisualMenu({
                   <div className="p-4 sm:p-5 md:p-6 flex flex-col flex-1">
                     <div className="flex justify-between items-start mb-2 gap-2">
                       <h3 className="font-heading text-lg sm:text-xl font-semibold flex-1">
-                        {item.name}
+                        {itemName}
                       </h3>
                       <span className="font-body text-base sm:text-lg font-medium text-muted-foreground flex-shrink-0">
                         {formatCurrency(item.price)}
@@ -100,9 +105,9 @@ export default function VisualMenu({
                       </p>
                     )}
 
-                    {item.description && (
+                    {itemDescription && (
                       <p className="font-body text-xs sm:text-sm text-muted-foreground leading-relaxed mb-3 sm:mb-4">
-                        {item.description}
+                        {itemDescription}
                       </p>
                     )}
 
@@ -121,7 +126,7 @@ export default function VisualMenu({
                           >
                             <Plus size={18} weight="bold" className="mr-2 sm:hidden" />
                             <Plus size={16} weight="bold" className="mr-2 hidden sm:block" />
-                            Add
+                            {t('common.add', language)}
                           </Button>
                         </div>
                       ) : (
