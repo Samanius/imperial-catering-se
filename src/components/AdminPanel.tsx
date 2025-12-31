@@ -243,6 +243,9 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       waiterServicePrice: formData.waiterServicePrice ? Number(formData.waiterServicePrice) : undefined
     }
 
+    console.log('💾 Saving restaurant:', restaurant.name)
+    console.log('📸 Cover image:', restaurant.coverImage ? `${restaurant.coverImage.substring(0, 50)}... (${restaurant.coverImage.length} chars)` : 'No image')
+
     try {
       if (selectedRestaurant) {
         await createBackup('update', 'restaurant', restaurant.id, restaurant.name, restaurant, selectedRestaurant)
@@ -257,6 +260,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       setIsCreating(false)
       setSelectedRestaurant(null)
     } catch (error: any) {
+      console.error('❌ Failed to save restaurant:', error)
       toast.error(error.message || 'Failed to save restaurant')
     }
   }

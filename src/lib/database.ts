@@ -205,7 +205,17 @@ export class Database {
 
   public async getRestaurants(): Promise<Restaurant[]> {
     const data = await this.getData()
-    return data.restaurants || []
+    const restaurants = data.restaurants || []
+    
+    console.log(`📥 Loaded ${restaurants.length} restaurants from database`)
+    restaurants.forEach((r, idx) => {
+      const coverImageInfo = r.coverImage 
+        ? `${r.coverImage.substring(0, 30)}... (${r.coverImage.length} chars)`
+        : '❌ No image'
+      console.log(`  ${idx + 1}. ${r.name} - Cover: ${coverImageInfo}`)
+    })
+    
+    return restaurants
   }
 
   public async saveRestaurants(restaurants: Restaurant[]): Promise<void> {
@@ -217,7 +227,16 @@ export class Database {
       version: (currentData.version || 0) + 1
     }
 
+    console.log(`💾 Saving ${restaurants.length} restaurants to database`)
+    restaurants.forEach((r, idx) => {
+      const coverImageInfo = r.coverImage 
+        ? `${r.coverImage.substring(0, 30)}... (${r.coverImage.length} chars)`
+        : 'No image'
+      console.log(`  ${idx + 1}. ${r.name} - Cover: ${coverImageInfo}`)
+    })
+
     await this.updateGist(newData)
+    console.log('✅ Database updated successfully')
   }
 
   public async addRestaurant(restaurant: Restaurant): Promise<void> {

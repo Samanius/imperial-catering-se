@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card } from './ui/card'
 import { Button } from './ui/button'
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -14,6 +14,14 @@ interface RestaurantCardProps {
 export default function RestaurantCard({ restaurant, isWide, onClick }: RestaurantCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const isMobile = useIsMobile()
+
+  useEffect(() => {
+    if (restaurant.coverImage) {
+      console.log(`🖼️ Restaurant "${restaurant.name}" has cover image: ${restaurant.coverImage.substring(0, 50)}... (${restaurant.coverImage.length} chars)`)
+    } else {
+      console.warn(`⚠️ Restaurant "${restaurant.name}" has NO cover image`)
+    }
+  }, [restaurant])
 
   return (
     <Card
