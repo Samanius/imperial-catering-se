@@ -18,10 +18,10 @@ interface CartDrawerProps {
 }
 
 export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
-  const { cartItems, updateQuantity, removeItem, totalPrice, groupedByRestaurant } = useCart()
-  const [cart] = useKV<Cart>('cart', { items: [], total: 0, services: [] })
   const isMobile = useIsMobile()
   const { language } = useLanguage()
+  const { cartItems, updateQuantity, removeItem, totalPrice, groupedByRestaurant } = useCart()
+  const [cart] = useKV<Cart>('cart', { items: [], total: 0, services: [] })
 
   const calculateServicesTotal = () => {
     let total = 0
