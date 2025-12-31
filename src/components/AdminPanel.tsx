@@ -292,6 +292,27 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
     const file = e.target.files?.[0]
     if (!file) return
 
+    e.target.value = ''
+
+    setIsUploadingCover(true)
+    try {
+      const base64Image = await processImageUpload(file)
+      setFormData(prev => ({ ...prev, coverImage: base64Image }))
+      toast.success('Cover image uploaded')
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to upload image')
+    } finally {
+      setIsUploadingCover(false)
+    }
+  }
+
+  const handleCoverImageDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    const file = e.dataTransfer.files?.[0]
+    if (!file) return
+
     setIsUploadingCover(true)
     try {
       const base64Image = await processImageUpload(file)
@@ -308,6 +329,27 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
     const file = e.target.files?.[0]
     if (!file) return
 
+    e.target.value = ''
+
+    setIsUploadingMenuItem(true)
+    try {
+      const base64Image = await processImageUpload(file)
+      setNewMenuItem(prev => ({ ...prev, image: base64Image }))
+      toast.success('Image uploaded')
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to upload image')
+    } finally {
+      setIsUploadingMenuItem(false)
+    }
+  }
+
+  const handleMenuItemImageDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    const file = e.dataTransfer.files?.[0]
+    if (!file) return
+
     setIsUploadingMenuItem(true)
     try {
       const base64Image = await processImageUpload(file)
@@ -322,6 +364,24 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
 
   const handleEditingItemImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
+    if (!file) return
+
+    e.target.value = ''
+
+    try {
+      const base64Image = await processImageUpload(file)
+      setEditingItemData(prev => prev ? ({ ...prev, image: base64Image }) : null)
+      toast.success('Image uploaded')
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to upload image')
+    }
+  }
+
+  const handleEditingItemImageDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    const file = e.dataTransfer.files?.[0]
     if (!file) return
 
     try {
@@ -867,24 +927,41 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                     <div className="space-y-2">
                       <Label htmlFor="coverImage">Cover Image</Label>
                       <div className="space-y-3">
-                        <div className="flex gap-2">
-                          <div className="relative flex-1">
-                            <Input
+                        {!formData.coverImage ? (
+                          <div
+                            onDrop={handleCoverImageDrop}
+                            onDragOver={(e) => { e.preventDefault(); e.stopPropagation() }}
+                            onDragEnter={(e) => { e.preventDefault(); e.stopPropagation() }}
+                            className="relative border-2 border-dashed border-border rounded-sm p-6 transition-colors hover:border-accent hover:bg-accent/5"
+                          >
+                            <input
                               id="coverImage"
                               type="file"
                               accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
                               onChange={handleCoverImageUpload}
                               disabled={isUploadingCover}
-                              className="cursor-pointer"
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
                             />
+                            <div className="flex flex-col items-center justify-center gap-2 pointer-events-none">
+                              {isUploadingCover ? (
+                                <>
+                                  <SpinnerGap size={32} className="animate-spin text-accent" />
+                                  <p className="text-sm text-muted-foreground">Uploading...</p>
+                                </>
+                              ) : (
+                                <>
+                                  <UploadSimple size={32} className="text-muted-foreground" />
+                                  <p className="text-sm font-medium text-foreground">
+                                    Click to upload or drag and drop
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    JPG, PNG, WebP, or GIF (max 5MB)
+                                  </p>
+                                </>
+                              )}
+                            </div>
                           </div>
-                          {isUploadingCover && (
-                            <Button disabled size="icon" variant="outline">
-                              <SpinnerGap size={20} className="animate-spin" />
-                            </Button>
-                          )}
-                        </div>
-                        {formData.coverImage && (
+                        ) : (
                           <div className="relative rounded-sm overflow-hidden border border-border">
                             <img 
                               src={formData.coverImage} 
@@ -903,9 +980,6 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                           </div>
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        Upload JPG, PNG, WebP, or GIF (max 5MB)
-                      </p>
                     </div>
 
                     <div className="space-y-2">
@@ -1053,21 +1127,42 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                           onChange={(e) => setNewMenuItem(prev => ({ ...prev, weight: e.target.value ? Number(e.target.value) : undefined }))}
                         />
                         <div className="md:col-span-2 space-y-2">
-                          <div className="flex gap-2">
-                            <Input
-                              type="file"
-                              accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
-                              onChange={handleMenuItemImageUpload}
-                              disabled={isUploadingMenuItem}
-                              className="flex-1 cursor-pointer"
-                            />
-                            {isUploadingMenuItem && (
-                              <Button disabled size="icon" variant="outline">
-                                <SpinnerGap size={20} className="animate-spin" />
-                              </Button>
-                            )}
-                          </div>
-                          {newMenuItem.image && (
+                          {!newMenuItem.image ? (
+                            <div
+                              onDrop={handleMenuItemImageDrop}
+                              onDragOver={(e) => { e.preventDefault(); e.stopPropagation() }}
+                              onDragEnter={(e) => { e.preventDefault(); e.stopPropagation() }}
+                              className="relative border-2 border-dashed border-border rounded-sm p-4 transition-colors hover:border-accent hover:bg-accent/5"
+                            >
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                                onChange={handleMenuItemImageUpload}
+                                disabled={isUploadingMenuItem}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                              />
+                              <div className="flex items-center justify-center gap-3 pointer-events-none">
+                                {isUploadingMenuItem ? (
+                                  <>
+                                    <SpinnerGap size={24} className="animate-spin text-accent" />
+                                    <p className="text-xs text-muted-foreground">Uploading...</p>
+                                  </>
+                                ) : (
+                                  <>
+                                    <ImageIcon size={24} className="text-muted-foreground" />
+                                    <div>
+                                      <p className="text-xs font-medium text-foreground">
+                                        Click or drag image
+                                      </p>
+                                      <p className="text-[10px] text-muted-foreground">
+                                        JPG, PNG, WebP, GIF (max 5MB)
+                                      </p>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          ) : (
                             <div className="relative rounded-sm overflow-hidden border border-border">
                               <img 
                                 src={newMenuItem.image} 
@@ -1141,31 +1236,48 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                                 </div>
                                 <div className="space-y-1 md:col-span-2">
                                   <Label className="text-xs">Image</Label>
-                                  <div className="space-y-2">
-                                    <Input
-                                      type="file"
-                                      accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
-                                      onChange={handleEditingItemImageUpload}
-                                      className="cursor-pointer"
-                                    />
-                                    {editingItemData.image && (
-                                      <div className="relative rounded-sm overflow-hidden border border-border">
-                                        <img 
-                                          src={editingItemData.image} 
-                                          alt="Menu item preview" 
-                                          className="w-full h-32 object-cover"
-                                        />
-                                        <Button
-                                          variant="destructive"
-                                          size="sm"
-                                          onClick={() => setEditingItemData(prev => prev ? ({ ...prev, image: '' }) : null)}
-                                          className="absolute top-2 right-2"
-                                        >
-                                          <Trash size={14} />
-                                        </Button>
+                                  {!editingItemData.image ? (
+                                    <div
+                                      onDrop={handleEditingItemImageDrop}
+                                      onDragOver={(e) => { e.preventDefault(); e.stopPropagation() }}
+                                      onDragEnter={(e) => { e.preventDefault(); e.stopPropagation() }}
+                                      className="relative border-2 border-dashed border-border rounded-sm p-4 transition-colors hover:border-accent hover:bg-accent/5"
+                                    >
+                                      <input
+                                        type="file"
+                                        accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                                        onChange={handleEditingItemImageUpload}
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                      />
+                                      <div className="flex items-center justify-center gap-3 pointer-events-none">
+                                        <ImageIcon size={24} className="text-muted-foreground" />
+                                        <div>
+                                          <p className="text-xs font-medium text-foreground">
+                                            Click or drag image
+                                          </p>
+                                          <p className="text-[10px] text-muted-foreground">
+                                            JPG, PNG, WebP, GIF (max 5MB)
+                                          </p>
+                                        </div>
                                       </div>
-                                    )}
-                                  </div>
+                                    </div>
+                                  ) : (
+                                    <div className="relative rounded-sm overflow-hidden border border-border">
+                                      <img 
+                                        src={editingItemData.image} 
+                                        alt="Menu item preview" 
+                                        className="w-full h-32 object-cover"
+                                      />
+                                      <Button
+                                        variant="destructive"
+                                        size="sm"
+                                        onClick={() => setEditingItemData(prev => prev ? ({ ...prev, image: '' }) : null)}
+                                        className="absolute top-2 right-2"
+                                      >
+                                        <Trash size={14} />
+                                      </Button>
+                                    </div>
+                                  )}
                                 </div>
                                 <div className="space-y-1 md:col-span-2">
                                   <Label className="text-xs">Description</Label>
