@@ -6,7 +6,7 @@ export function useLanguage() {
   
   const toggleLanguage = () => {
     setLanguage((current) => {
-      const newLang = (current || 'en') === 'en' ? 'ru' : 'en'
+      const newLang = current === 'en' ? 'ru' : 'en'
       return newLang
     })
   }
