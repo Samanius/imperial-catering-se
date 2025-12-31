@@ -1,4 +1,4 @@
-import { ShoppingBag, UserCircle, ArrowLeft, Translate } from '@phosphor-icons/react'
+import { ShoppingBag, UserCircle, ArrowLeft } from '@phosphor-icons/react'
 import { Button } from './ui/button'
 import { Badge } from './ui/badge'
 import { useCart } from '@/hooks/use-cart'
@@ -54,19 +54,13 @@ export default function Header({
           </button>
 
           <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
-            <Button 
-              variant="ghost" 
-              size="icon"
+            <button
               onClick={toggleLanguage}
-              className="relative hover:bg-accent/10 h-10 w-10 sm:h-9 sm:w-9"
+              className="font-body text-sm hover:text-accent transition-colors px-2 py-1"
               title={language === 'en' ? 'Switch to Russian' : 'Переключить на английский'}
             >
-              <Translate size={24} weight="regular" className="sm:hidden" />
-              <Translate size={22} weight="regular" className="hidden sm:block" />
-              <span className="absolute bottom-0 right-0 text-[8px] font-bold uppercase bg-primary text-primary-foreground rounded-full px-1">
-                {language}
-              </span>
-            </Button>
+              {language === 'en' ? 'Русский' : 'English'}
+            </button>
 
             <Button 
               variant="ghost" 
