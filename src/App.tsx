@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Header from './components/Header'
 import RestaurantCatalog from './components/RestaurantCatalog'
 import RestaurantDetail from './components/RestaurantDetail'
@@ -14,10 +14,6 @@ function App() {
   const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(null)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const { language } = useLanguage()
-
-  useEffect(() => {
-    console.log('🔄 App re-rendered with language:', language)
-  }, [language])
 
   const handleRestaurantSelect = (id: string) => {
     setSelectedRestaurantId(id)
@@ -42,7 +38,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col" key={language}>
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Header 
         onAdminClick={handleAdminAccess}
         onLogoClick={handleBackToCatalog}
@@ -53,15 +49,15 @@ function App() {
       
       <div className="flex-1">
         {currentView === 'catalog' && (
-          <RestaurantCatalog onRestaurantSelect={handleRestaurantSelect} key={`catalog-${language}`} />
+          <RestaurantCatalog onRestaurantSelect={handleRestaurantSelect} />
         )}
         
         {currentView === 'restaurant' && selectedRestaurantId && (
-          <RestaurantDetail restaurantId={selectedRestaurantId} key={`restaurant-${language}-${selectedRestaurantId}`} />
+          <RestaurantDetail restaurantId={selectedRestaurantId} key={selectedRestaurantId} />
         )}
         
         {currentView === 'admin' && (
-          <AdminPanel onBack={handleBackFromAdmin} key={`admin-${language}`} />
+          <AdminPanel onBack={handleBackFromAdmin} />
         )}
       </div>
 
