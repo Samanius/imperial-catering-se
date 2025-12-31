@@ -376,7 +376,7 @@ export function t(key: string, lang: Language, replacements?: Record<string, str
   const customTranslations = loadCustomTranslations()
   
   const customValue = getNestedValue(customTranslations[lang], key)
-  if (customValue) {
+  if (customValue !== undefined && customValue !== '') {
     if (replacements) {
       return customValue.replace(/\{\{(\w+)\}\}/g, (_, key) => String(replacements[key] ?? ''))
     }
