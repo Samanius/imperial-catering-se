@@ -341,20 +341,38 @@ export const translations = {
   },
 }
 
+let cachedCustomTranslations: { en: TranslationObject; ru: TranslationObject } = { en: {}, ru: {} }
+let lastLoadTime = 0
+const CACHE_DURATION = 1000
+
 function loadCustomTranslations(): { en: TranslationObject; ru: TranslationObject } {
+  const now = Date.now()
+  if ((now - lastLoadTime) < CACHE_DURATION) {
+    return cachedCustomTranslations
+  }
+  
   try {
     const stored = localStorage.getItem('kv:custom-translations')
     if (stored) {
       const parsed = JSON.parse(stored)
       if (parsed && typeof parsed === 'object') {
-        return { en: {}, ru: {}, ...parsed }
+        cachedCustomTranslations = { en: {}, ru: {}, ...parsed }
+        lastLoadTime = now
+        return cachedCustomTranslations
       }
     }
   } catch (error) {
     console.error('Failed to load custom translations:', error)
   }
   
-  return { en: {}, ru: {} }
+  cachedCustomTranslations = { en: {}, ru: {} }
+  lastLoadTime = now
+  return cachedCustomTranslations
+}
+
+export function clearTranslationCache() {
+  lastLoadTime = 0
+  cachedCustomTranslations = { en: {}, ru: {} }
 }
 
 function getNestedValue(obj: any, path: string): string | undefined {

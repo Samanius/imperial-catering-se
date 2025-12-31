@@ -28,7 +28,7 @@ export default function ServiceSelector({ restaurant }: ServiceSelectorProps) {
       setChefSelected(existingService.chefService || false)
       setWaiterCount(existingService.waiterCount || 0)
     }
-  }, [cart?.services, restaurant.id])
+  }, [cart, restaurant.id])
 
   const updateServices = (newChefSelected: boolean, newWaiterCount: number) => {
     setCart((currentCart) => {

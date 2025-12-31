@@ -79,14 +79,14 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
   const coverImageInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    if (googleApiKey) {
+    if (!apiKeyInput && googleApiKey) {
       setApiKeyInput(googleApiKey)
-    } else {
+    } else if (!googleApiKey && !apiKeyInput) {
       const defaultKey = 'AIzaSyDX3Morf9Oeg-ANaP4ABE_irlIRbqMsSyE'
       setApiKeyInput(defaultKey)
       setGoogleApiKey(defaultKey)
     }
-  }, [])
+  }, [googleApiKey, setGoogleApiKey, apiKeyInput])
 
   const startCreating = () => {
     setSelectedRestaurant(null)

@@ -1,5 +1,5 @@
 import { useKV } from '@github/spark/hooks'
-import { useCallback, useMemo, useEffect } from 'react'
+import { useCallback, useMemo } from 'react'
 import type { CartItem, MenuItem } from '@/lib/types'
 
 export function useCart() {
@@ -8,20 +8,9 @@ export function useCart() {
   const safeCartItems = useMemo(() => {
     const items = Array.isArray(cartItems) ? cartItems : []
     return items.filter(item => {
-      const isValid = item?.menuItem?.id && item?.restaurantId && item?.quantity > 0
-      if (!isValid) {
-        console.warn('Removing invalid cart item:', item)
-      }
-      return isValid
+      return item?.menuItem?.id && item?.restaurantId && item?.quantity > 0
     })
   }, [cartItems])
-
-  useEffect(() => {
-    if (Array.isArray(cartItems) && cartItems.length !== safeCartItems.length) {
-      console.log('Cleaning up invalid cart items')
-      setCartItems(safeCartItems)
-    }
-  }, [cartItems, safeCartItems, setCartItems])
 
   const addToCart = useCallback((
     restaurantId: string,
