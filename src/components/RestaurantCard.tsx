@@ -18,6 +18,17 @@ export default function RestaurantCard({ restaurant, isWide, onClick }: Restaura
   const isMobile = useIsMobile()
   const { language } = useLanguage()
 
+  const name = getLocalizedText(restaurant, 'name', language)
+  const tagline = getLocalizedText(restaurant, 'tagline', language)
+  const tags = getLocalizedArray(restaurant, 'tags', language)
+
+  console.log('🔍 RestaurantCard render:', { 
+    restaurantName: restaurant.name, 
+    language, 
+    localizedName: name,
+    hasCoverImage: !!restaurant.coverImage 
+  })
+
   useEffect(() => {
     if (restaurant.coverImage) {
       console.log(`🖼️ Restaurant "${restaurant.name}" has cover image: ${restaurant.coverImage.substring(0, 50)}... (${restaurant.coverImage.length} chars)`)
@@ -25,10 +36,6 @@ export default function RestaurantCard({ restaurant, isWide, onClick }: Restaura
       console.warn(`⚠️ Restaurant "${restaurant.name}" has NO cover image`)
     }
   }, [restaurant])
-
-  const name = getLocalizedText(restaurant, 'name', language)
-  const tagline = getLocalizedText(restaurant, 'tagline', language)
-  const tags = getLocalizedArray(restaurant, 'tags', language)
 
   return (
     <Card

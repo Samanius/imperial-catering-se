@@ -17,6 +17,13 @@ export default function RestaurantCatalog({ onRestaurantSelect }: RestaurantCata
 
   const visibleRestaurants = (restaurants || []).filter(r => !r.isHidden)
 
+  console.log('🔍 RestaurantCatalog render:', {
+    isLoading,
+    totalRestaurants: restaurants?.length,
+    visibleRestaurants: visibleRestaurants.length,
+    language
+  })
+
   return (
     <main className="pt-14 sm:pt-20">
       <section className="relative h-[60vh] sm:h-[70vh] md:h-[85vh] overflow-hidden flex items-center justify-center">

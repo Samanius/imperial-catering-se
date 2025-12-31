@@ -1,9 +1,16 @@
 import { useKV } from '@github/spark/hooks'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState, useEffect } from 'react'
 import type { CartItem, MenuItem } from '@/lib/types'
 
 export function useCart() {
-  const [cartItems, setCartItems] = useKV<CartItem[]>('cart-items', [])
+  const [storedCartItems, setStoredCartItems] = useKV<CartItem[]>('cart-items', [])
+  const [cartItems, setCartItems] = useState<CartItem[]>([])
+
+  useEffect(() => {
+    if (storedCartItems) {
+      setCartItems(Array.isArray(storedCartItems) ? storedCartItems : [])
+    }
+  }, [storedCartItems])
 
   const safeCartItems = useMemo(() => {
     const items = Array.isArray(cartItems) ? cartItems : []
@@ -22,49 +29,57 @@ export function useCart() {
       return
     }
 
-    setCartItems((current) => {
+    setStoredCartItems((current) => {
       const safeArray = Array.isArray(current) ? current : []
       const existingItem = safeArray.find(
         item => item?.restaurantId === restaurantId && item?.menuItem?.id === menuItem.id
       )
 
       if (existingItem) {
-        return safeArray.map(item =>
+        const updated = safeArray.map(item =>
           item?.restaurantId === restaurantId && item?.menuItem?.id === menuItem.id
             ? { ...item, quantity: item.quantity + 1 }
             : item
         )
+        setCartItems(updated)
+        return updated
       }
 
-      return [...safeArray, { restaurantId, restaurantName, menuItem, quantity: 1 }]
+      const updated = [...safeArray, { restaurantId, restaurantName, menuItem, quantity: 1 }]
+      setCartItems(updated)
+      return updated
     })
-  }, [setCartItems])
+  }, [setStoredCartItems])
 
   const updateQuantity = useCallback((
     restaurantId: string,
     menuItemId: string,
     delta: number
   ) => {
-    setCartItems((current) => {
+    setStoredCartItems((current) => {
       const safeArray = Array.isArray(current) ? current : []
-      return safeArray.map(item => {
+      const updated = safeArray.map(item => {
         if (item?.restaurantId === restaurantId && item?.menuItem?.id === menuItemId) {
           const newQuantity = item.quantity + delta
           return newQuantity > 0 ? { ...item, quantity: newQuantity } : null
         }
         return item
       }).filter(Boolean) as CartItem[]
+      setCartItems(updated)
+      return updated
     })
-  }, [setCartItems])
+  }, [setStoredCartItems])
 
   const removeItem = useCallback((restaurantId: string, menuItemId: string) => {
-    setCartItems((current) => {
+    setStoredCartItems((current) => {
       const safeArray = Array.isArray(current) ? current : []
-      return safeArray.filter(
+      const updated = safeArray.filter(
         item => !(item?.restaurantId === restaurantId && item?.menuItem?.id === menuItemId)
       )
+      setCartItems(updated)
+      return updated
     })
-  }, [setCartItems])
+  }, [setStoredCartItems])
 
   const itemQuantities = useMemo(() => {
     const quantities: Record<string, number> = {}
@@ -114,7 +129,8 @@ export function useCart() {
 
   const clearCart = useCallback(() => {
     setCartItems([])
-  }, [setCartItems])
+    setStoredCartItems([])
+  }, [setStoredCartItems])
 
   return {
     cartItems: safeCartItems,

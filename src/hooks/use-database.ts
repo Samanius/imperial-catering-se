@@ -8,15 +8,16 @@ export function useDatabase() {
   const [error, setError] = useState<string | null>(null)
   const [isConfigured, setIsConfigured] = useState(false)
   const [hasWriteAccess, setHasWriteAccess] = useState(false)
-
-  useEffect(() => {
-    setIsConfigured(db.hasCredentials())
-    setHasWriteAccess(db.hasWriteAccess())
-    loadRestaurants()
-  }, [])
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   const loadRestaurants = useCallback(async () => {
-    if (!db.hasCredentials()) {
+    const configured = db.hasCredentials()
+    const writeAccess = db.hasWriteAccess()
+    
+    setIsConfigured(configured)
+    setHasWriteAccess(writeAccess)
+    
+    if (!configured) {
       setIsLoading(false)
       setRestaurants([])
       return
@@ -34,57 +35,61 @@ export function useDatabase() {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [refreshTrigger])
+
+  useEffect(() => {
+    loadRestaurants()
+  }, [loadRestaurants])
 
   const addRestaurant = useCallback(async (restaurant: Restaurant) => {
     try {
       await db.addRestaurant(restaurant)
-      await loadRestaurants()
+      setRefreshTrigger(prev => prev + 1)
     } catch (err: any) {
       throw new Error(err.message || 'Failed to add restaurant')
     }
-  }, [loadRestaurants])
+  }, [])
 
   const updateRestaurant = useCallback(async (restaurant: Restaurant) => {
     try {
       await db.updateRestaurant(restaurant)
-      await loadRestaurants()
+      setRefreshTrigger(prev => prev + 1)
     } catch (err: any) {
       throw new Error(err.message || 'Failed to update restaurant')
     }
-  }, [loadRestaurants])
+  }, [])
 
   const deleteRestaurant = useCallback(async (id: string) => {
     try {
       await db.deleteRestaurant(id)
-      await loadRestaurants()
+      setRefreshTrigger(prev => prev + 1)
     } catch (err: any) {
       throw new Error(err.message || 'Failed to delete restaurant')
     }
-  }, [loadRestaurants])
+  }, [])
 
   const saveRestaurants = useCallback(async (restaurants: Restaurant[]) => {
     try {
       await db.saveRestaurants(restaurants)
-      await loadRestaurants()
+      setRefreshTrigger(prev => prev + 1)
     } catch (err: any) {
       throw new Error(err.message || 'Failed to save restaurants')
     }
-  }, [loadRestaurants])
+  }, [])
 
   const configureDatabase = useCallback(async (gistId: string, githubToken: string) => {
     try {
       db.setCredentials(gistId, githubToken)
       setIsConfigured(true)
       setHasWriteAccess(true)
-      await loadRestaurants()
+      setRefreshTrigger(prev => prev + 1)
       return true
     } catch (err: any) {
       setIsConfigured(false)
       setHasWriteAccess(false)
       throw new Error(err.message || 'Failed to configure database')
     }
-  }, [loadRestaurants])
+  }, [])
 
   const createDatabase = useCallback(async (githubToken: string) => {
     try {
@@ -93,12 +98,12 @@ export function useDatabase() {
       db.setCredentials(result.gistId, githubToken)
       setIsConfigured(true)
       setHasWriteAccess(true)
-      await loadRestaurants()
+      setRefreshTrigger(prev => prev + 1)
       return result
     } catch (err: any) {
       throw new Error(err.message || 'Failed to create database')
     }
-  }, [loadRestaurants])
+  }, [])
 
   const testConnection = useCallback(async () => {
     try {
@@ -110,8 +115,8 @@ export function useDatabase() {
 
   const refresh = useCallback(() => {
     db.clearCache()
-    loadRestaurants()
-  }, [loadRestaurants])
+    setRefreshTrigger(prev => prev + 1)
+  }, [])
 
   return {
     restaurants,
