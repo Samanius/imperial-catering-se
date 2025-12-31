@@ -5,8 +5,13 @@ export function useLanguage() {
   const [language, setLanguage] = useKV<Language>('app-language', 'en')
   
   const toggleLanguage = () => {
-    setLanguage((current) => current === 'en' ? 'ru' : 'en')
+    setLanguage((current) => {
+      const newLang = (current || 'en') === 'en' ? 'ru' : 'en'
+      return newLang
+    })
   }
   
-  return { language: language || 'en', setLanguage, toggleLanguage }
+  const currentLanguage: Language = language || 'en'
+  
+  return { language: currentLanguage, setLanguage, toggleLanguage }
 }

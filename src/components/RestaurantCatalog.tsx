@@ -17,14 +17,6 @@ export default function RestaurantCatalog({ onRestaurantSelect }: RestaurantCata
 
   const visibleRestaurants = (restaurants || []).filter(r => !r.isHidden)
 
-  const heroTitle = language === 'en' 
-    ? 'Exquisite Dining.\nOn your Yacht.' 
-    : 'Изысканная кухня.\nНа вашей яхте.'
-  
-  const heroSubtitle = language === 'en'
-    ? "Curated gastronomy from the Dubai's finest establishments"
-    : 'Лучшие рестораны Дубая для вашего путешествия'
-
   return (
     <main className="pt-14 sm:pt-20">
       <section className="relative h-[60vh] sm:h-[70vh] md:h-[85vh] overflow-hidden flex items-center justify-center">
@@ -43,10 +35,10 @@ export default function RestaurantCatalog({ onRestaurantSelect }: RestaurantCata
         
         <div className="relative z-10 text-center px-4 sm:px-6 max-w-4xl">
           <h1 className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold text-card tracking-wide leading-tight mb-4 sm:mb-6 whitespace-pre-line">
-            {heroTitle}
+            {t('catalog.heroTitle', language)}
           </h1>
           <p className="font-body text-base sm:text-lg md:text-xl text-card/90 tracking-wide font-light px-4">
-            {heroSubtitle}
+            {t('catalog.heroSubtitle', language)}
           </p>
         </div>
       </section>

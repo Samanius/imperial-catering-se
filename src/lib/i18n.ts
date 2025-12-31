@@ -10,6 +10,8 @@ export const translations = {
       heading: 'Explore Our Curated Selection',
       description: 'Each restaurant brings its own unique culinary perspective.',
       noRestaurants: 'No restaurants available. Please check back later.',
+      heroTitle: 'Exquisite Dining.\nOn your Yacht.',
+      heroSubtitle: "Curated gastronomy from the Dubai's finest establishments",
     },
     restaurant: {
       minimumOrder: 'Min. order',
@@ -90,6 +92,8 @@ export const translations = {
       heading: 'Наша Тщательно Подобранная Коллекция',
       description: 'Каждый ресторан предлагает свою уникальную кулинарную концепцию.',
       noRestaurants: 'Рестораны временно недоступны. Пожалуйста, вернитесь позже.',
+      heroTitle: 'Изысканная кухня.\nНа вашей яхте.',
+      heroSubtitle: 'Лучшие рестораны Дубая для вашего путешествия',
     },
     restaurant: {
       minimumOrder: 'Мин. заказ',
