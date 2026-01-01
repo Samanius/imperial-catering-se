@@ -1,6 +1,6 @@
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useCart } from '@/hooks/use-cart'
-import { useKV } from '@github/spark/hooks'
+import { useApp } from '@/state/AppProvider'
 import { useLanguage } from '@/hooks/use-language'
 import { t } from '@/lib/i18n'
 import { formatCurrency } from '@/lib/utils'
@@ -10,7 +10,6 @@ import { ScrollArea } from './ui/scroll-area'
 import { Separator } from './ui/separator'
 import { X, Plus, Minus, WhatsappLogo, ChefHat, UsersThree } from '@phosphor-icons/react'
 import { toast } from 'sonner'
-import type { Cart } from '@/lib/types'
 
 interface CartDrawerProps {
   isOpen: boolean
@@ -21,11 +20,11 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const isMobile = useIsMobile()
   const { language } = useLanguage()
   const { cartItems, updateQuantity, removeItem, totalPrice, groupedByRestaurant } = useCart()
-  const [cart] = useKV<Cart>('cart', { items: [], total: 0, services: [] })
+  const { cartServices } = useApp()
 
   const calculateServicesTotal = () => {
     let total = 0
-    cart?.services?.forEach(service => {
+    cartServices?.services?.forEach(service => {
       if (service.chefService && service.chefServicePrice) {
         total += service.chefServicePrice
       }
@@ -54,7 +53,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         message += `• ${item.quantity}x ${item.menuItem.name}${weight} - ${formatCurrency(item.menuItem.price * item.quantity)}%0A`
       })
       
-      const restaurantService = cart?.services?.find(s => s.restaurantId === items[0]?.restaurantId)
+      const restaurantService = cartServices?.services?.find(s => s.restaurantId === items[0]?.restaurantId)
       if (restaurantService) {
         message += '%0A*Services:*%0A'
         if (restaurantService.chefService && restaurantService.chefServicePrice) {
@@ -121,7 +120,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               <ScrollArea className="h-full">
                 <div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
                   {Object.entries(groupedByRestaurant).map(([restaurantId, { restaurantName, items }]) => {
-                    const restaurantService = cart?.services?.find(s => s.restaurantId === restaurantId)
+                    const restaurantService = cartServices?.services?.find(s => s.restaurantId === restaurantId)
                     const restaurantItemsTotal = items.reduce((sum, item) => {
                       if (item?.menuItem?.price && item?.quantity) {
                         return sum + (item.menuItem.price * item.quantity)

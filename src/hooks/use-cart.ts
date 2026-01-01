@@ -1,16 +1,16 @@
-import { useKV } from '@github/spark/hooks'
 import { useCallback, useMemo } from 'react'
+import { useApp } from '@/state/AppProvider'
 import type { CartItem, MenuItem } from '@/lib/types'
 
 export function useCart() {
-  const [cartItems, setCartItems] = useKV<CartItem[]>('cart-items', [])
+  const { cart, setCart } = useApp()
 
   const safeCartItems = useMemo(() => {
-    const items = Array.isArray(cartItems) ? cartItems : []
+    const items = Array.isArray(cart) ? cart : []
     return items.filter(item => {
       return item?.menuItem?.id && item?.restaurantId && item?.quantity > 0
     })
-  }, [cartItems])
+  }, [cart])
 
   const addToCart = useCallback((
     restaurantId: string,
@@ -22,7 +22,7 @@ export function useCart() {
       return
     }
 
-    setCartItems((current) => {
+    setCart((current) => {
       const safeArray = Array.isArray(current) ? current : []
       
       const existingItem = safeArray.find(
@@ -39,14 +39,14 @@ export function useCart() {
 
       return [...safeArray, { restaurantId, restaurantName, menuItem, quantity: 1 }]
     })
-  }, [setCartItems])
+  }, [setCart])
 
   const updateQuantity = useCallback((
     restaurantId: string,
     menuItemId: string,
     delta: number
   ) => {
-    setCartItems((current) => {
+    setCart((current) => {
       const safeArray = Array.isArray(current) ? current : []
       const updated = safeArray.map(item => {
         if (item?.restaurantId === restaurantId && item?.menuItem?.id === menuItemId) {
@@ -58,10 +58,10 @@ export function useCart() {
       
       return updated
     })
-  }, [setCartItems])
+  }, [setCart])
 
   const removeItem = useCallback((restaurantId: string, menuItemId: string) => {
-    setCartItems((current) => {
+    setCart((current) => {
       const safeArray = Array.isArray(current) ? current : []
       const updated = safeArray.filter(
         item => !(item?.restaurantId === restaurantId && item?.menuItem?.id === menuItemId)
@@ -69,7 +69,7 @@ export function useCart() {
       
       return updated
     })
-  }, [setCartItems])
+  }, [setCart])
 
   const getItemQuantity = useCallback((restaurantId: string, menuItemId: string) => {
     const item = safeCartItems.find(
@@ -107,8 +107,8 @@ export function useCart() {
   }, [safeCartItems])
 
   const clearCart = useCallback(() => {
-    setCartItems([])
-  }, [setCartItems])
+    setCart([])
+  }, [setCart])
 
   return {
     cartItems: safeCartItems,

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useKV } from '@github/spark/hooks'
+import { useApp } from '@/state/AppProvider'
 import { useLanguage } from '@/hooks/use-language'
 import { Card } from './ui/card'
 import { Button } from './ui/button'
@@ -8,7 +8,7 @@ import { Switch } from './ui/switch'
 import { formatCurrency } from '@/lib/utils'
 import { t } from '@/lib/i18n'
 import { Minus, Plus, ChefHat, UsersThree } from '@phosphor-icons/react'
-import type { Restaurant, Cart } from '@/lib/types'
+import type { Restaurant } from '@/lib/types'
 import { toast } from 'sonner'
 
 interface ServiceSelectorProps {
@@ -16,22 +16,22 @@ interface ServiceSelectorProps {
 }
 
 export default function ServiceSelector({ restaurant }: ServiceSelectorProps) {
-  const [cart, setCart] = useKV<Cart>('cart', { items: [], total: 0, services: [] })
+  const { cartServices, setCartServices } = useApp()
   const { language } = useLanguage()
   
   const [chefSelected, setChefSelected] = useState(false)
   const [waiterCount, setWaiterCount] = useState(0)
 
   useEffect(() => {
-    const existingService = cart?.services?.find(s => s.restaurantId === restaurant.id)
+    const existingService = cartServices?.services?.find(s => s.restaurantId === restaurant.id)
     if (existingService) {
       setChefSelected(existingService.chefService || false)
       setWaiterCount(existingService.waiterCount || 0)
     }
-  }, [cart, restaurant.id])
+  }, [cartServices, restaurant.id])
 
   const updateServices = (newChefSelected: boolean, newWaiterCount: number) => {
-    setCart((currentCart) => {
+    setCartServices((currentCart) => {
       if (!currentCart) {
         currentCart = { items: [], total: 0, services: [] }
       }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useKV } from '@github/spark/hooks'
+import { useApp } from '@/state/AppProvider'
 import { useLanguage } from '@/hooks/use-language'
 import { t } from '@/lib/i18n'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
@@ -24,10 +24,7 @@ interface FlatTranslation {
 }
 
 export default function TranslationsEditor() {
-  const [customTranslations, setCustomTranslations] = useKV<{ en: TranslationObject; ru: TranslationObject }>('custom-translations', {
-    en: {},
-    ru: {}
-  })
+  const { customTranslations, setCustomTranslations } = useApp()
   const { language } = useLanguage()
   const [flattenedTranslations, setFlattenedTranslations] = useState<FlatTranslation[]>([])
   const [editedValues, setEditedValues] = useState<{ [key: string]: { en: string; ru: string } }>({})
@@ -143,8 +140,6 @@ export default function TranslationsEditor() {
     
     setHasUnsavedChanges(false)
     toast.success(t('translationsEditor.saved', language))
-    
-    window.location.reload()
   }
 
   const resetToDefaults = () => {
@@ -155,10 +150,6 @@ export default function TranslationsEditor() {
       })
       setHasUnsavedChanges(false)
       toast.success(t('translationsEditor.reset', language))
-      
-      setTimeout(() => {
-        window.location.reload()
-      }, 500)
     }
   }
 
