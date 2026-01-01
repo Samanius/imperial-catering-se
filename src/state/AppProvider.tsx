@@ -21,9 +21,12 @@ type AppState = {
 const Ctx = createContext<AppState | null>(null)
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<Language>(() => {
-    const stored = localStorage.getItem('app-language')
-    return (stored === 'ru' || stored === 'en') ? stored : 'en'
+  const [language, setLanguageInternal] = useState<Language>(() => {
+    const path = window.location.pathname
+    if (path.startsWith('/rus')) {
+      return 'ru'
+    }
+    return 'en'
   })
 
   const [cart, setCart] = useState<CartItem[]>(() => {
@@ -58,6 +61,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return { en: {}, ru: {} }
     }
   })
+
+  const setLanguage = (newLang: Language) => {
+    setLanguageInternal(newLang)
+    
+    const currentPath = window.location.pathname
+    let newPath = currentPath
+    
+    if (newLang === 'ru') {
+      if (!currentPath.startsWith('/rus')) {
+        newPath = '/rus' + currentPath
+      }
+    } else {
+      if (currentPath.startsWith('/rus')) {
+        newPath = currentPath.replace(/^\/rus/, '') || '/'
+      }
+    }
+    
+    if (newPath !== currentPath) {
+      window.history.pushState({}, '', newPath)
+    }
+  }
 
   useEffect(() => {
     localStorage.setItem('app-language', language)
