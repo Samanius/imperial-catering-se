@@ -570,10 +570,13 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
           console.log('  • Column A: Item Name (must not be empty)')
           console.log('  • Column C: Price (must be a valid number, $ signs OK)')
           console.log('✓ Optional columns:')
-          console.log('  • Column B: Description')
-          console.log('  • Column D: Category')
+          console.log('  • Column B: Description (English)')
+          console.log('  • Column D: Category (English)')
           console.log('  • Column E: Weight (in grams)')
           console.log('  • Column F: Image URL (must start with http or https)')
+          console.log('  • Column G: Item Name (Russian)')
+          console.log('  • Column H: Description (Russian)')
+          console.log('  • Column I: Category (Russian)')
           console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
           console.log('\n🔍 COMMON ISSUES:')
           console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
@@ -591,8 +594,9 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
             `SPREADSHEET REQUIREMENTS:\n` +
             `• Each sheet = one restaurant (sheet name = restaurant name)\n` +
             `• First row can be headers (skipped automatically)\n` +
-            `• Required: Column A (Item Name), Column C (Price)\n` +
-            `• Optional: Column B (Description), D (Category), E (Weight), F (Image URL)\n\n` +
+            `• Required: Column A (Item Name EN), Column C (Price)\n` +
+            `• Optional: Column B (Description EN), D (Category EN), E (Weight), F (Image URL)\n` +
+            `• Russian: Column G (Name RU), H (Description RU), I (Category RU)\n\n` +
             `COMMON ISSUES:\n` +
             `1. Empty rows are skipped automatically\n` +
             `2. Invalid prices - must be numbers (e.g., 25, $25, 25.50)\n` +
@@ -647,8 +651,9 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
         `SPREADSHEET REQUIREMENTS:\n` +
         `• Each sheet = one restaurant (sheet name = restaurant name)\n` +
         `• First row can be headers (skipped automatically)\n` +
-        `• Required: Column A (Item Name), Column C (Price)\n` +
-        `• Optional: Column B (Description), D (Category), E (Weight), F (Image URL)\n\n` +
+        `• Required: Column A (Item Name EN), Column C (Price)\n` +
+        `• Optional: Column B (Description EN), D (Category EN), E (Weight), F (Image URL)\n` +
+        `• Russian: Column G (Name RU), H (Description RU), I (Category RU)\n\n` +
         `COMMON SETUP ISSUES:\n` +
         `1. Google Sheets API not enabled (most common!)\n` +
         `2. Invalid or incomplete API key\n` +
@@ -744,13 +749,19 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                       <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
                         <li>Each sheet = one restaurant (sheet name = restaurant name)</li>
                         <li>First row can be headers (skipped automatically)</li>
-                        <li>Column A: Item Name (required)</li>
-                        <li>Column B: Description (optional)</li>
-                        <li>Column C: Price (required)</li>
-                        <li>Column D: Category (optional)</li>
-                        <li>Column E: Weight in grams (optional)</li>
-                        <li>Column F: Image URL (optional)</li>
+                        <li><strong>Column A:</strong> Item Name (English) - required</li>
+                        <li><strong>Column B:</strong> Description (English) - optional</li>
+                        <li><strong>Column C:</strong> Price - required</li>
+                        <li><strong>Column D:</strong> Category (English) - optional</li>
+                        <li><strong>Column E:</strong> Weight in grams - optional</li>
+                        <li><strong>Column F:</strong> Image URL - optional</li>
+                        <li><strong>Column G:</strong> Item Name (Russian) - optional</li>
+                        <li><strong>Column H:</strong> Description (Russian) - optional</li>
+                        <li><strong>Column I:</strong> Category (Russian) - optional</li>
                       </ul>
+                      <p className="text-xs text-muted-foreground mt-3 italic">
+                        💡 Columns B and D are for English text. Columns H and I are for Russian translations.
+                      </p>
                     </Card>
 
                     <div className="space-y-2">

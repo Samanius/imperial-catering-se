@@ -66,6 +66,18 @@ export async function importFromGoogleSheets(
       
       const rowErrors: string[] = []
       
+      console.log('📊 Column Structure:')
+      console.log('  A: Item Name (English) - REQUIRED')
+      console.log('  B: Description (English) - optional')
+      console.log('  C: Price - REQUIRED')
+      console.log('  D: Category (English) - optional')
+      console.log('  E: Weight (grams) - optional')
+      console.log('  F: Image URL - optional')
+      console.log('  G: Item Name (Russian) - optional')
+      console.log('  H: Description (Russian) - optional')
+      console.log('  I: Category (Russian) - optional')
+      console.log('')
+      
       for (let i = startIndex; i < sheet.rows.length; i++) {
         const row = sheet.rows[i]
         const rowNum = i + 1
@@ -91,6 +103,17 @@ export async function importFromGoogleSheets(
         const itemName_ru = row[6]?.toString().trim() || ''
         const description_ru = row[7]?.toString().trim() || ''
         const category_ru = row[8]?.toString().trim() || ''
+        
+        console.log(`Row ${rowNum} parsed:`, {
+          'A (Name EN)': itemName || '(empty)',
+          'B (Desc EN)': description ? description.substring(0, 30) + '...' : '(empty)',
+          'C (Price)': priceStr || '(empty)',
+          'D (Category EN)': category || '(empty)',
+          'E (Weight)': weightStr || '(empty)',
+          'G (Name RU)': itemName_ru || '(not provided)',
+          'H (Desc RU)': description_ru ? description_ru.substring(0, 30) + '...' : '(not provided)',
+          'I (Category RU)': category_ru || '(not provided)'
+        })
         
         try {
           imageUrl = row[5]?.toString().trim() || ''

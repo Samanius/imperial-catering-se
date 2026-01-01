@@ -8,15 +8,17 @@ The Google Sheets import now supports bilingual content (English and Russian). E
 
 | Column | Field | Description | Required |
 |--------|-------|-------------|----------|
-| **A** | Item Name (English) | Menu item name in English | ✅ Yes |
-| **B** | Description (English) | Item description in English | Optional |
+| **A** | Item Name (EN) | Menu item name in **English** | ✅ Yes |
+| **B** | Description (EN) | Item description in **English** | Optional |
 | **C** | Price | Item price (numbers only) | ✅ Yes |
-| **D** | Category (English) | Category name in English | Optional |
+| **D** | Category (EN) | Category name in **English** | Optional |
 | **E** | Weight | Item weight in grams | Optional |
 | **F** | Image URL | Full URL to item image | Optional |
-| **G** | Item Name (Russian) | Menu item name in Russian | Optional |
-| **H** | Description (Russian) | Item description in Russian | Optional |
-| **I** | Category (Russian) | Category name in Russian | Optional |
+| **G** | Item Name (RU) | Menu item name in **Russian** | Optional |
+| **H** | Description (RU) | Item description in **Russian** | Optional |
+| **I** | Category (RU) | Category name in **Russian** | Optional |
+
+**Important:** Columns B and D are specifically for **English** text. Columns H and I are for **Russian** translations.
 
 ### Example Row
 
@@ -60,15 +62,23 @@ When Russian translations are not available:
 If you want to add headers to your spreadsheet for clarity, use row 1:
 
 ```
-A: Item Name
-B: Description  
+A: Item Name (EN)
+B: Description (EN)
 C: Price
-D: Category
+D: Category (EN)
 E: Weight (g)
 F: Image URL
-G: Название (RU)
-H: Описание (RU)
-I: Категория (RU)
+G: Item Name (RU) / Название
+H: Description (RU) / Описание
+I: Category (RU) / Категория
 ```
 
 The import will automatically detect and skip this header row.
+
+### Data Entry Tips
+
+1. **Always fill Column B (Description EN)** - This is the English description
+2. **Always fill Column D (Category EN)** - This is the English category name
+3. **Column H (Description RU)** - Russian translation of description
+4. **Column I (Category RU)** - Russian translation of category
+5. Categories should match across languages (e.g., "Main Courses" → "Основные блюда")
