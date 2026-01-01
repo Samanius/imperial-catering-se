@@ -15,8 +15,6 @@ function App() {
   const [isCartOpen, setIsCartOpen] = useState(false)
   const { language } = useLanguage()
 
-  console.log('🔍 App render - view:', currentView, 'language:', language, 'selectedRestaurant:', selectedRestaurantId)
-
   const handleRestaurantSelect = (id: string) => {
     setSelectedRestaurantId(id)
     setCurrentView('restaurant')

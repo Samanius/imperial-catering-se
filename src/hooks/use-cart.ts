@@ -22,31 +22,22 @@ export function useCart() {
       return
     }
 
-    console.log('➕ Adding to cart:', { restaurantId, restaurantName, menuItem })
-
     setCartItems((current) => {
       const safeArray = Array.isArray(current) ? current : []
-      console.log('📦 Current cart:', safeArray)
       
       const existingItem = safeArray.find(
         item => item?.restaurantId === restaurantId && item?.menuItem?.id === menuItem.id
       )
 
       if (existingItem) {
-        console.log('🔄 Updating existing item quantity')
-        const updated = safeArray.map(item =>
+        return safeArray.map(item =>
           item?.restaurantId === restaurantId && item?.menuItem?.id === menuItem.id
             ? { ...item, quantity: item.quantity + 1 }
             : item
         )
-        console.log('✅ Updated cart:', updated)
-        return updated
       }
 
-      console.log('🆕 Adding new item to cart')
-      const updated = [...safeArray, { restaurantId, restaurantName, menuItem, quantity: 1 }]
-      console.log('✅ Updated cart:', updated)
-      return updated
+      return [...safeArray, { restaurantId, restaurantName, menuItem, quantity: 1 }]
     })
   }, [setCartItems])
 
@@ -55,8 +46,6 @@ export function useCart() {
     menuItemId: string,
     delta: number
   ) => {
-    console.log('🔢 Updating quantity:', { restaurantId, menuItemId, delta })
-    
     setCartItems((current) => {
       const safeArray = Array.isArray(current) ? current : []
       const updated = safeArray.map(item => {
@@ -67,21 +56,17 @@ export function useCart() {
         return item
       }).filter(Boolean) as CartItem[]
       
-      console.log('✅ Quantity updated:', updated)
       return updated
     })
   }, [setCartItems])
 
   const removeItem = useCallback((restaurantId: string, menuItemId: string) => {
-    console.log('🗑️ Removing item:', { restaurantId, menuItemId })
-    
     setCartItems((current) => {
       const safeArray = Array.isArray(current) ? current : []
       const updated = safeArray.filter(
         item => !(item?.restaurantId === restaurantId && item?.menuItem?.id === menuItemId)
       )
       
-      console.log('✅ Item removed, new cart:', updated)
       return updated
     })
   }, [setCartItems])
@@ -122,7 +107,6 @@ export function useCart() {
   }, [safeCartItems])
 
   const clearCart = useCallback(() => {
-    console.log('🧹 Clearing cart')
     setCartItems([])
   }, [setCartItems])
 

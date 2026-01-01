@@ -341,38 +341,14 @@ export const translations = {
   },
 }
 
-let cachedCustomTranslations: { en: TranslationObject; ru: TranslationObject } = { en: {}, ru: {} }
-let lastLoadTime = 0
-const CACHE_DURATION = 1000
+let cachedCustomTranslations: { en: TranslationObject; ru: TranslationObject } | null = null
 
-function loadCustomTranslations(): { en: TranslationObject; ru: TranslationObject } {
-  const now = Date.now()
-  if ((now - lastLoadTime) < CACHE_DURATION) {
-    return cachedCustomTranslations
-  }
-  
-  try {
-    const stored = localStorage.getItem('kv:custom-translations')
-    if (stored) {
-      const parsed = JSON.parse(stored)
-      if (parsed && typeof parsed === 'object') {
-        cachedCustomTranslations = { en: {}, ru: {}, ...parsed }
-        lastLoadTime = now
-        return cachedCustomTranslations
-      }
-    }
-  } catch (error) {
-    console.error('Failed to load custom translations:', error)
-  }
-  
-  cachedCustomTranslations = { en: {}, ru: {} }
-  lastLoadTime = now
-  return cachedCustomTranslations
+export function setCustomTranslationsCache(translations: { en: TranslationObject; ru: TranslationObject }) {
+  cachedCustomTranslations = translations
 }
 
 export function clearTranslationCache() {
-  lastLoadTime = 0
-  cachedCustomTranslations = { en: {}, ru: {} }
+  cachedCustomTranslations = null
 }
 
 function getNestedValue(obj: any, path: string): string | undefined {
@@ -391,14 +367,14 @@ function getNestedValue(obj: any, path: string): string | undefined {
 }
 
 export function t(key: string, lang: Language, replacements?: Record<string, string | number>): string {
-  const customTranslations = loadCustomTranslations()
-  
-  const customValue = getNestedValue(customTranslations[lang], key)
-  if (customValue !== undefined && customValue !== '') {
-    if (replacements) {
-      return customValue.replace(/\{\{(\w+)\}\}/g, (_, key) => String(replacements[key] ?? ''))
+  if (cachedCustomTranslations) {
+    const customValue = getNestedValue(cachedCustomTranslations[lang], key)
+    if (customValue !== undefined && customValue !== '') {
+      if (replacements) {
+        return customValue.replace(/\{\{(\w+)\}\}/g, (_, key) => String(replacements[key] ?? ''))
+      }
+      return customValue
     }
-    return customValue
   }
   
   const keys = key.split('.')
