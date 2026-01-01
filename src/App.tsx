@@ -62,18 +62,10 @@ function App() {
       </div>
 
       <footer className="border-t border-border bg-card/50 backdrop-blur-sm py-4 px-4 sm:px-6 mt-auto">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
-          <p className="font-body text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
+        <div className="max-w-7xl mx-auto flex items-center justify-center">
+          <p className="font-body text-xs sm:text-sm text-muted-foreground text-center">
             {t('footer.copyright', language, { year: new Date().getFullYear().toString() })}
           </p>
-          <a 
-            href="/CHANGELOG.md" 
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-body text-xs sm:text-sm text-accent hover:text-accent/80 transition-colors underline underline-offset-2"
-          >
-            {t('footer.documentation', language)}
-          </a>
         </div>
       </footer>
 
