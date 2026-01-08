@@ -622,7 +622,30 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       let displayError = errorMessage
       let actionableSteps = ''
       
-      if (errorMessage.includes('Sheets API is not enabled') || errorMessage.includes('SERVICE_DISABLED')) {
+      if (errorMessage.includes('Invalid GitHub token') || errorMessage.includes('INVALID_TOKEN')) {
+        displayError = 'GitHub token is invalid or expired.'
+        actionableSteps = '\n\n📋 CHECKLIST TO FIX:\n' +
+          '☐ Go to the "Database" tab in Admin Panel\n' +
+          '☐ Create a new GitHub Personal Access Token:\n' +
+          '   → Visit: https://github.com/settings/tokens/new?scopes=gist\n' +
+          '   → Check only "gist" scope\n' +
+          '   → Click "Generate token"\n' +
+          '   → Copy the new token\n' +
+          '☐ Paste the new token in the "GitHub Personal Access Token" field\n' +
+          '☐ Click "Connect Database" or "Enable Write Access"\n' +
+          '☐ Try importing again\n\n' +
+          '💡 NOTE: Your old token may have expired or been revoked.\n' +
+          '   Creating a new token will solve this issue.'
+      } else if (errorMessage.includes('GitHub token required') || errorMessage.includes('NO_TOKEN')) {
+        displayError = 'GitHub token is missing.'
+        actionableSteps = '\n\n📋 CHECKLIST TO FIX:\n' +
+          '☐ Go to the "Database" tab in Admin Panel\n' +
+          '☐ Enter your GitHub Personal Access Token\n' +
+          '☐ If you don\'t have one, create it at:\n' +
+          '   → https://github.com/settings/tokens/new?scopes=gist\n' +
+          '☐ Make sure to check the "gist" scope\n' +
+          '☐ Try importing again'
+      } else if (errorMessage.includes('Sheets API is not enabled') || errorMessage.includes('SERVICE_DISABLED')) {
         actionableSteps = '\n\n📋 CHECKLIST TO FIX:\n' +
           '☐ Go to Google Cloud Console\n' +
           '☐ Select your project\n' +
@@ -658,7 +681,8 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
         `1. Google Sheets API not enabled (most common!)\n` +
         `2. Invalid or incomplete API key\n` +
         `3. Spreadsheet not shared publicly\n` +
-        `4. Wrong Google Cloud project selected`
+        `4. Wrong Google Cloud project selected\n` +
+        `5. GitHub token expired or invalid (check Database tab!)`
       
       setImportError(fullErrorText)
       setIsErrorDialogOpen(true)
