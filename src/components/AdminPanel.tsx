@@ -577,6 +577,11 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
           console.log('  • Column G: Item Name (Russian)')
           console.log('  • Column H: Description (Russian)')
           console.log('  • Column I: Category (Russian)')
+          console.log('✓ Restaurant metadata (optional):')
+          console.log('  • Row with "Restaurant description" in Column A')
+          console.log('  • Next row: Column A = Description (EN), Column B = Description (RU)')
+          console.log('  • Row with "Restaurant photo" in Column A')
+          console.log('  • Next row: Column A = Photo URL (must start with http or https)')
           console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
           console.log('\n🔍 COMMON ISSUES:')
           console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
@@ -596,7 +601,9 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
             `• First row can be headers (skipped automatically)\n` +
             `• Required: Column A (Item Name EN), Column C (Price)\n` +
             `• Optional: Column B (Description EN), D (Category EN), E (Weight), F (Image URL)\n` +
-            `• Russian: Column G (Name RU), H (Description RU), I (Category RU)\n\n` +
+            `• Russian: Column G (Name RU), H (Description RU), I (Category RU)\n` +
+            `• Restaurant info: Row "Restaurant description" + next row (A=EN, B=RU)\n` +
+            `• Restaurant photo: Row "Restaurant photo" + next row (A=Photo URL)\n\n` +
             `COMMON ISSUES:\n` +
             `1. Empty rows are skipped automatically\n` +
             `2. Invalid prices - must be numbers (e.g., 25, $25, 25.50)\n` +
@@ -683,7 +690,9 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
         `• First row can be headers (skipped automatically)\n` +
         `• Required: Column A (Item Name EN), Column C (Price)\n` +
         `• Optional: Column B (Description EN), D (Category EN), E (Weight), F (Image URL)\n` +
-        `• Russian: Column G (Name RU), H (Description RU), I (Category RU)\n\n` +
+        `• Russian: Column G (Name RU), H (Description RU), I (Category RU)\n` +
+        `• Restaurant info: Row "Restaurant description" + next row (A=EN, B=RU)\n` +
+        `• Restaurant photo: Row "Restaurant photo" + next row (A=Photo URL)\n\n` +
         `COMMON SETUP ISSUES:\n` +
         `1. Google Sheets API not enabled (most common!)\n` +
         `2. Invalid or incomplete API key\n` +
@@ -789,9 +798,14 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                         <li><strong>Column G:</strong> Item Name (Russian) - optional</li>
                         <li><strong>Column H:</strong> Description (Russian) - optional</li>
                         <li><strong>Column I:</strong> Category (Russian) - optional</li>
+                        <li className="mt-2 pt-2 border-t border-accent/20"><strong>Restaurant Info:</strong></li>
+                        <li>Row with "Restaurant description" in Column A</li>
+                        <li className="ml-4">→ Next row: Column A = Description (EN), Column B = Description (RU)</li>
+                        <li>Row with "Restaurant photo" in Column A</li>
+                        <li className="ml-4">→ Next row: Column A = Photo URL</li>
                       </ul>
                       <p className="text-xs text-muted-foreground mt-3 italic">
-                        💡 Columns B and D are for English text. Columns H and I are for Russian translations.
+                        💡 Restaurant description and photo are optional but recommended for better presentation.
                       </p>
                     </Card>
 

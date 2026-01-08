@@ -52,6 +52,9 @@ export async function importFromGoogleSheets(
       console.log('Existing restaurant found:', existingRestaurant ? `Yes (${existingRestaurant.name})` : 'No')
 
       const menuItems: MenuItem[] = []
+      let restaurantDescription = ''
+      let restaurantDescription_ru = ''
+      let restaurantPhoto = ''
       
       console.log(`Processing ${sheet.rows.length} rows`)
       
@@ -61,6 +64,36 @@ export async function importFromGoogleSheets(
         if (firstCell === 'item name' || firstCell === 'name' || firstCell === 'item') {
           console.log('First row appears to be a header, skipping it')
           startIndex = 1
+        }
+      }
+      
+      for (let i = 0; i < Math.min(sheet.rows.length, 3); i++) {
+        const row = sheet.rows[i]
+        if (!row || row.length === 0) continue
+        
+        const firstCell = row[0]?.toString().trim().toLowerCase() || ''
+        
+        if (firstCell === 'restaurant description') {
+          const nextRow = sheet.rows[i + 1]
+          if (nextRow && nextRow.length > 0) {
+            restaurantDescription = nextRow[0]?.toString().trim() || ''
+            restaurantDescription_ru = nextRow[1]?.toString().trim() || ''
+            console.log('Found restaurant description:', restaurantDescription ? 'EN present' : 'EN empty', restaurantDescription_ru ? ', RU present' : ', RU empty')
+          }
+          if (startIndex <= i + 1) startIndex = i + 2
+        }
+        
+        if (firstCell === 'restaurant photo') {
+          const nextRow = sheet.rows[i + 1]
+          if (nextRow && nextRow.length > 0) {
+            restaurantPhoto = nextRow[0]?.toString().trim() || ''
+            if (restaurantPhoto && !restaurantPhoto.startsWith('http')) {
+              console.log('Restaurant photo URL invalid, clearing')
+              restaurantPhoto = ''
+            }
+            console.log('Found restaurant photo:', restaurantPhoto || '(empty/invalid)')
+          }
+          if (startIndex <= i + 1) startIndex = i + 2
         }
       }
       
@@ -256,13 +289,29 @@ export async function importFromGoogleSheets(
 
         console.log(`Summary: ${newItems.length} new items, ${updatedItems.length} updated items`)
 
+        const descriptionChanged = restaurantDescription && existingRestaurant.description !== restaurantDescription
+        const descriptionRuChanged = restaurantDescription_ru && (existingRestaurant.description_ru || '') !== restaurantDescription_ru
+        const photoChanged = restaurantPhoto && existingRestaurant.coverImage !== restaurantPhoto
+        
+        if (descriptionChanged || descriptionRuChanged || photoChanged) {
+          console.log('Restaurant metadata changed:', {
+            description: descriptionChanged ? 'updated' : 'same',
+            description_ru: descriptionRuChanged ? 'updated' : 'same',
+            photo: photoChanged ? 'updated' : 'same'
+          })
+          hasChanges = true
+        }
+
         if (hasChanges) {
           const allCategories = Array.from(new Set(updatedMenuItems.map(item => item.category)))
           
           const updatedRestaurant: Restaurant = {
             ...existingRestaurant,
             menuItems: updatedMenuItems,
-            categories: allCategories
+            categories: allCategories,
+            ...(descriptionChanged && { description: restaurantDescription }),
+            ...(descriptionRuChanged && { description_ru: restaurantDescription_ru }),
+            ...(photoChanged && { coverImage: restaurantPhoto })
           }
           
           updatedRestaurants.push(updatedRestaurant)
@@ -271,6 +320,8 @@ export async function importFromGoogleSheets(
           const changeSummary: string[] = []
           if (newItems.length > 0) changeSummary.push(`${newItems.length} new`)
           if (updatedItems.length > 0) changeSummary.push(`${updatedItems.length} updated`)
+          if (descriptionChanged || descriptionRuChanged) changeSummary.push('description updated')
+          if (photoChanged) changeSummary.push('photo updated')
           
           console.log(`Updated restaurant "${restaurantName}": ${changeSummary.join(', ')}`)
           
@@ -288,10 +339,11 @@ export async function importFromGoogleSheets(
           name: restaurantName,
           tagline: '',
           tags: [],
-          description: '',
+          description: restaurantDescription || '',
+          description_ru: restaurantDescription_ru || undefined,
           story: `Imported from Google Sheets on ${new Date().toLocaleDateString()}`,
           menuType: 'visual',
-          coverImage: '',
+          coverImage: restaurantPhoto || '',
           galleryImages: [],
           menuItems: menuItems,
           tastingMenuDescription: '',
@@ -306,7 +358,7 @@ export async function importFromGoogleSheets(
         newRestaurants.push(newRestaurant)
         itemsAddedCount += menuItems.length
         
-        console.log(`New restaurant added: "${restaurantName}"`)
+        console.log(`New restaurant added: "${restaurantName}" with description: ${restaurantDescription ? 'Yes' : 'No'}, photo: ${restaurantPhoto ? 'Yes' : 'No'}`)
         
         await createBackup('create', 'restaurant', newRestaurant.id, newRestaurant.name, newRestaurant)
       }
