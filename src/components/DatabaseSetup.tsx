@@ -629,10 +629,7 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured, hasW
               <div className="font-semibold text-foreground mb-2 font-body">Git</div>
               <div className="space-y-1.5 pl-2">
                 <div>
-                  <span className="text-muted-foreground">Api Token:</span> {(() => {
-                    const token = db.getCredentials().githubToken;
-                    return token ? `${token.substring(0, 8)}...${token.substring(token.length - 4)}` : '❌ Not configured';
-                  })()}
+                  <span className="text-muted-foreground">Api Token:</span> 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
                 </div>
                 <div>
                   <span className="text-muted-foreground">Database:</span> {db.getCredentials().gistId || '❌ Not configured'}
