@@ -4,7 +4,7 @@ import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
 import { Alert, AlertDescription } from './ui/alert'
-import { Database, Plus, CheckCircle, XCircle, Info, ArrowSquareOut } from '@phosphor-icons/react'
+import { Database, Plus, CheckCircle, XCircle, Info, ArrowSquareOut, PencilSimple } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { db } from '@/lib/database'
 
@@ -20,6 +20,8 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured, hasW
   const [gistId, setGistId] = useState('')
   const [githubToken, setGithubToken] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isEditingToken, setIsEditingToken] = useState(false)
+  const [newToken, setNewToken] = useState('')
 
   const handleConnect = async () => {
     const trimmedToken = githubToken.trim()
@@ -162,6 +164,81 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured, hasW
     }
   }
 
+  const handleUpdateToken = async () => {
+    const trimmedToken = newToken.trim()
+
+    if (!trimmedToken) {
+      toast.error('Please enter a new GitHub token')
+      return
+    }
+
+    if (!trimmedToken.startsWith('ghp_') && !trimmedToken.startsWith('github_pat_')) {
+      toast.error('Invalid token format')
+      return
+    }
+
+    if (trimmedToken.length < 40) {
+      toast.error('Invalid GitHub token - too short')
+      return
+    }
+
+    setIsLoading(true)
+    const loadingToast = toast.loading('Verifying new token...')
+    
+    try {
+      const testResponse = await fetch('https://api.github.com/user', {
+        headers: {
+          'Authorization': `Bearer ${trimmedToken}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      })
+
+      if (!testResponse.ok) {
+        if (testResponse.status === 401) {
+          throw new Error('Invalid GitHub token')
+        } else {
+          throw new Error(`GitHub authorization error: ${testResponse.status}`)
+        }
+      }
+
+      const userData = await testResponse.json()
+      
+      const credentials = db.getCredentials()
+      const currentGistId = credentials.gistId || ''
+
+      if (currentGistId) {
+        const gistResponse = await fetch(`https://api.github.com/gists/${currentGistId}`, {
+          headers: {
+            'Authorization': `Bearer ${trimmedToken}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        })
+
+        if (!gistResponse.ok) {
+          if (gistResponse.status === 404) {
+            throw new Error('Cannot access database with this token. Make sure you own the Gist or have access to it.')
+          } else if (gistResponse.status === 401) {
+            throw new Error('Token is valid but cannot access the database')
+          }
+        }
+      }
+
+      await onSetup(currentGistId, trimmedToken)
+      
+      toast.dismiss(loadingToast)
+      toast.success(`GitHub token updated successfully (user: ${userData.login})`)
+      
+      setNewToken('')
+      setIsEditingToken(false)
+    } catch (error: any) {
+      toast.dismiss(loadingToast)
+      const errorMessage = error.message || 'Failed to update token'
+      toast.error(errorMessage, { duration: 8000 })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <>
       <Card className={isConfigured ? (hasWriteAccess ? "border-accent/20 bg-card" : "border-yellow-500/20 bg-card") : "border-destructive/20"}>
@@ -198,12 +275,76 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured, hasW
         </CardHeader>
         <CardContent className="space-y-6">
           {isConfigured && hasWriteAccess ? (
-            <Alert className="bg-accent/5 border-accent/20">
-              <Info className="h-4 w-4 text-accent" />
-              <AlertDescription className="text-sm">
-                Database is active. All changes are automatically saved to the cloud.
-              </AlertDescription>
-            </Alert>
+            <>
+              <Alert className="bg-accent/5 border-accent/20">
+                <Info className="h-4 w-4 text-accent" />
+                <AlertDescription className="text-sm">
+                  Database is active. All changes are automatically saved to the cloud.
+                </AlertDescription>
+              </Alert>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">GitHub Token</p>
+                    <p className="text-xs text-muted-foreground">Update your access token if needed</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsEditingToken(!isEditingToken)}
+                  >
+                    <PencilSimple size={16} className="mr-2" />
+                    {isEditingToken ? 'Cancel' : 'Change Token'}
+                  </Button>
+                </div>
+
+                {isEditingToken && (
+                  <div className="space-y-3 pt-2">
+                    <Alert className="bg-accent/5 border-accent/20">
+                      <Info className="h-4 w-4 text-accent" />
+                      <AlertDescription className="text-xs space-y-2">
+                        <p className="font-semibold">Need a new token?</p>
+                        <div className="flex flex-col gap-1">
+                          <a 
+                            href="https://github.com/settings/tokens/new?scopes=gist&description=Imperial%20Restaurant%20Database" 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="text-accent hover:underline inline-flex items-center gap-1"
+                          >
+                            Create New API Token <ArrowSquareOut size={14} weight="bold" />
+                          </a>
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="new-token" className="font-semibold">New GitHub Token</Label>
+                      <Input
+                        id="new-token"
+                        type="password"
+                        placeholder="ghp_..."
+                        value={newToken}
+                        onChange={(e) => setNewToken(e.target.value)}
+                        className="font-mono"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Token must have "gist" scope enabled
+                      </p>
+                    </div>
+
+                    <Button 
+                      onClick={handleUpdateToken} 
+                      disabled={isLoading || !newToken.trim()} 
+                      className="w-full" 
+                      size="sm"
+                    >
+                      {isLoading ? 'Updating Token...' : 'Update Token'}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </>
           ) : isConfigured && !hasWriteAccess ? (
             <>
               <Alert className="bg-yellow-500/10 border-yellow-500/30">

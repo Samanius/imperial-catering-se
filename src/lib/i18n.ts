@@ -142,6 +142,10 @@ export const translations = {
       googleApiKey: 'Api Key',
       gitApiToken: 'Api Token',
       gitDatabase: 'Database',
+      changeToken: 'Change Token',
+      updateToken: 'Update Token',
+      newGithubToken: 'New GitHub Token',
+      tokenUpdated: 'GitHub token updated successfully',
     },
     translationsEditor: {
       title: 'Translations Editor',
@@ -309,6 +313,10 @@ export const translations = {
       googleApiKey: 'API ключ',
       gitApiToken: 'API токен',
       gitDatabase: 'База данных',
+      changeToken: 'Изменить токен',
+      updateToken: 'Обновить токен',
+      newGithubToken: 'Новый GitHub токен',
+      tokenUpdated: 'GitHub токен успешно обновлен',
     },
     translationsEditor: {
       title: 'Редактор переводов',
