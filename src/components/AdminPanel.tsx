@@ -619,10 +619,17 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       
+      console.error('❌ Import catch block error:', error)
+      console.error('Error message:', errorMessage)
+      console.error('Error type:', typeof error, error instanceof Error ? error.constructor.name : 'not an Error')
+      
       let displayError = errorMessage
       let actionableSteps = ''
       
-      if (errorMessage.includes('Invalid GitHub token') || errorMessage.includes('INVALID_TOKEN')) {
+      if (errorMessage.includes('Invalid GitHub token') || 
+          errorMessage.includes('INVALID_TOKEN') ||
+          errorMessage.includes('check your credentials') ||
+          errorMessage.toLowerCase().includes('401')) {
         displayError = 'GitHub token is invalid or expired.'
         actionableSteps = '\n\n📋 CHECKLIST TO FIX:\n' +
           '☐ Go to the "Database" tab in Admin Panel\n' +
