@@ -591,7 +591,7 @@ export default function DatabaseSetup({ onSetup, onCreateNew, isConfigured, hasW
           <CardTitle className="text-base">Configuration Details</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-3 font-mono text-xs">
+          <div className="space-y-3 font-mono text-xs break-all">
             <div>
               <div className="font-semibold text-foreground mb-2 font-body">Google</div>
               <div className="space-y-1.5 pl-2">
