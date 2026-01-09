@@ -250,9 +250,37 @@ export default function FirebaseImageHosting() {
                 Настройка правил безопасности
               </h3>
               <div className="ml-8 space-y-2 text-sm">
-                <p>1. Перейдите на вкладку <strong>"Rules"</strong> в Firebase Storage</p>
+                <Alert className="bg-yellow-50 border-yellow-300 mb-3">
+                  <Info size={18} className="text-yellow-600" />
+                  <AlertDescription className="ml-2 text-xs text-yellow-800">
+                    <strong>Важно!</strong> Вкладка "Rules" находится <strong>ВНУТРИ</strong> раздела Storage, а не на главной странице проекта.
+                  </AlertDescription>
+                </Alert>
+
+                <p><strong>Шаг 1:</strong> В <strong>ЛЕВОМ МЕНЮ</strong> найдите и нажмите на раздел <strong>"Storage"</strong></p>
                 
-                <p>2. Замените существующие правила на следующие:</p>
+                <Card className="bg-blue-50/50 border-blue-200 my-2">
+                  <CardContent className="p-3 text-xs">
+                    <div className="space-y-1">
+                      <p className="font-semibold text-blue-900">📍 Где находится Storage:</p>
+                      <div className="ml-3 space-y-0.5 text-blue-800">
+                        <p>• Посмотрите на <strong>ЛЕВУЮ БОКОВУЮ ПАНЕЛЬ</strong></p>
+                        <p>• Найдите раздел "Product categories" или "Build"</p>
+                        <p>• Нажмите на <strong>"Storage"</strong></p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <p><strong>Шаг 2:</strong> После открытия Storage вы увидите <strong>ДВЕ ВКЛАДКИ ВВЕРХУ СТРАНИЦЫ:</strong></p>
+                <ul className="ml-4 list-disc space-y-1">
+                  <li><strong>"Files"</strong> - список загруженных файлов</li>
+                  <li><strong>"Rules"</strong> - правила безопасности (нам нужна эта!)</li>
+                </ul>
+                
+                <p><strong>Шаг 3:</strong> Нажмите на вкладку <strong>"Rules"</strong></p>
+                
+                <p><strong>Шаг 4:</strong> Замените существующие правила на следующие:</p>
                 
                 <Card className="bg-muted/50 border-border mt-2 mb-2">
                   <CardContent className="p-4">
@@ -309,7 +337,7 @@ service firebase.storage {
                   </CardContent>
                 </Card>
                 
-                <p>3. Нажмите <strong>"Publish"</strong></p>
+                <p><strong>Шаг 5:</strong> Нажмите кнопку <strong>"Publish"</strong> в верхней части редактора правил</p>
                 
                 <Alert className="bg-muted/30 border-border">
                   <Info size={18} />
