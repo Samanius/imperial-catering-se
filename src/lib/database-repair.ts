@@ -63,23 +63,23 @@ export async function repairDatabase(gistId: string, githubToken: string): Promi
 
       let repairedContent = content
       let repairAttempts: string[] = []
+      
       repairedContent = repairedContent.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
-      repairAttempts.push('Removed control characters')
+      repairedContent = repairedContent.replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
+      repairedContent = repairedContent.replace(/[\u2028\u2029]/g, '')
+      repairAttempts.push('Removed control characters and unicode separators')
       
-      repairedContent = repairedContent.replace(/\r\n/g, '\\n').replace(/\r/g, '\\n').replace(/\n/g, '\\n')
-      repairAttempts.push('Escaped newlines in strings')
+      repairedContent = repairedContent.replace(/\r\n/g, ' ').replace(/\r/g, ' ').replace(/\n/g, ' ')
+      repairAttempts.push('Replaced all line breaks with spaces')
       
-      repairedContent = repairedContent.replace(/([^\\])\\n([^"]*)":/g, '$1 $2":')
-      repairedContent = repairedContent.replace(/: "([^"]*?)\\n\\n/g, ': "$1 ')
-      repairAttempts.push('Fixed escaped newlines in values')
+      repairedContent = repairedContent.replace(/([^\\])\\([^"\\nrtbfuU\/])/g, '$1\\\\$2')
+      repairAttempts.push('Fixed unescaped backslashes')
       
       repairedContent = repairedContent.replace(/,(\s*[}\]])/g, '$1')
       repairAttempts.push('Removed trailing commas')
       
-      repairedContent = repairedContent.replace(/([^\\])"([^"]*?)\\([^\\nrtbf"\/])/g, (match, prefix, middle, char) => {
-        return `${prefix}"${middle}\\\\${char}`
-      })
-      repairAttempts.push('Fixed single backslashes')
+      repairedContent = repairedContent.replace(/"([^"]*?)[\x00-\x1F]([^"]*?)"/g, '"$1$2"')
+      repairAttempts.push('Removed control chars from strings')
       
       try {
         data = JSON.parse(repairedContent)
@@ -134,9 +134,16 @@ export async function repairDatabase(gistId: string, githubToken: string): Promi
       restaurant.story = sanitizeString(restaurant.story || '')
       restaurant.tagline = sanitizeString(restaurant.tagline || '')
 
-      if (restaurant.coverImage && !restaurant.coverImage.startsWith('http')) {
-        report.errors.push(`Invalid cover image URL for ${restaurant.name}: ${restaurant.coverImage.substring(0, 50)}...`)
-        restaurant.coverImage = ''
+      if (restaurant.coverImage) {
+        restaurant.coverImage = sanitizeString(restaurant.coverImage)
+        if (restaurant.coverImage && !restaurant.coverImage.startsWith('http')) {
+          report.errors.push(`Invalid cover image URL for ${restaurant.name}: ${restaurant.coverImage.substring(0, 50)}...`)
+          restaurant.coverImage = ''
+        }
+        if (restaurant.coverImage && restaurant.coverImage.length > 2000) {
+          report.fixed.push(`✓ Truncated long cover image URL for: ${restaurant.name}`)
+          restaurant.coverImage = restaurant.coverImage.substring(0, 2000)
+        }
       }
 
       if (!restaurant.menuItems || !Array.isArray(restaurant.menuItems)) {
@@ -165,9 +172,16 @@ export async function repairDatabase(gistId: string, githubToken: string): Promi
         item.category = sanitizeString(item.category || 'Uncategorized')
         item.category_ru = item.category_ru ? sanitizeString(item.category_ru) : undefined
 
-        if (item.image && !item.image.startsWith('http')) {
-          report.errors.push(`Invalid image URL for ${item.name}: ${item.image.substring(0, 50)}...`)
-          item.image = ''
+        if (item.image) {
+          item.image = sanitizeString(item.image)
+          if (item.image && !item.image.startsWith('http')) {
+            report.errors.push(`Invalid image URL for ${item.name}: ${item.image.substring(0, 50)}...`)
+            item.image = ''
+          }
+          if (item.image && item.image.length > 2000) {
+            report.fixed.push(`✓ Truncated long image URL for: ${item.name}`)
+            item.image = item.image.substring(0, 2000)
+          }
         }
 
         return item
@@ -232,5 +246,10 @@ function sanitizeString(str: string): string {
   
   return str
     .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+    .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
+    .replace(/[\u2028\u2029]/g, '')
+    .replace(/\r\n/g, ' ')
+    .replace(/\r/g, ' ')
+    .replace(/\n/g, ' ')
     .trim()
 }

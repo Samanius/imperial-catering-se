@@ -67,6 +67,21 @@ export async function importFromGoogleSheets(
         }
       }
       
+      const sanitizeMetadataField = (value: any): string => {
+        if (!value) return ''
+        const str = value.toString().trim()
+        return str
+          .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+          .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
+          .replace(/\\/g, '\\\\')
+          .replace(/"/g, '\\"')
+          .replace(/\r\n/g, ' ')
+          .replace(/\n/g, ' ')
+          .replace(/\r/g, ' ')
+          .replace(/\t/g, ' ')
+          .trim()
+      }
+      
       for (let i = 0; i < Math.min(sheet.rows.length, 3); i++) {
         const row = sheet.rows[i]
         if (!row || row.length === 0) continue
@@ -76,8 +91,8 @@ export async function importFromGoogleSheets(
         if (firstCell === 'restaurant description') {
           const nextRow = sheet.rows[i + 1]
           if (nextRow && nextRow.length > 0) {
-            restaurantDescription = nextRow[0]?.toString().trim() || ''
-            restaurantDescription_ru = nextRow[1]?.toString().trim() || ''
+            restaurantDescription = sanitizeMetadataField(nextRow[0])
+            restaurantDescription_ru = sanitizeMetadataField(nextRow[1])
             console.log('Found restaurant description:', restaurantDescription ? 'EN present' : 'EN empty', restaurantDescription_ru ? ', RU present' : ', RU empty')
           }
           if (startIndex <= i + 1) startIndex = i + 2
@@ -86,10 +101,14 @@ export async function importFromGoogleSheets(
         if (firstCell === 'restaurant photo') {
           const nextRow = sheet.rows[i + 1]
           if (nextRow && nextRow.length > 0) {
-            restaurantPhoto = nextRow[0]?.toString().trim() || ''
+            restaurantPhoto = sanitizeMetadataField(nextRow[0])
             if (restaurantPhoto && !restaurantPhoto.startsWith('http')) {
               console.log('Restaurant photo URL invalid, clearing')
               restaurantPhoto = ''
+            }
+            if (restaurantPhoto && restaurantPhoto.length > 2000) {
+              console.log(`Restaurant photo URL too long (${restaurantPhoto.length} chars), truncating`)
+              restaurantPhoto = restaurantPhoto.substring(0, 2000)
             }
             console.log('Found restaurant photo:', restaurantPhoto || '(empty/invalid)')
           }
@@ -126,16 +145,30 @@ export async function importFromGoogleSheets(
           continue
         }
 
-        const itemName = row[0]?.toString().trim() || ''
-        const description = row[1]?.toString().trim() || ''
+        const sanitizeField = (value: any): string => {
+          if (!value) return ''
+          const str = value.toString().trim()
+          return str
+            .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+            .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
+            .replace(/\\/g, '\\\\')
+            .replace(/"/g, '\\"')
+            .replace(/\n/g, ' ')
+            .replace(/\r/g, ' ')
+            .replace(/\t/g, ' ')
+            .trim()
+        }
+        
+        const itemName = sanitizeField(row[0])
+        const description = sanitizeField(row[1])
         const priceStr = row[2]?.toString().trim() || ''
-        const category = row[3]?.toString().trim() || ''
+        const category = sanitizeField(row[3])
         const weightStr = row[4]?.toString().trim() || ''
         let imageUrl = ''
         
-        const itemName_ru = row[6]?.toString().trim() || ''
-        const description_ru = row[7]?.toString().trim() || ''
-        const category_ru = row[8]?.toString().trim() || ''
+        const itemName_ru = sanitizeField(row[6])
+        const description_ru = sanitizeField(row[7])
+        const category_ru = sanitizeField(row[8])
         
         console.log(`Row ${rowNum} parsed:`, {
           'A (Name EN)': itemName || '(empty)',
@@ -149,11 +182,15 @@ export async function importFromGoogleSheets(
         })
         
         try {
-          imageUrl = row[5]?.toString().trim() || ''
+          imageUrl = sanitizeField(row[5])
           if (imageUrl && !imageUrl.startsWith('http')) {
             console.log(`Row ${rowNum}: Image URL doesn't start with http, clearing it`)
             rowErrors.push(`Row ${rowNum}: Image URL invalid (must start with http:// or https://), skipped image`)
             imageUrl = ''
+          }
+          if (imageUrl && imageUrl.length > 2000) {
+            console.log(`Row ${rowNum}: Image URL too long (${imageUrl.length} chars), truncating`)
+            imageUrl = imageUrl.substring(0, 2000)
           }
         } catch (e) {
           console.log(`Row ${rowNum}: Could not parse image URL, setting to empty`)
