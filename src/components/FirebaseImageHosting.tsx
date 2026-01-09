@@ -423,10 +423,10 @@ service firebase.storage {
                   </CardContent>
                 </Card>
                 
-                <Alert className="bg-muted/30 border-border">
-                  <Info size={18} />
+                <Alert className="bg-accent/5 border-accent/30">
+                  <CheckCircle size={18} className="text-accent" />
                   <AlertDescription className="ml-2 text-xs">
-                    <strong>Примечание:</strong> Вы можете загружать изображения через Firebase Console вручную или использовать функцию загрузки в админ панели (появится после сохранения конфигурации).
+                    <strong>💡 СОВЕТ:</strong> Используйте автозагрузку из Google Drive (вкладка "Drive → Firebase") для массовой загрузки изображений!
                   </AlertDescription>
                 </Alert>
               </div>

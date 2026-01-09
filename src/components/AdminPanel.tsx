@@ -23,6 +23,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import DatabaseSetup from './DatabaseSetup'
 import TranslationsEditor from './TranslationsEditor'
 import FirebaseImageHosting from './FirebaseImageHosting'
+import GoogleDriveSync from './GoogleDriveSync'
 
 interface AdminPanelProps {
   onBack: () => void
@@ -33,7 +34,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
   const { language } = useLanguage()
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
   const [isCreating, setIsCreating] = useState(false)
-  const [activeTab, setActiveTab] = useState<'restaurants' | 'database' | 'translations' | 'firebase'>('restaurants')
+  const [activeTab, setActiveTab] = useState<'restaurants' | 'database' | 'translations' | 'firebase' | 'drive-sync'>('restaurants')
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
   const [googleSheetUrl, setGoogleSheetUrl] = useState('https://docs.google.com/spreadsheets/d/1my60zyjTGdDaY0sen9WAxCWooP7EDPneRTzwVDxoxEQ/edit?gid=0#gid=0')
   const [googleApiKey, setGoogleApiKey] = useKV<string>('google-sheets-api-key', 'AIzaSyDX3Morf9Oeg-ANaP4ABE_irlIRbqMsSyE')
@@ -870,6 +871,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
             <TabsTrigger value="database">{t('admin.database', language)}</TabsTrigger>
             <TabsTrigger value="translations">{t('admin.translations', language)}</TabsTrigger>
             <TabsTrigger value="firebase">Firebase</TabsTrigger>
+            <TabsTrigger value="drive-sync">Drive → Firebase</TabsTrigger>
           </TabsList>
 
           <TabsContent value="restaurants" className="mt-0">
@@ -1535,6 +1537,10 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
 
           <TabsContent value="firebase" className="mt-0">
             <FirebaseImageHosting />
+          </TabsContent>
+
+          <TabsContent value="drive-sync" className="mt-0">
+            <GoogleDriveSync />
           </TabsContent>
         </Tabs>
       </div>
