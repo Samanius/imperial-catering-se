@@ -337,7 +337,7 @@ service firebase.storage {
                   </CardContent>
                 </Card>
                 
-                <p><strong>Шаг 5:</strong> Нажмите кнопку <strong>"Publish"</strong> в верхней части редактора правил</p>
+                <p><strong>Шаг 5:</strong> Нажмите кнопку <strong>"Publish"</strong> в верхней ча��ти редактора правил</p>
                 
                 <Alert className="bg-muted/30 border-border">
                   <Info size={18} />
@@ -412,7 +412,7 @@ service firebase.storage {
                   <CardContent className="p-4">
                     <div className="text-xs font-mono space-y-1">
                       <div>📁 restaurants/</div>
-                      <div className="ml-4">└── 📁 {'{restaurant-id}'}/ <span className="text-muted-foreground">// ID каждого ресторана</span></div>
+                      <div className="ml-4">└── 📁 {'{restaurant-id}'}/ <span className="text-muted-foreground">// ID каждого рес��орана</span></div>
                       <div className="ml-8">└── 🖼️ cover.jpg</div>
                       <div className="ml-8">└── 🖼️ gallery-1.jpg</div>
                       <div className="ml-8">└── 🖼️ gallery-2.jpg</div>
