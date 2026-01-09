@@ -270,16 +270,33 @@ export class Database {
         console.error('First 500 chars:', content.substring(0, 500))
         console.error('Last 500 chars:', content.substring(Math.max(0, content.length - 500)))
         
+        const errorPosition = parseError instanceof Error ? 
+          parseError.message.match(/position (\d+)/) : null
+        const lineMatch = parseError instanceof Error ? 
+          parseError.message.match(/line (\d+) column (\d+)/) : null
+        
+        let locationInfo = ''
+        if (errorPosition) {
+          const pos = parseInt(errorPosition[1], 10)
+          const start = Math.max(0, pos - 50)
+          const end = Math.min(content.length, pos + 50)
+          const snippet = content.substring(start, end)
+          locationInfo = `\nError near: "...${snippet}..."`
+        } else if (lineMatch) {
+          locationInfo = `\nError at line ${lineMatch[1]}, column ${lineMatch[2]}`
+        }
+        
         throw new DatabaseError(
-          `Failed to read database: ${parseError instanceof Error ? parseError.message : 'Unknown error'}\n\n` +
+          `Failed to read database: ${parseError instanceof Error ? parseError.message : 'Unknown error'}${locationInfo}\n\n` +
           `This usually happens when:\n` +
           `1. The JSON file contains unescaped special characters\n` +
           `2. Very long text fields (descriptions, URLs) are corrupted\n` +
           `3. The file was manually edited and contains syntax errors\n\n` +
           `SOLUTION:\n` +
+          `• Try the "Auto-Repair" button in the error dialog\n` +
           `• Check your GitHub Gist for syntax errors\n` +
           `• Look for unescaped quotes or backslashes in text fields\n` +
-          `• Try creating a new database (Database Setup → Create New Database)\n` +
+          `• If repair fails, create a new database and re-import from Google Sheets\n` +
           `• If you recently imported data, the source may have invalid characters`,
           'JSON_PARSE_ERROR'
         )

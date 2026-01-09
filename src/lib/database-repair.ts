@@ -62,21 +62,55 @@ export async function repairDatabase(gistId: string, githubToken: string): Promi
       }
 
       let repairedContent = content
+      let repairAttempts: string[] = []
       
       repairedContent = repairedContent.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+      repairAttempts.push('Removed control characters')
       
-      repairedContent = repairedContent.replace(/([^\\])"([^",:}\]]*)"(?=[,}\]])/g, '$1\\"$2\\"')
+      repairedContent = repairedContent.replace(/\r\n/g, '\\n').replace(/\r/g, '\\n').replace(/\n/g, '\\n')
+      repairAttempts.push('Escaped newlines in strings')
+      
+      repairedContent = repairedContent.replace(/([^\\])\\n([^"]*)":/g, '$1 $2":')
+      repairedContent = repairedContent.replace(/: "([^"]*?)\\n\\n/g, ': "$1 ')
+      repairAttempts.push('Fixed escaped newlines in values')
       
       repairedContent = repairedContent.replace(/,(\s*[}\]])/g, '$1')
+      repairAttempts.push('Removed trailing commas')
+      
+      repairedContent = repairedContent.replace(/([^\\])"([^"]*?)\\([^\\nrtbf"\/])/g, (match, prefix, middle, char) => {
+        return `${prefix}"${middle}\\\\${char}`
+      })
+      repairAttempts.push('Fixed single backslashes')
       
       try {
         data = JSON.parse(repairedContent)
-        report.fixed.push('✓ Repaired control characters')
-        report.fixed.push('✓ Repaired unescaped quotes')
-        report.fixed.push('✓ Removed trailing commas')
+        report.fixed.push('✓ Successfully repaired JSON structure')
+        report.fixed.push(...repairAttempts.map(a => `  • ${a}`))
       } catch (secondError) {
-        report.errors.push('Unable to automatically repair JSON. Manual intervention required.')
-        return report
+        console.error('Second parse attempt failed:', secondError)
+        
+        try {
+          const lines = repairedContent.split('\n')
+          const repairedLines = lines.map(line => {
+            if (line.includes(': "') && !line.trim().endsWith('",') && !line.trim().endsWith('"')) {
+              const lastQuoteIndex = line.lastIndexOf('"')
+              if (lastQuoteIndex > 0) {
+                return line.substring(0, lastQuoteIndex + 1) + (line.includes(',') ? ',' : '')
+              }
+            }
+            return line
+          })
+          repairedContent = repairedLines.join('\n')
+          
+          data = JSON.parse(repairedContent)
+          report.fixed.push('✓ Fixed unterminated strings')
+          report.fixed.push(...repairAttempts.map(a => `  • ${a}`))
+        } catch (thirdError) {
+          console.error('Third parse attempt failed:', thirdError)
+          report.errors.push('Unable to automatically repair JSON. Manual intervention required.')
+          report.errors.push('Suggestion: Create a new database and re-import data from Google Sheets')
+          return report
+        }
       }
     }
 

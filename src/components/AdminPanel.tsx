@@ -1615,27 +1615,58 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                         </p>
                       </div>
                       
-                      <Button
-                        onClick={handleRepairDatabase}
-                        disabled={isRepairing || !database.hasWriteAccess}
-                        className="w-full bg-yellow-600 text-white hover:bg-yellow-700"
-                      >
-                        {isRepairing ? (
-                          <>
-                            <SpinnerGap size={20} className="mr-2 animate-spin" />
-                            Analyzing & Repairing...
-                          </>
-                        ) : (
-                          <>
-                            <ArrowsClockwise size={20} className="mr-2" />
-                            Repair Database Automatically
-                          </>
-                        )}
-                      </Button>
+                      <div className="space-y-2">
+                        <Button
+                          onClick={handleRepairDatabase}
+                          disabled={isRepairing || !database.hasWriteAccess}
+                          className="w-full bg-yellow-600 text-white hover:bg-yellow-700"
+                        >
+                          {isRepairing ? (
+                            <>
+                              <SpinnerGap size={20} className="mr-2 animate-spin" />
+                              Analyzing & Repairing...
+                            </>
+                          ) : (
+                            <>
+                              <ArrowsClockwise size={20} className="mr-2" />
+                              Try Auto-Repair
+                            </>
+                          )}
+                        </Button>
+                        
+                        <Button
+                          onClick={async () => {
+                            if (confirm('⚠️ This will create a NEW empty database. Your current corrupted data will be lost.\n\nYou should re-import from Google Sheets after creating the new database.\n\nContinue?')) {
+                              try {
+                                const credentials = db.getCredentials()
+                                if (!credentials.githubToken) {
+                                  toast.error('GitHub token required. Please configure in Database tab.')
+                                  return
+                                }
+                                
+                                const loadingToast = toast.loading('Creating new database...')
+                                const result = await database.createDatabase(credentials.githubToken)
+                                toast.dismiss(loadingToast)
+                                toast.success('New database created! You can now import from Google Sheets.')
+                                setIsErrorDialogOpen(false)
+                                setActiveTab('restaurants')
+                              } catch (error) {
+                                toast.error(error instanceof Error ? error.message : 'Failed to create database')
+                              }
+                            }
+                          }}
+                          disabled={!database.hasWriteAccess}
+                          variant="outline"
+                          className="w-full border-yellow-600 text-yellow-800 hover:bg-yellow-100"
+                        >
+                          <Plus size={20} className="mr-2" />
+                          Create New Database (Fresh Start)
+                        </Button>
+                      </div>
                       
                       {!database.hasWriteAccess && (
                         <p className="text-xs text-yellow-700">
-                          ⚠️ GitHub token required for repair. Configure in Database tab.
+                          ⚠️ GitHub token required. Configure in Database tab first.
                         </p>
                       )}
                     </div>
