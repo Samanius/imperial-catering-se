@@ -89,6 +89,38 @@ export class Database {
     return response.json()
   }
 
+  private sanitizeData(data: DatabaseData): DatabaseData {
+    const sanitizeString = (str: string | undefined): string | undefined => {
+      if (!str) return str
+      return str
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+        .trim()
+    }
+
+    const sanitizedRestaurants = data.restaurants.map(restaurant => ({
+      ...restaurant,
+      name: sanitizeString(restaurant.name) || restaurant.name,
+      description: sanitizeString(restaurant.description) || restaurant.description,
+      description_ru: restaurant.description_ru ? sanitizeString(restaurant.description_ru) : restaurant.description_ru,
+      story: sanitizeString(restaurant.story) || restaurant.story,
+      tagline: sanitizeString(restaurant.tagline) || restaurant.tagline,
+      menuItems: restaurant.menuItems?.map(item => ({
+        ...item,
+        name: sanitizeString(item.name) || item.name,
+        name_ru: item.name_ru ? sanitizeString(item.name_ru) : item.name_ru,
+        description: sanitizeString(item.description) || item.description,
+        description_ru: item.description_ru ? sanitizeString(item.description_ru) : item.description_ru,
+        category: sanitizeString(item.category) || item.category,
+        category_ru: item.category_ru ? sanitizeString(item.category_ru) : item.category_ru,
+      }))
+    }))
+
+    return {
+      ...data,
+      restaurants: sanitizedRestaurants
+    }
+  }
+
   private async updateGist(data: DatabaseData): Promise<void> {
     if (!this.gistId) {
       throw new DatabaseError('Database not configured. Please set up Gist ID.', 'NO_GIST_ID')
@@ -96,6 +128,25 @@ export class Database {
 
     if (!this.githubToken) {
       throw new DatabaseError('GitHub token required for write operations. Please configure in Admin Panel.', 'NO_TOKEN')
+    }
+
+    const sanitizedData = this.sanitizeData(data)
+
+    let jsonContent: string
+    try {
+      jsonContent = JSON.stringify(sanitizedData, null, 2)
+      JSON.parse(jsonContent)
+    } catch (err) {
+      console.error('JSON serialization failed:', err)
+      throw new DatabaseError(
+        `Failed to serialize database: Data contains invalid characters.\n\n` +
+        `This can happen if text fields contain:\n` +
+        `• Unescaped quotes or backslashes\n` +
+        `• Special control characters\n` +
+        `• Corrupted Unicode characters\n\n` +
+        `Please check your data for invalid characters and try again.`,
+        'SERIALIZATION_ERROR'
+      )
     }
 
     const response = await fetch(`https://api.github.com/gists/${this.gistId}`, {
@@ -108,7 +159,7 @@ export class Database {
       body: JSON.stringify({
         files: {
           [DATA_FILENAME]: {
-            content: JSON.stringify(data, null, 2)
+            content: jsonContent
           }
         }
       })
@@ -121,10 +172,24 @@ export class Database {
       if (response.status === 404) {
         throw new DatabaseError('Database not found. Please check your Gist ID.', 'GIST_NOT_FOUND')
       }
+      if (response.status === 413) {
+        throw new DatabaseError(
+          'Database size exceeds GitHub Gist limits (max ~25MB).\n\n' +
+          'Your database is too large. This can happen if:\n' +
+          '• You have too many restaurants or menu items\n' +
+          '• Image URLs are extremely long\n' +
+          '• Description fields contain very large amounts of text\n\n' +
+          'SOLUTIONS:\n' +
+          '• Delete some restaurants or menu items\n' +
+          '• Use shorter image URLs (e.g., Firebase short URLs)\n' +
+          '• Reduce the length of description fields',
+          'SIZE_LIMIT_EXCEEDED'
+        )
+      }
       throw new DatabaseError(`Failed to update database: ${response.statusText}`, 'UPDATE_ERROR')
     }
 
-    this.cache = data
+    this.cache = sanitizedData
     this.cacheExpiry = Date.now() + this.CACHE_TTL
   }
 
@@ -190,7 +255,44 @@ export class Database {
         throw new DatabaseError('Database file not found in Gist', 'FILE_NOT_FOUND')
       }
 
-      const data: DatabaseData = JSON.parse(file.content)
+      let content = file.content
+      
+      if (!content || content.trim() === '') {
+        throw new DatabaseError('Database file is empty', 'EMPTY_FILE')
+      }
+
+      let data: DatabaseData
+      try {
+        data = JSON.parse(content)
+      } catch (parseError) {
+        console.error('JSON Parse Error:', parseError)
+        console.error('Content length:', content.length)
+        console.error('First 500 chars:', content.substring(0, 500))
+        console.error('Last 500 chars:', content.substring(Math.max(0, content.length - 500)))
+        
+        throw new DatabaseError(
+          `Failed to read database: ${parseError instanceof Error ? parseError.message : 'Unknown error'}\n\n` +
+          `This usually happens when:\n` +
+          `1. The JSON file contains unescaped special characters\n` +
+          `2. Very long text fields (descriptions, URLs) are corrupted\n` +
+          `3. The file was manually edited and contains syntax errors\n\n` +
+          `SOLUTION:\n` +
+          `• Check your GitHub Gist for syntax errors\n` +
+          `• Look for unescaped quotes or backslashes in text fields\n` +
+          `• Try creating a new database (Database Setup → Create New Database)\n` +
+          `• If you recently imported data, the source may have invalid characters`,
+          'JSON_PARSE_ERROR'
+        )
+      }
+
+      if (!data || typeof data !== 'object') {
+        throw new DatabaseError('Database file contains invalid data structure', 'INVALID_STRUCTURE')
+      }
+
+      if (!Array.isArray(data.restaurants)) {
+        data.restaurants = []
+      }
+
       this.cache = data
       this.cacheExpiry = Date.now() + this.CACHE_TTL
       

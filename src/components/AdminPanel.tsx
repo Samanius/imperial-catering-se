@@ -11,7 +11,7 @@ import { Textarea } from './ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { Separator } from './ui/separator'
 import { formatCurrency } from '@/lib/utils'
-import { ArrowLeft, Plus, Trash, PencilSimple, Check, X, Eye, EyeSlash, FileArrowDown, SpinnerGap, ArrowsClockwise, UploadSimple, Image as ImageIcon } from '@phosphor-icons/react'
+import { ArrowLeft, Plus, Trash, PencilSimple, Check, X, Eye, EyeSlash, FileArrowDown, SpinnerGap, ArrowsClockwise, UploadSimple, Image as ImageIcon, Info, CheckCircle, XCircle } from '@phosphor-icons/react'
 import type { Restaurant, MenuItem, MenuType } from '@/lib/types'
 import { toast } from 'sonner'
 import { processImageUpload } from '@/lib/file-upload'
@@ -19,6 +19,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 import { ScrollArea } from './ui/scroll-area'
 import { createBackup } from '@/lib/backup'
 import { importFromGoogleSheets, extractSpreadsheetId } from '@/lib/google-sheets-import'
+import { repairDatabase, type RepairReport } from '@/lib/database-repair'
+import { db } from '@/lib/database'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog'
 import DatabaseSetup from './DatabaseSetup'
 import TranslationsEditor from './TranslationsEditor'
@@ -42,6 +44,8 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
   const [isImporting, setIsImporting] = useState(false)
   const [importError, setImportError] = useState<string | null>(null)
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
+  const [isRepairing, setIsRepairing] = useState(false)
+  const [repairReport, setRepairReport] = useState<RepairReport | null>(null)
 
   const [formData, setFormData] = useState<Partial<Restaurant>>({
     name: '',
@@ -709,6 +713,45 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       console.error('Import error:', error)
     } finally {
       setIsImporting(false)
+    }
+  }
+
+  const handleRepairDatabase = async () => {
+    const credentials = db.getCredentials()
+    
+    if (!credentials.gistId || !credentials.githubToken) {
+      toast.error('Database credentials not found. Please configure in Database tab.')
+      return
+    }
+
+    setIsRepairing(true)
+    setRepairReport(null)
+    
+    const loadingToast = toast.loading('Analyzing and repairing database...')
+
+    try {
+      const report = await repairDatabase(credentials.gistId, credentials.githubToken)
+      
+      setRepairReport(report)
+      
+      toast.dismiss(loadingToast)
+      
+      if (report.success) {
+        toast.success(`Database repaired! ${report.fixed.length} issues fixed.`, { duration: 5000 })
+        
+        database.refresh()
+        
+        if (report.errors.length === 0) {
+          setIsErrorDialogOpen(false)
+        }
+      } else {
+        toast.error('Repair failed. See details in the dialog.')
+      }
+    } catch (error) {
+      toast.dismiss(loadingToast)
+      toast.error(error instanceof Error ? error.message : 'Repair failed')
+    } finally {
+      setIsRepairing(false)
     }
   }
 
@@ -1559,6 +1602,93 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
           
           <ScrollArea className="flex-1 overflow-auto pr-4 my-4">
             <div className="space-y-4">
+              {importError && importError.includes('Unterminated string in JSON') && (
+                <Card className="p-4 bg-yellow-50 border-yellow-300">
+                  <div className="flex items-start gap-3">
+                    <Info size={24} className="text-yellow-600 flex-shrink-0 mt-1" />
+                    <div className="flex-1 space-y-3">
+                      <div>
+                        <h3 className="font-semibold text-yellow-900 mb-2">🔧 Database Corruption Detected</h3>
+                        <p className="text-sm text-yellow-800">
+                          Your database JSON file contains invalid characters or syntax errors. 
+                          This typically happens when text fields contain unescaped special characters.
+                        </p>
+                      </div>
+                      
+                      <Button
+                        onClick={handleRepairDatabase}
+                        disabled={isRepairing || !database.hasWriteAccess}
+                        className="w-full bg-yellow-600 text-white hover:bg-yellow-700"
+                      >
+                        {isRepairing ? (
+                          <>
+                            <SpinnerGap size={20} className="mr-2 animate-spin" />
+                            Analyzing & Repairing...
+                          </>
+                        ) : (
+                          <>
+                            <ArrowsClockwise size={20} className="mr-2" />
+                            Repair Database Automatically
+                          </>
+                        )}
+                      </Button>
+                      
+                      {!database.hasWriteAccess && (
+                        <p className="text-xs text-yellow-700">
+                          ⚠️ GitHub token required for repair. Configure in Database tab.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {repairReport && (
+                <Card className={`p-4 ${repairReport.success ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'}`}>
+                  <div className="space-y-3">
+                    <h3 className={`font-semibold flex items-center gap-2 ${repairReport.success ? 'text-green-900' : 'text-red-900'}`}>
+                      {repairReport.success ? (
+                        <>
+                          <CheckCircle size={20} className="text-green-600" />
+                          Repair Successful!
+                        </>
+                      ) : (
+                        <>
+                          <XCircle size={20} className="text-red-600" />
+                          Repair Failed
+                        </>
+                      )}
+                    </h3>
+                    
+                    {repairReport.fixed.length > 0 && (
+                      <div>
+                        <p className="text-sm font-medium text-green-900 mb-2">✅ Fixed ({repairReport.fixed.length}):</p>
+                        <ul className="text-xs text-green-800 space-y-1 pl-4">
+                          {repairReport.fixed.map((fix, index) => (
+                            <li key={index}>{fix}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {repairReport.errors.length > 0 && (
+                      <div>
+                        <p className="text-sm font-medium text-red-900 mb-2">❌ Issues ({repairReport.errors.length}):</p>
+                        <ul className="text-xs text-red-800 space-y-1 pl-4">
+                          {repairReport.errors.map((error, index) => (
+                            <li key={index}>{error}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    <div className="text-xs text-muted-foreground pt-2 border-t">
+                      <p>Size: {(repairReport.originalSize / 1024).toFixed(1)} KB → {(repairReport.repairedSize / 1024).toFixed(1)} KB</p>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
               <Card className="p-4 bg-destructive/5 border-destructive/20">
                 <pre className="text-xs whitespace-pre-wrap font-mono text-foreground leading-relaxed">
                   {importError}
