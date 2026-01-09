@@ -63,31 +63,30 @@ export async function repairDatabase(gistId: string, githubToken: string): Promi
 
       let repairedContent = content
       let repairAttempts: string[] = []
-      
       repairedContent = repairedContent.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
-      repairAttempts.push('Removed control characters')
+      repairedContent = repairedContent.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
       
       repairedContent = repairedContent.replace(/\r\n/g, '\\n').replace(/\r/g, '\\n').replace(/\n/g, '\\n')
       repairAttempts.push('Escaped newlines in strings')
       
-      repairedContent = repairedContent.replace(/([^\\])\\n([^"]*)":/g, '$1 $2":')
+      tent = repairedContent.replace(/([^\\])\\n([^"]*)":/g, '$1 $2":')
       repairedContent = repairedContent.replace(/: "([^"]*?)\\n\\n/g, ': "$1 ')
       repairAttempts.push('Fixed escaped newlines in values')
       
       repairedContent = repairedContent.replace(/,(\s*[}\]])/g, '$1')
-      repairAttempts.push('Removed trailing commas')
+      repairedContent = repairedContent.replace(/,(\s*[}\]])/g, '$1')
       
-      repairedContent = repairedContent.replace(/([^\\])"([^"]*?)\\([^\\nrtbf"\/])/g, (match, prefix, middle, char) => {
+      airedContent.replace(/([^\\])"([^"]*?)\\([^\\nrtbf"\/])/g, (match, prefix, middle, char) => {
         return `${prefix}"${middle}\\\\${char}`
       })
       repairAttempts.push('Fixed single backslashes')
       
       try {
-        data = JSON.parse(repairedContent)
-        report.fixed.push('✓ Successfully repaired JSON structure')
+      try {
+        data = JSON.parse(repairedContent)red JSON structure')
         report.fixed.push(...repairAttempts.map(a => `  • ${a}`))
       } catch (secondError) {
-        console.error('Second parse attempt failed:', secondError)
+      } catch (secondError) {
         
         try {
           const lines = repairedContent.split('\n')
@@ -111,6 +110,7 @@ export async function repairDatabase(gistId: string, githubToken: string): Promi
           report.errors.push('Suggestion: Create a new database and re-import data from Google Sheets')
           return report
         }
+      }
       }
     }
 
@@ -146,7 +146,6 @@ export async function repairDatabase(gistId: string, githubToken: string): Promi
         report.fixed.push(`✓ Fixed missing menu items for: ${restaurant.name}`)
       }
 
-      restaurant.menuItems = restaurant.menuItems.filter(item => {
         if (!item.name || !item.price || item.price <= 0) {
           report.errors.push(`Removed invalid menu item from ${restaurant.name}: ${item.name || 'unnamed'}`)
           return false
