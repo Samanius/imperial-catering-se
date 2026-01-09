@@ -99,7 +99,29 @@ export class Database {
         .replace(/\r\n/g, ' ')
         .replace(/\r/g, ' ')
         .replace(/\n/g, ' ')
+        .replace(/\t/g, ' ')
         .trim()
+    }
+
+    const sanitizeUrl = (url: string | undefined): string | undefined => {
+      if (!url) return url
+      let sanitized = url
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+        .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
+        .replace(/[\u2028\u2029]/g, '')
+        .replace(/[\r\n\t]/g, '')
+        .trim()
+      
+      if (sanitized.length > 2000) {
+        const urlBeforeQuery = sanitized.split('?')[0]
+        if (urlBeforeQuery && urlBeforeQuery.length <= 2000) {
+          sanitized = urlBeforeQuery
+        } else {
+          sanitized = sanitized.substring(0, 2000)
+        }
+      }
+      
+      return sanitized
     }
 
     const sanitizedRestaurants = data.restaurants.map(restaurant => ({
@@ -109,9 +131,7 @@ export class Database {
       description_ru: restaurant.description_ru ? sanitizeString(restaurant.description_ru) : restaurant.description_ru,
       story: sanitizeString(restaurant.story) || restaurant.story,
       tagline: sanitizeString(restaurant.tagline) || restaurant.tagline,
-      coverImage: restaurant.coverImage && restaurant.coverImage.length > 2000 
-        ? restaurant.coverImage.substring(0, 2000) 
-        : restaurant.coverImage,
+      coverImage: sanitizeUrl(restaurant.coverImage) || '',
       menuItems: restaurant.menuItems?.map(item => ({
         ...item,
         name: sanitizeString(item.name) || item.name,
@@ -120,9 +140,7 @@ export class Database {
         description_ru: item.description_ru ? sanitizeString(item.description_ru) : item.description_ru,
         category: sanitizeString(item.category) || item.category,
         category_ru: item.category_ru ? sanitizeString(item.category_ru) : item.category_ru,
-        image: item.image && item.image.length > 2000 
-          ? item.image.substring(0, 2000) 
-          : item.image
+        image: sanitizeUrl(item.image) || ''
       }))
     }))
 

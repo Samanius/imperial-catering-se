@@ -73,8 +73,7 @@ export async function importFromGoogleSheets(
         return str
           .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
           .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
-          .replace(/\\/g, '\\\\')
-          .replace(/"/g, '\\"')
+          .replace(/[\u2028\u2029]/g, '')
           .replace(/\r\n/g, ' ')
           .replace(/\n/g, ' ')
           .replace(/\r/g, ' ')
@@ -101,14 +100,27 @@ export async function importFromGoogleSheets(
         if (firstCell === 'restaurant photo') {
           const nextRow = sheet.rows[i + 1]
           if (nextRow && nextRow.length > 0) {
-            restaurantPhoto = sanitizeMetadataField(nextRow[0])
+            restaurantPhoto = nextRow[0]?.toString().trim() || ''
+            restaurantPhoto = restaurantPhoto
+              .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+              .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
+              .replace(/[\u2028\u2029]/g, '')
+              .replace(/[\r\n\t]/g, '')
+            
             if (restaurantPhoto && !restaurantPhoto.startsWith('http')) {
               console.log('Restaurant photo URL invalid, clearing')
               restaurantPhoto = ''
             }
             if (restaurantPhoto && restaurantPhoto.length > 2000) {
-              console.log(`Restaurant photo URL too long (${restaurantPhoto.length} chars), truncating`)
-              restaurantPhoto = restaurantPhoto.substring(0, 2000)
+              console.log(`Restaurant photo URL too long (${restaurantPhoto.length} chars)`)
+              const urlBeforeQuery = restaurantPhoto.split('?')[0]
+              if (urlBeforeQuery && urlBeforeQuery.length <= 2000) {
+                restaurantPhoto = urlBeforeQuery
+                console.log(`Removed query params from restaurant photo, URL now ${restaurantPhoto.length} chars`)
+              } else {
+                console.log('Even base URL is too long, truncating')
+                restaurantPhoto = restaurantPhoto.substring(0, 2000)
+              }
             }
             console.log('Found restaurant photo:', restaurantPhoto || '(empty/invalid)')
           }
@@ -151,8 +163,7 @@ export async function importFromGoogleSheets(
           return str
             .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
             .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
-            .replace(/\\/g, '\\\\')
-            .replace(/"/g, '\\"')
+            .replace(/[\u2028\u2029]/g, '')
             .replace(/\n/g, ' ')
             .replace(/\r/g, ' ')
             .replace(/\t/g, ' ')
@@ -182,15 +193,28 @@ export async function importFromGoogleSheets(
         })
         
         try {
-          imageUrl = sanitizeField(row[5])
+          imageUrl = row[5]?.toString().trim() || ''
+          imageUrl = imageUrl
+            .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+            .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
+            .replace(/[\u2028\u2029]/g, '')
+            .replace(/[\r\n\t]/g, '')
+          
           if (imageUrl && !imageUrl.startsWith('http')) {
             console.log(`Row ${rowNum}: Image URL doesn't start with http, clearing it`)
             rowErrors.push(`Row ${rowNum}: Image URL invalid (must start with http:// or https://), skipped image`)
             imageUrl = ''
           }
+          
           if (imageUrl && imageUrl.length > 2000) {
-            console.log(`Row ${rowNum}: Image URL too long (${imageUrl.length} chars), truncating`)
-            imageUrl = imageUrl.substring(0, 2000)
+            console.log(`Row ${rowNum}: Image URL too long (${imageUrl.length} chars), truncating to first 2000 chars`)
+            const urlBeforeQuery = imageUrl.split('?')[0]
+            if (urlBeforeQuery && urlBeforeQuery.length <= 2000) {
+              imageUrl = urlBeforeQuery
+              console.log(`Row ${rowNum}: Removed query params, URL now ${imageUrl.length} chars`)
+            } else {
+              imageUrl = imageUrl.substring(0, 2000)
+            }
           }
         } catch (e) {
           console.log(`Row ${rowNum}: Could not parse image URL, setting to empty`)

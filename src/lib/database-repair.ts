@@ -69,44 +69,68 @@ export async function repairDatabase(gistId: string, githubToken: string): Promi
       repairedContent = repairedContent.replace(/[\u2028\u2029]/g, '')
       repairAttempts.push('Removed control characters and unicode separators')
       
-      repairedContent = repairedContent.replace(/\r\n/g, ' ').replace(/\r/g, ' ').replace(/\n/g, ' ')
-      repairAttempts.push('Replaced all line breaks with spaces')
-      
-      repairedContent = repairedContent.replace(/([^\\])\\([^"\\nrtbfuU\/])/g, '$1\\\\$2')
-      repairAttempts.push('Fixed unescaped backslashes')
-      
       repairedContent = repairedContent.replace(/,(\s*[}\]])/g, '$1')
       repairAttempts.push('Removed trailing commas')
       
-      repairedContent = repairedContent.replace(/"([^"]*?)[\x00-\x1F]([^"]*?)"/g, '"$1$2"')
-      repairAttempts.push('Removed control chars from strings')
+      const fixUnterminatedStrings = (text: string): string => {
+        const lines = text.split('\n')
+        const fixedLines = lines.map((line, idx) => {
+          const trimmed = line.trim()
+          if (!trimmed.includes(': "')) return line
+          
+          const colonQuoteIndex = line.indexOf(': "')
+          if (colonQuoteIndex === -1) return line
+          
+          const afterColon = line.substring(colonQuoteIndex + 3)
+          let inString = true
+          let lastQuoteIdx = -1
+          
+          for (let i = 0; i < afterColon.length; i++) {
+            if (afterColon[i] === '"' && (i === 0 || afterColon[i-1] !== '\\')) {
+              lastQuoteIdx = i
+              inString = false
+              break
+            }
+          }
+          
+          if (inString || lastQuoteIdx === -1) {
+            const beforeString = line.substring(0, colonQuoteIndex + 3)
+            const content = afterColon.replace(/["\r\n\t]/g, ' ').trim()
+            const needsComma = trimmed.endsWith(',') || (idx < lines.length - 1 && !lines[idx + 1].trim().startsWith('}') && !lines[idx + 1].trim().startsWith(']'))
+            return beforeString + content + '"' + (needsComma ? ',' : '')
+          }
+          
+          return line
+        })
+        return fixedLines.join('\n')
+      }
+      
+      repairedContent = fixUnterminatedStrings(repairedContent)
+      repairAttempts.push('Fixed unterminated string values')
       
       try {
         data = JSON.parse(repairedContent)
         report.fixed.push('✓ Successfully repaired JSON structure')
         report.fixed.push(...repairAttempts.map(a => `  • ${a}`))
       } catch (secondError) {
+        console.error('Second parse attempt failed:', secondError)
         
         try {
-          const lines = repairedContent.split('\n')
-          const repairedLines = lines.map(line => {
-            if (line.includes(': "') && !line.trim().endsWith('",') && !line.trim().endsWith('"')) {
-              const lastQuoteIndex = line.lastIndexOf('"')
-              if (lastQuoteIndex > 0) {
-                return line.substring(0, lastQuoteIndex + 1) + (line.includes(',') ? ',' : '')
-              }
-            }
-            return line
-          })
-          repairedContent = repairedLines.join('\n')
+          const parsedData = JSON.parse(content.substring(0, 1000))
+          data = {
+            restaurants: [],
+            lastUpdated: Date.now(),
+            version: 1
+          }
           
-          data = JSON.parse(repairedContent)
-          report.fixed.push('✓ Fixed unterminated strings')
-          report.fixed.push(...repairAttempts.map(a => `  • ${a}`))
+          report.errors.push('Could not repair the JSON file automatically.')
+          report.errors.push('The database structure is too corrupted to recover.')
+          report.errors.push('SOLUTION: Create a new database and re-import from Google Sheets')
+          return report
         } catch (thirdError) {
           console.error('Third parse attempt failed:', thirdError)
           report.errors.push('Unable to automatically repair JSON. Manual intervention required.')
-          report.errors.push('Suggestion: Create a new database and re-import data from Google Sheets')
+          report.errors.push('SOLUTION: Create a new database (button below) and re-import data from Google Sheets')
           return report
         }
       }
